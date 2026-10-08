@@ -2,7 +2,7 @@
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.01.30
+   2026.10.08
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -208,14 +208,22 @@ begin
   end;
 
  Assert(Renderer.Frame <> NIL, 'No frame in renderer!');
- if Renderer.Frame.Empty
+ if GIFImg.Images[FrameNo].Empty
  then EXIT(NIL);
 
  Result:= TBitmap.Create;
  Result.SetSize(GIFImg.Width, GIFImg.Height);
 
- Renderer.FrameIndex:= FrameNo;  { Note: Remember to reset to frame zero if necessary }
+ { A Draw on a canvas the renderer has not drawn on before resets it to frame 0 (Vcl.Imaging.GIFImg.pas, TCustomGIFRenderer.Draw calls Reset),
+   so a FrameIndex set before the first Draw on the new bitmap is lost.
+   The renderer also composes frame N on top of frames 0..N-1 (disposal methods), so: start at frame 0, then step forward to FrameNo. }
+ Renderer.FrameIndex:= 0;
  Renderer.Draw(Result.Canvas, Result.Canvas.ClipRect);
+ for VAR i:= 1 to Integer(FrameNo) do
+  begin
+   Renderer.NextFrame;
+   Renderer.Draw(Result.Canvas, Result.Canvas.ClipRect);
+  end;
 end;
 
 

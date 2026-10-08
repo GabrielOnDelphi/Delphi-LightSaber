@@ -51,7 +51,7 @@ INTERFACE
 USES
   Winapi.Windows, Winapi.Messages,
   System.SysUtils, System.Classes, Generics.Collections, System.SyncObjs,
-  Vcl.Forms, Vcl.Graphics;
+  Vcl.Graphics;
 
 CONST
    { LIMITATION: hardcoded magic number — collides with any other component in the same
@@ -75,7 +75,7 @@ TYPE
     procedure Execute; override;
     procedure Handleexception; virtual;
   public
-    SilentErrors: Boolean;                        { Silent: don't show errors in case the image cannot be loaded }
+    SilentErrors: Boolean;                        { If True, a file that fails to load is skipped: no raise, no log line }
     Width: Integer;
     Height: Integer;
     FileList: TStringList;
@@ -88,7 +88,7 @@ TYPE
 
 
 IMPLEMENTATION
-USES LightVcl.Graph.Resize, LightCore.Graph.ResizeParams;
+USES LightVcl.Graph.Resize, LightCore.Graph.ResizeParams, LightCore.AppData;
 
 
 
@@ -107,7 +107,7 @@ begin
  FWndHandle      := AWndHandle;
  ReadyThumbs     := TQueue<TBitmap>.Create;
  FQueueLock      := TCriticalSection.Create;
- SilentErrors    := False;    { If True, don't show errors when images fail to load }
+ SilentErrors    := False;    { If True, a failed image is skipped: no raise, no log line }
  Width           := 256;
  Height          := 128;
  FileList        := NIL;      { Caller must assign FileList before Start. Thread takes ownership! }
@@ -192,7 +192,7 @@ end;
 
 
 { Loads a single image file, resizes it to Width x Height, and pushes it to the queue.
-  Handles exceptions gracefully based on SilentErrors setting. }
+  On failure: re-raises (Execute then logs it), or skips the file silently when SilentErrors is True. }
 procedure TBkgImgLoader.ProcessFile(CONST AFileName: string);
 VAR
    BMP: TBitmap;
@@ -237,15 +237,11 @@ end;
    exception HANDLING
 --------------------------------------------------------------------------------------------------}
 
+{ Logs the exception. A library never shows a dialog - the caller reads the log. }
 procedure TBkgImgLoader.DoHandleexception;
 begin
- if GetCapture <> 0
- then SendMessage(GetCapture, WM_CANCELMODE, 0, 0);                    // Cancel the mouse capture
-
- { Now actually show the exception }
- if Fexception is exception
- then Application.Showexception(Fexception)
- else System.SysUtils.Showexception(Fexception, nil);
+ if Fexception <> NIL
+ then AppDataCore.LogError('TBkgImgLoader: ' + Fexception.ClassName + ': ' + Fexception.Message);
 end;
 
 
@@ -253,7 +249,7 @@ procedure TBkgImgLoader.Handleexception;                               // This f
 begin
  Fexception := exception(exceptObject);
  TRY
-   if NOT (Fexception is EAbort)                                       // Don't show EAbort messages
+   if NOT (Fexception is EAbort)                                       // EAbort is not logged
    then Synchronize(DoHandleexception);
  FINALLY
    Fexception := NIL;

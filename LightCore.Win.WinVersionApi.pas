@@ -71,8 +71,8 @@ CONST
   BuildThreshold_Win2008 = 6000;   { Windows Server 2008: builds 6001+ }
   BuildThreshold_Win7    = 7000;   { Windows 7: builds 7600+ }
   BuildThreshold_Win8    = 8000;   { Windows 8: builds 9200+ }
-  BuildThreshold_Win81   = 9000;   { Windows 8.1: builds 9600+ }
-  BuildThreshold_Win10   = 9100;   { Windows 10: builds 10240+ (first release: July 2015) }
+  BuildThreshold_Win81   = 9500;   { Windows 8.1: builds 9600+ (Windows 8 is 9200) }
+  BuildThreshold_Win10   = 10000;  { Windows 10: builds 10240+ (first release: July 2015) }
   BuildThreshold_Win11   = 22000;  { Windows 11: builds 22000+ (first release: October 2021) }
 
 

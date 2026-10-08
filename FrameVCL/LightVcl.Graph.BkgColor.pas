@@ -107,8 +107,9 @@ begin
 
  if BorderSize = 0 then EXIT;
  BMP.Canvas.Brush.Color:= FrameColor;
+ { FrameRect does not paint the column Right and the row Bottom of its rectangle, hence the +1: ring i covers pixels i-1 .. Width-i }
  for var i:= 1 to BorderSize do
-   BMP.Canvas.FrameRect(Rect(i-1, i-1, BMP.Width-i, BMP.Height-i));
+   BMP.Canvas.FrameRect(Rect(i-1, i-1, BMP.Width-i+1, BMP.Height-i+1));
 end;
 
 

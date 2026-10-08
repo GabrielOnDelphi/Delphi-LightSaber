@@ -74,10 +74,10 @@ IMPLEMENTATION
 {--------------------------------------------------------------------------------------------------
    WINDOW POS
 --------------------------------------------------------------------------------------------------}
-{ Set the specified windows in top of all other windows in the system }
+{ Set the specified windows in top of all other windows in the system. Does not activate the window (does not take the keyboard focus). }
 procedure SetWindowPosToFront(WndHandle: HWND);
 begin
-  SetWindowPos(WndHandle,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE or SWP_NOSIZE);
+  SetWindowPos(WndHandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE);
 end;
 
 

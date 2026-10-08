@@ -129,7 +129,9 @@ var
   NextTitle: array[0..260] of char;
   s: string;
 begin
-  NextHandle := GetWindow(Application.Handle, GW_HWNDFIRST);                  // Get the first window
+  if Application.Handle <> 0
+  then NextHandle:= GetWindow(Application.Handle, GW_HWNDFIRST)               // Get the first window
+  else NextHandle:= GetWindow(GetDesktopWindow, GW_CHILD);                    // A console program has no Application window: TApplication.CreateHandle skips it when IsConsole (Vcl.Forms.pas). Start at the top-level window highest in the Z order.
   WHILE NextHandle > 0 DO
    begin
      GetWindowText(NextHandle, NextTitle, 255);                               // retrieve its text

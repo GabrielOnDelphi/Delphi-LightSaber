@@ -193,6 +193,9 @@ function ShortenString(CONST s: String; MaxLength: Integer): string;
 VAR TotalLength, FLength: Integer;
 begin
   TotalLength:= Length(s);
+  if (MaxLength < 2) AND (TotalLength > MaxLength)
+  then EXIT(system.COPY(s, 1, MaxLength));  { No room for the 2-char ellipsis: keep the first MaxLength chars (none if MaxLength <= 0) }
+
   if TotalLength > MaxLength
   then
    begin
