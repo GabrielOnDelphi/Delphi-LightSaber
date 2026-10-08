@@ -109,10 +109,6 @@ type
     { TResizeOp Enum Tests }
     [Test]
     procedure TestTResizeOp_EnumValues;
-
-    { Constants Tests }
-    [Test]
-    procedure TestConstants_UninitializedSize;
   end;
 
 implementation
@@ -586,14 +582,6 @@ begin
   Assert.AreEqual(5, Ord(roForceWidth), 'roForceWidth should be 5');
   Assert.AreEqual(6, Ord(roForceHeight), 'roForceHeight should be 6');
   Assert.AreEqual(7, Ord(roStretch), 'roStretch should be 7');
-end;
-
-
-{ Constants Tests }
-
-procedure TTestResizeParams.TestConstants_UninitializedSize;
-begin
-  Assert.AreEqual(-7777, UNINITIALIZED_SIZE, 'UNINITIALIZED_SIZE should be -7777');
 end;
 
 

@@ -30,13 +30,6 @@ type
     [TearDown]
     procedure TearDown;
 
-    { AutoState Tests }
-    [Test]
-    procedure TestAutoState_DefaultIsUndefined;
-
-    [Test]
-    procedure TestAutoState_Comparisons;
-
     { CloseOnEscape Property Tests }
     [Test]
     procedure TestCloseOnEscape_DefaultValue;
@@ -47,27 +40,13 @@ type
 
     { MainFormCaption Tests }
     [Test]
-    procedure TestMainFormCaption_Format;
+    procedure TestMainFormCaption_ExactText;
 
     [Test]
     procedure TestMainFormCaption_EmptyCaption;
 
     [Test]
     procedure TestMainFormCaption_WithCaption;
-  end;
-
-  { Tests for AutoState enum behavior }
-  [TestFixture]
-  TTestAutoStateBehavior = class
-  public
-    [Test]
-    procedure TestAutoState_NoneIsLessThanPosOnly;
-
-    [Test]
-    procedure TestAutoState_PosOnlyIsLessThanFull;
-
-    [Test]
-    procedure TestAutoState_CompareWithNone;
   end;
 
 implementation
@@ -92,28 +71,6 @@ end;
 procedure TTestLightForm.TearDown;
 begin
   TAppDataCore.Unattended:= FOldUnattended;
-end;
-
-
-{ AutoState Tests }
-
-procedure TTestLightForm.TestAutoState_DefaultIsUndefined;
-var
-  State: TAutoState;
-begin
-  // Default enum value should be asUndefined (ordinal 0)
-  State:= Default(TAutoState);
-  Assert.AreEqual(asUndefined, State, 'Default AutoState should be asUndefined');
-end;
-
-procedure TTestLightForm.TestAutoState_Comparisons;
-begin
-  // Test that AutoState values can be compared correctly
-  // This is important because saveBeforeExit uses "AutoState > asNone"
-  Assert.IsTrue(asPosOnly > asNone, 'asPosOnly should be greater than asNone');
-  Assert.IsTrue(asFull > asNone, 'asFull should be greater than asNone');
-  Assert.IsTrue(asFull > asPosOnly, 'asFull should be greater than asPosOnly');
-  Assert.IsFalse(asNone > asNone, 'asNone should not be greater than asNone');
 end;
 
 
@@ -163,10 +120,32 @@ end;
 
 { MainFormCaption Tests }
 
-procedure TTestLightForm.TestMainFormCaption_Format;
+procedure TTestLightForm.TestMainFormCaption_ExactText;
+var
+  Form: TLightForm;
+  Expected: string;
 begin
-  // Test that AppData.AppName is available for caption formatting
-  Assert.IsNotEmpty(AppData.AppName, 'AppData.AppName should not be empty');
+  if AppData = NIL then
+  begin
+    Assert.Pass('AppData not available - skipping form test');
+    EXIT;
+  end;
+
+  { "AppName - caption", then one tag per active mode }
+  Expected:= AppData.AppName + ' - Exact';
+  if AppData.RunningHome    then Expected:= Expected + ' [Running home]';
+  if AppData.BetaTesterMode then Expected:= Expected + ' [BetaTesterMode]';
+  {$IFDEF DEBUG}
+  Expected:= Expected + ' [Debug]';
+  {$ENDIF}
+
+  Form:= TLightForm.Create(NIL, asNone);
+  try
+    Form.MainFormCaption('Exact');
+    Assert.AreEqual(Expected, Form.Caption, 'MainFormCaption must build the exact caption');
+  finally
+    FreeAndNil(Form);
+  end;
 end;
 
 procedure TTestLightForm.TestMainFormCaption_EmptyCaption;
@@ -218,29 +197,7 @@ begin
 end;
 
 
-{ TTestAutoStateBehavior }
-
-procedure TTestAutoStateBehavior.TestAutoState_NoneIsLessThanPosOnly;
-begin
-  Assert.IsTrue(asNone < asPosOnly);
-end;
-
-procedure TTestAutoStateBehavior.TestAutoState_PosOnlyIsLessThanFull;
-begin
-  Assert.IsTrue(asPosOnly < asFull);
-end;
-
-procedure TTestAutoStateBehavior.TestAutoState_CompareWithNone;
-begin
-  // This tests the logic used in saveBeforeExit: "if AutoState > asNone"
-  Assert.IsFalse(asNone > asNone, 'asNone should not trigger save');
-  Assert.IsTrue(asPosOnly > asNone, 'asPosOnly should trigger save');
-  Assert.IsTrue(asFull > asNone, 'asFull should trigger save');
-end;
-
-
 initialization
   TDUnitX.RegisterTestFixture(TTestLightForm);
-  TDUnitX.RegisterTestFixture(TTestAutoStateBehavior);
 
 end.

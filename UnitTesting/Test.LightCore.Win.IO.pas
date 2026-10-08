@@ -232,10 +232,20 @@ begin
 end;
 
 procedure TTestVclCommonIO.TestValidDrive_InvalidDrive;
+VAR
+  Drives: DWORD;
+  Letter: Char;
 begin
-  { Drive Z is unlikely to exist on most systems }
-  { Note: This test may fail if Z: is mapped - adjust if needed }
-  Assert.Pass('Skipped - depends on system configuration');
+  { GetLogicalDrives has one bit per drive letter in use (bit 0 = A:). Pick a letter that is not in use. }
+  Drives:= Winapi.Windows.GetLogicalDrives;   { The bit mask, not the LightCore.Win.IO list of the same name }
+  for Letter:= 'Z' downto 'D' do
+    if (Drives AND (DWORD(1) shl (Ord(Letter) - Ord('A')))) = 0 then
+      begin
+        Assert.IsFalse(ValidDrive(Letter), Letter + ': is not in use, so it must not be a valid drive');
+        EXIT;
+      end;
+
+  Assert.Pass('Every drive letter from D: to Z: is in use');
 end;
 
 procedure TTestVclCommonIO.TestDriveFreeSpace;

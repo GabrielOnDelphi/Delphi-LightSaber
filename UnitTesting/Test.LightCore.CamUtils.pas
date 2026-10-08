@@ -142,12 +142,11 @@ end;
 procedure TTestCamUtils.TestRequestCameraPermission_NilCallback_NoException;
 begin
   // Should not raise exception when callback is nil
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RequestCameraPermission(nil);
     end,
-    Exception,
     'RequestCameraPermission should handle nil callback gracefully');
 end;
 
@@ -155,12 +154,11 @@ end;
 procedure TTestCamUtils.TestRequestStorageReadPermission_NilCallback_NoException;
 begin
   // Should not raise exception when callback is nil
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RequestStorageReadPermission(nil);
     end,
-    Exception,
     'RequestStorageReadPermission should handle nil callback gracefully');
 end;
 

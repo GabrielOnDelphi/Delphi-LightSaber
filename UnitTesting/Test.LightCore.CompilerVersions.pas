@@ -18,18 +18,6 @@ type
   [TestFixture]
   TTestCompiler = class
   public
-    { Version Constants - Existence Tests }
-    [Test]
-    [TestCase('Delphi13_Florence',  '')]
-    [TestCase('Delphi12_Athens', '')]
-    [TestCase('Delphi11_Alex',   '')]
-    [TestCase('Delphi10_Sydney', '')]
-    [TestCase('Delphi10_Rio',    '')]
-    procedure TestModernVersionsExist(const Dummy: string);
-
-    [Test]
-    procedure TestLegacyVersionsExist;
-
     { Version Constants - Value Tests }
     [Test]
     procedure TestDelphiYukon;
@@ -63,53 +51,12 @@ type
     [Test]
     procedure TestRTLVersionIsKnown;
 
-    { Backward Compatibility Aliases }
-    [Test]
-    procedure TestBackwardCompatibilityAliases;
-
     { Edge Cases }
     [Test]
     procedure TestVersionDifferencesAreSignificant;
   end;
 
 implementation
-
-
-{ Version Constants - Existence Tests }
-
-procedure TTestCompiler.TestModernVersionsExist(const Dummy: string);
-begin
-  { Verify all modern (supported) version constants are defined and positive }
-  Assert.IsTrue(Delphi13_Florence > 0,  'Delphi13_Florence must be defined');
-  Assert.IsTrue(Delphi12_Athens > 0, 'Delphi12_Athens must be defined');
-  Assert.IsTrue(Delphi11_Alex > 0,   'Delphi11_Alex must be defined');
-  Assert.IsTrue(Delphi10_Sydney > 0, 'Delphi10_Sydney must be defined');
-  Assert.IsTrue(Delphi10_Rio > 0,    'Delphi10_Rio must be defined');
-end;
-
-
-procedure TTestCompiler.TestLegacyVersionsExist;
-begin
-  { Verify legacy version constants are defined }
-  Assert.IsTrue(Delphi10_Tokyo > 0,   'Delphi10_Tokyo must be defined');
-  Assert.IsTrue(Delphi10_Berlin > 0,  'Delphi10_Berlin must be defined');
-  Assert.IsTrue(Delphi10_Seattle > 0, 'Delphi10_Seattle must be defined');
-  Assert.IsTrue(Delphi_XE8 > 0,     'Delphi_XE8 must be defined');
-  Assert.IsTrue(Delphi_XE7 > 0,     'Delphi_XE7 must be defined');
-  Assert.IsTrue(Delphi_XE6 > 0,     'Delphi_XE6 must be defined');
-  Assert.IsTrue(Delphi_XE5 > 0,     'Delphi_XE5 must be defined');
-  Assert.IsTrue(Delphi_XE4 > 0,     'Delphi_XE4 must be defined');
-  Assert.IsTrue(Delphi_XE3 > 0,     'Delphi_XE3 must be defined');
-  Assert.IsTrue(Delphi_XE2 > 0,     'Delphi_XE2 must be defined');
-  Assert.IsTrue(Delphi_XE > 0,      'Delphi_XE must be defined');
-  Assert.IsTrue(Delphi_2010 > 0,    'Delphi_2010 must be defined');
-  Assert.IsTrue(Delphi_2009 > 0,    'Delphi_2009 must be defined');
-  Assert.IsTrue(Delphi_2007 > 0,    'Delphi_2007 must be defined');
-  Assert.IsTrue(Delphi_2006 > 0,    'Delphi_2006 must be defined');
-  Assert.IsTrue(Delphi_2005 > 0,    'Delphi_2005 must be defined');
-  Assert.IsTrue(Delphi_8Net > 0,    'Delphi_8Net must be defined');
-  Assert.IsTrue(Delphi_7 > 0,       'Delphi_7 must be defined');
-end;
 
 
 { Version Constants - Value Tests }
@@ -213,16 +160,6 @@ begin
   Assert.IsTrue(
     (RTLVersion >= Delphi_7) AND (RTLVersion <= Delphi13_Florence + 1),
     Format('RTLVersion %.1f should be within known range', [RTLVersion]));
-end;
-
-
-{ Backward Compatibility Aliases }
-
-procedure TTestCompiler.TestBackwardCompatibilityAliases;
-begin
-  { Verify typo aliases point to correct values }
-  Assert.AreEqual(Delphi12_Athens, Delphi12_Athens, 0.001, 'Delphi12_Athens should alias Delphi12_Athens');
-  Assert.AreEqual(Delphi11_Alex, Delphi11_Alex, 0.001, 'Delphi11_Alex should alias Delphi11_Alex');
 end;
 
 

@@ -1,9 +1,9 @@
 ﻿UNIT Test.FormScreenCapture;
 
 {=============================================================================================================
-   2026.01.31
+   2026.10.07
    Unit tests for FormScreenCapture and LightFmx.Visual.ScreenCapture
-   Tests screen capture manager logic and overlay style handling
+   Tests screen capture manager logic, including its INI persistence
 
    Note: UI-related tests are limited since FMX forms require actual display context.
    Focus is on business logic in TScreenCaptureManager.
@@ -16,8 +16,20 @@ USES
   System.SysUtils, System.Types, System.Classes;
 
 TYPE
+  { TScreenCaptureManager keeps 5 keys in section [ScreenCapture] of the application INI file.
+    Setup saves them and removes them, so every test starts from "no INI values"; TearDown puts the
+    saved values back, so the tests leave the INI file as they found it. }
+  TSavedIniKeys = record
+    Exists: array[0..4] of Boolean;
+    Value : array[0..4] of string;
+  end;
+
   [TestFixture]
   TTestScreenCaptureManager = class
+  private
+    FIniPath: string;
+    FSaved: TSavedIniKeys;
+    procedure DeleteIniKeys;
   public
     [Setup]
     procedure Setup;
@@ -30,7 +42,10 @@ TYPE
     procedure TestCreate_InitializesProperties;
 
     [Test]
-    procedure TestDestroy_NoMemoryLeak;
+    procedure TestDestroy_SavesCaptureTipShown;
+
+    [Test]
+    procedure TestCreate_LoadsLastSelectionRect;
 
     { LastSelectionRect }
     [Test]
@@ -52,27 +67,6 @@ TYPE
     { CaptureTipShown }
     [Test]
     procedure TestCaptureTipShown_DefaultValue;
-
-    [Test]
-    procedure TestCaptureTipShown_SetAndGet;
-  end;
-
-
-  [TestFixture]
-  TTestOverlayStyle = class
-  public
-    { Overlay Style enum }
-    [Test]
-    procedure TestOverlayStyle_FrostedGlass;
-
-    [Test]
-    procedure TestOverlayStyle_Glossy;
-
-    [Test]
-    procedure TestOverlayStyle_SimpleDim;
-
-    [Test]
-    procedure TestOverlayStyle_OrdinalValues;
   end;
 
 
@@ -94,21 +88,77 @@ TYPE
 IMPLEMENTATION
 
 USES
+  System.IniFiles,
   FMX.Forms, FMX.Graphics,
+  LightFmx.Common.IniFile,
   FormScreenCapture, LightFmx.Visual.ScreenCapture;
+
+CONST
+  IniSection = 'ScreenCapture';
+  IniKeys: array[0..4] of string = ('CaptureTipShown', 'LastSelection_Left', 'LastSelection_Top', 'LastSelection_Right', 'LastSelection_Bottom');
 
 
 { TTestScreenCaptureManager }
 
-procedure TTestScreenCaptureManager.Setup;
+procedure TTestScreenCaptureManager.DeleteIniKeys;
+VAR
+  Ini: TIniFile;
+  i: Integer;
 begin
-  // Each test creates its own manager instance
+  Ini:= TIniFile.Create(FIniPath);
+  TRY
+    for i:= Low(IniKeys) to High(IniKeys) DO
+      Ini.DeleteKey(IniSection, IniKeys[i]);
+  FINALLY
+    FreeAndNil(Ini);
+  END;
+end;
+
+
+procedure TTestScreenCaptureManager.Setup;
+VAR
+  AppIni: TIniFileApp;
+  Ini: TIniFile;
+  i: Integer;
+begin
+  { The same INI file the manager uses }
+  AppIni:= TIniFileApp.Create(IniSection);
+  TRY
+    FIniPath:= AppIni.FileName;
+  FINALLY
+    FreeAndNil(AppIni);
+  END;
+
+  Ini:= TIniFile.Create(FIniPath);
+  TRY
+    for i:= Low(IniKeys) to High(IniKeys) DO
+      begin
+        FSaved.Exists[i]:= Ini.ValueExists(IniSection, IniKeys[i]);
+        FSaved.Value[i] := Ini.ReadString(IniSection, IniKeys[i], '');
+      end;
+  FINALLY
+    FreeAndNil(Ini);
+  END;
+
+  DeleteIniKeys;
 end;
 
 
 procedure TTestScreenCaptureManager.TearDown;
+VAR
+  Ini: TIniFile;
+  i: Integer;
 begin
-  // Cleanup handled in individual tests
+  DeleteIniKeys;
+
+  Ini:= TIniFile.Create(FIniPath);
+  TRY
+    for i:= Low(IniKeys) to High(IniKeys) DO
+      if FSaved.Exists[i]
+      then Ini.WriteString(IniSection, IniKeys[i], FSaved.Value[i]);
+  FINALLY
+    FreeAndNil(Ini);
+  END;
 end;
 
 
@@ -126,29 +176,78 @@ begin
 end;
 
 
-procedure TTestScreenCaptureManager.TestDestroy_NoMemoryLeak;
+procedure TTestScreenCaptureManager.TestDestroy_SavesCaptureTipShown;
 VAR
   Manager: TScreenCaptureManager;
 begin
-  // Test that destruction completes without errors
   Manager:= TScreenCaptureManager.Create;
-  FreeAndNil(Manager);
-  Assert.IsNull(Manager, 'Manager should be nil after FreeAndNil');
+  Manager.CaptureTipShown:= 7;
+  FreeAndNil(Manager);   // The destructor writes the counter to the INI file
+
+  Manager:= TScreenCaptureManager.Create;
+  try
+    Assert.AreEqual(7, Manager.CaptureTipShown, 'A new manager must load the counter the old one saved on destroy');
+  finally
+    FreeAndNil(Manager);
+  end;
+end;
+
+
+procedure TTestScreenCaptureManager.TestCreate_LoadsLastSelectionRect;
+VAR
+  Manager: TScreenCaptureManager;
+  Ini: TIniFile;
+begin
+  Ini:= TIniFile.Create(FIniPath);
+  TRY
+    Ini.WriteFloat(IniSection, 'LastSelection_Left',   10);
+    Ini.WriteFloat(IniSection, 'LastSelection_Top',    20);
+    Ini.WriteFloat(IniSection, 'LastSelection_Right',  110);
+    Ini.WriteFloat(IniSection, 'LastSelection_Bottom', 220);
+  FINALLY
+    FreeAndNil(Ini);
+  END;
+
+  Manager:= TScreenCaptureManager.Create;
+  try
+    Assert.AreEqual(Double(10),  Double(Manager.LastSelectionRect.Left),   0.001, 'Left');
+    Assert.AreEqual(Double(20),  Double(Manager.LastSelectionRect.Top),    0.001, 'Top');
+    Assert.AreEqual(Double(110), Double(Manager.LastSelectionRect.Right),  0.001, 'Right');
+    Assert.AreEqual(Double(220), Double(Manager.LastSelectionRect.Bottom), 0.001, 'Bottom');
+  finally
+    FreeAndNil(Manager);
+  end;
 end;
 
 
 procedure TTestScreenCaptureManager.TestLastSelectionRect_DefaultEmpty;
 VAR
   Manager: TScreenCaptureManager;
+  Ini: TIniFile;
 begin
+  { No keys in the INI file (Setup removed them): the rectangle is empty }
   Manager:= TScreenCaptureManager.Create;
   try
-    // Default should be empty (unless previously saved to INI)
-    // We can only check it's a valid TRectF
-    Assert.IsTrue(
-      (Manager.LastSelectionRect.Width >= 0) OR Manager.LastSelectionRect.IsEmpty,
-      'LastSelectionRect should be valid'
-    );
+    Assert.IsTrue(Manager.LastSelectionRect.IsEmpty, 'With no INI values LastSelectionRect must be empty');
+  finally
+    FreeAndNil(Manager);
+  end;
+
+  { A stored rectangle with Right < Left is rejected and becomes empty too }
+  Ini:= TIniFile.Create(FIniPath);
+  TRY
+    Ini.WriteFloat(IniSection, 'LastSelection_Left',   200);
+    Ini.WriteFloat(IniSection, 'LastSelection_Top',    20);
+    Ini.WriteFloat(IniSection, 'LastSelection_Right',  100);
+    Ini.WriteFloat(IniSection, 'LastSelection_Bottom', 220);
+  FINALLY
+    FreeAndNil(Ini);
+  END;
+
+  Manager:= TScreenCaptureManager.Create;
+  try
+    Assert.IsTrue(Manager.LastSelectionRect.IsEmpty, 'A stored rectangle of negative width must be read as empty');
+    Assert.AreEqual(Double(0), Double(Manager.LastSelectionRect.Left), 0.001, 'The rejected rectangle is TRectF.Empty');
   finally
     FreeAndNil(Manager);
   end;
@@ -237,63 +336,11 @@ VAR
 begin
   Manager:= TScreenCaptureManager.Create;
   try
-    // Default value depends on what's saved in INI, but should be >= 0
-    Assert.IsTrue(Manager.CaptureTipShown >= 0, 'CaptureTipShown should be non-negative');
+    { Setup removed the key from the INI file, so the default applies }
+    Assert.AreEqual(0, Manager.CaptureTipShown, 'CaptureTipShown must default to 0 when the INI file has no value');
   finally
     FreeAndNil(Manager);
   end;
-end;
-
-
-procedure TTestScreenCaptureManager.TestCaptureTipShown_SetAndGet;
-VAR
-  Manager: TScreenCaptureManager;
-begin
-  Manager:= TScreenCaptureManager.Create;
-  try
-    Manager.CaptureTipShown:= 5;
-    Assert.AreEqual(5, Manager.CaptureTipShown, 'CaptureTipShown should be settable');
-  finally
-    FreeAndNil(Manager);
-  end;
-end;
-
-
-{ TTestOverlayStyle }
-
-procedure TTestOverlayStyle.TestOverlayStyle_FrostedGlass;
-VAR
-  Style: TOverlayStyle;
-begin
-  Style:= osFrostedGlass;
-  Assert.AreEqual(Ord(osFrostedGlass), Ord(Style));
-end;
-
-
-procedure TTestOverlayStyle.TestOverlayStyle_Glossy;
-VAR
-  Style: TOverlayStyle;
-begin
-  Style:= osGlossy;
-  Assert.AreEqual(Ord(osGlossy), Ord(Style));
-end;
-
-
-procedure TTestOverlayStyle.TestOverlayStyle_SimpleDim;
-VAR
-  Style: TOverlayStyle;
-begin
-  Style:= osSimpleDim;
-  Assert.AreEqual(Ord(osSimpleDim), Ord(Style));
-end;
-
-
-procedure TTestOverlayStyle.TestOverlayStyle_OrdinalValues;
-begin
-  // Verify enum ordinal values are as expected
-  Assert.AreEqual(0, Ord(osFrostedGlass), 'osFrostedGlass should be 0');
-  Assert.AreEqual(1, Ord(osGlossy), 'osGlossy should be 1');
-  Assert.AreEqual(2, Ord(osSimpleDim), 'osSimpleDim should be 2');
 end;
 
 
@@ -349,12 +396,11 @@ end;
 
 INITIALIZATION
   TDUnitX.RegisterTestFixture(TTestScreenCaptureManager);
-  TDUnitX.RegisterTestFixture(TTestOverlayStyle);
 
   { TTestFormScreenCapture is deliberately NOT registered. Its 3 tests call
     TfrmScreenCapture.Create(nil), which builds a real FMX form, and c:\Projects\CLAUDE.md says
     "No form tests" for this repository. The code is kept so the decision can be reversed with one
-    line. Gabriel's call, 2026-09-04. The other two fixtures (13 tests) touch no form. }
+    line. Gabriel's call, 2026-09-04. The other fixture touches no form. }
   //TDUnitX.RegisterTestFixture(TTestFormScreenCapture);
 
 end.

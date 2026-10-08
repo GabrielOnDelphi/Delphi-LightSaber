@@ -53,7 +53,7 @@ type
     procedure Test_GetTextFromHandle_ZeroHandle_ReturnsEmpty;
 
     [Test]
-    procedure Test_GetTextFromHandle_DesktopWindow_ReturnsString;
+    procedure Test_GetTextFromHandle_WindowWithTitle_ReturnsTitle;
 
     { FindChildWindowByClass Tests }
     [Test]
@@ -72,10 +72,10 @@ type
 
     { SetWindowPos Tests }
     [Test]
-    procedure Test_SetWindowPosToFront_ValidHandle_NoException;
+    procedure Test_SetWindowPosToFront_ValidHandle_MakesTopmost;
 
     [Test]
-    procedure Test_SetWindowPosToBack_ValidHandle_NoException;
+    procedure Test_SetWindowPosToBack_ValidHandle_ClearsTopmost;
   end;
 {$ENDIF}
 
@@ -89,6 +89,37 @@ begin
   FTestWnd:= AllocateHWnd(NIL);  { Hidden top-level window with the default window procedure }
   if FTestWnd = 0
   then RaiseLastOSError;
+  if NOT SetWindowPos(FTestWnd, 0, 0, 0, 100, 100, SWP_NOMOVE OR SWP_NOZORDER OR SWP_NOACTIVATE)   { AllocateHWnd makes it 0x0 }
+  then RaiseLastOSError;
+end;
+
+
+function IsTopmost(Wnd: HWND): Boolean;
+begin
+  Result:= GetWindowLong(Wnd, GWL_EXSTYLE) AND WS_EX_TOPMOST <> 0;
+end;
+
+
+{ Windows does not always let this process make a window topmost. Measured 2026-10-08 on Windows 11 (Tests_LightCore.exe started
+  from a terminal): SetWindowPos(HWND_TOPMOST) returns TRUE with GetLastError = 0, yet WS_EX_TOPMOST stays clear. It happened in
+  the full run, and in a run of this fixture alone once the test waited 3-5 seconds after the start of the process. A new window,
+  20 retries over 1 second, and a visible WS_EX_NOACTIVATE window did not change it. In one full run the call WITH
+  SWP_NOACTIVATE worked while the same call WITHOUT it did not.
+  So the test first asks Windows with a probe window, straight through the API and with the same flags as the routine under test,
+  and skips when Windows refuses. }
+function OsAllowsTopmost(Flags: UINT): Boolean;
+VAR Probe: HWND;
+begin
+  Probe:= AllocateHWnd(NIL);
+  if Probe = 0
+  then RaiseLastOSError;
+  TRY
+    SetWindowPos(Probe, 0, 0, 0, 100, 100, SWP_NOMOVE OR SWP_NOZORDER OR SWP_NOACTIVATE);
+    SetWindowPos(Probe, HWND_TOPMOST, 0, 0, 0, 0, Flags);
+    Result:= IsTopmost(Probe);
+  FINALLY
+    DeallocateHWnd(Probe);
+  END;
 end;
 
 
@@ -164,14 +195,14 @@ begin
 end;
 
 
-procedure TTestWindow.Test_GetTextFromHandle_DesktopWindow_ReturnsString;
-VAR
-  Text: string;
+procedure TTestWindow.Test_GetTextFromHandle_WindowWithTitle_ReturnsTitle;
+CONST
+  Title = 'LightSaber test window';
 begin
-  { GetDesktopWindow returns a valid handle, but its title is usually empty }
-  Text:= GetTextFromHandle(GetDesktopWindow);
-  { Just verify it doesn't crash - desktop may or may not have text }
-  Assert.Pass('GetTextFromHandle executed without error, returned: "' + Text + '"');
+  if NOT SetWindowText(FTestWnd, Title)
+  then RaiseLastOSError;
+
+  Assert.AreEqual(Title, GetTextFromHandle(FTestWnd), 'GetTextFromHandle must return the whole window title');
 end;
 
 
@@ -227,29 +258,28 @@ end;
 
 { SetWindowPos Tests }
 
-procedure TTestWindow.Test_SetWindowPosToFront_ValidHandle_NoException;
+procedure TTestWindow.Test_SetWindowPosToFront_ValidHandle_MakesTopmost;
 begin
-  Assert.WillNotRaise(
-    procedure
-    begin
-      SetWindowPosToFront(FTestWnd);
-    end,
-    Exception,
-    'SetWindowPosToFront with valid handle should not raise exception'
-  );
+  Assert.IsFalse(IsTopmost(FTestWnd), 'Precondition: the test window starts not topmost');
+  if NOT OsAllowsTopmost(SWP_NOMOVE OR SWP_NOSIZE OR SWP_NOACTIVATE)   { The flags SetWindowPosToFront passes }
+  then Assert.Pass('Windows refuses to make a window of this process topmost right now (see OsAllowsTopmost)');
+
+  SetWindowPosToFront(FTestWnd);
+
+  Assert.IsTrue(IsTopmost(FTestWnd), 'SetWindowPosToFront must make the window topmost. ExStyle=' + IntToHex(GetWindowLong(FTestWnd, GWL_EXSTYLE), 8));
 end;
 
 
-procedure TTestWindow.Test_SetWindowPosToBack_ValidHandle_NoException;
+procedure TTestWindow.Test_SetWindowPosToBack_ValidHandle_ClearsTopmost;
 begin
-  Assert.WillNotRaise(
-    procedure
-    begin
-      SetWindowPosToBack(FTestWnd);
-    end,
-    Exception,
-    'SetWindowPosToBack with valid handle should not raise exception'
-  );
+  if NOT SetWindowPos(FTestWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE OR SWP_NOSIZE OR SWP_NOACTIVATE)
+  then RaiseLastOSError;
+  if NOT IsTopmost(FTestWnd)
+  then Assert.Pass('Windows refuses to make a window of this process topmost right now (see OsAllowsTopmost)');
+
+  SetWindowPosToBack(FTestWnd);
+
+  Assert.IsFalse(IsTopmost(FTestWnd), 'SetWindowPosToBack must clear the topmost flag');
 end;
 
 

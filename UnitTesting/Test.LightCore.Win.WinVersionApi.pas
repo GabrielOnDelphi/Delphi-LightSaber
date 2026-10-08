@@ -4,11 +4,8 @@
    Unit tests for LightCore.Win.WinVersionApi.pas
    Tests alternative Windows version detection functions using various APIs.
 
-   Note: These tests verify:
-   - Functions return valid values without crashing
-   - Version strings are in expected format
-   - All three detection methods produce consistent results
-   - GenerateReport includes all detection methods
+   2026.10.07
+   The expected version comes from TOSVersion, which reads the registry, not the three APIs tested here.
 =============================================================================================================}
 
 interface
@@ -17,6 +14,7 @@ interface
 uses
   DUnitX.TestFramework,
   System.SysUtils,
+  Winapi.Windows,
   LightCore.Win.WinVersionApi;
 
 type
@@ -28,30 +26,24 @@ type
     procedure Test_GetWinVersion_Proc_ReturnsValidVersion;
 
     [Test]
-    procedure Test_GetWinVersion_Func_ReturnsNonEmptyString;
+    procedure Test_GetWinVersion_Func_MatchesTOSVersion;
 
     [Test]
-    procedure Test_GetWinVersion_Func_ContainsDot;
+    procedure Test_GetWinVersion_Proc_MatchesTOSVersion;
 
     [Test]
     procedure Test_GetWinVersion_MajorAtLeast6;
 
     { GetWinVersionEx Tests (GetVersionEx API) }
     [Test]
-    procedure Test_GetWinVersionEx_ReturnsNonEmptyString;
-
-    [Test]
-    procedure Test_GetWinVersionEx_ReturnsKnownOS;
+    procedure Test_GetWinVersionEx_MatchesBuildNumber;
 
     [Test]
     procedure Test_GetWinVersionEx_NotUnknownOS;
 
     { GetWinVerNetServer Tests (NetServerGetInfo API) }
     [Test]
-    procedure Test_GetWinVerNetServer_ReturnsNonEmptyString;
-
-    [Test]
-    procedure Test_GetWinVerNetServer_ContainsDot;
+    procedure Test_GetWinVerNetServer_MatchesTOSVersion;
 
     [Test]
     procedure Test_GetWinVerNetServer_NotUnknownOS;
@@ -65,7 +57,7 @@ type
 
     { GenerateReport Tests }
     [Test]
-    procedure Test_GenerateReport_ReturnsNonEmptyString;
+    procedure Test_GenerateReport_HoldsEachMethodValue;
 
     [Test]
     procedure Test_GenerateReport_ContainsSysUtilsSection;
@@ -111,22 +103,26 @@ begin
 end;
 
 
-procedure TTestWinVersionApi.Test_GetWinVersion_Func_ReturnsNonEmptyString;
-VAR
-  VersionStr: string;
+{ TOSVersion reads Major/Minor from the registry (CurrentMajorVersionNumber), not through RtlGetVersion, so it is an independent source }
+function ExpectedMajorMinor: string;
 begin
-  VersionStr:= GetWinVersion;
-  Assert.IsTrue(VersionStr <> '', 'GetWinVersion should return non-empty string');
+  Result:= IntToStr(TOSVersion.Major) + '.' + IntToStr(TOSVersion.Minor);
 end;
 
 
-procedure TTestWinVersionApi.Test_GetWinVersion_Func_ContainsDot;
-VAR
-  VersionStr: string;
+procedure TTestWinVersionApi.Test_GetWinVersion_Func_MatchesTOSVersion;
 begin
-  VersionStr:= GetWinVersion;
-  Assert.IsTrue(Pos('.', VersionStr) > 0,
-    'GetWinVersion should return version in Major.Minor format. Got: ' + VersionStr);
+  Assert.AreEqual(ExpectedMajorMinor, GetWinVersion, 'GetWinVersion must return Major.Minor of the running Windows');
+end;
+
+
+procedure TTestWinVersionApi.Test_GetWinVersion_Proc_MatchesTOSVersion;
+VAR
+  MajVer, MinVer: Cardinal;
+begin
+  GetWinVersion(MajVer, MinVer);
+  Assert.AreEqual(TOSVersion.Major, Integer(MajVer), 'Major version');
+  Assert.AreEqual(TOSVersion.Minor, Integer(MinVer), 'Minor version');
 end;
 
 
@@ -144,37 +140,29 @@ end;
 
 { GetWinVersionEx Tests }
 
-procedure TTestWinVersionApi.Test_GetWinVersionEx_ReturnsNonEmptyString;
+{ GetWinVersionEx names the Windows that GetVersionEx reports to THIS exe. Without a Windows 10 entry in the manifest GetVersionEx reports 6.2 build 9200 (Windows 8), so the expected name is computed from the build GetVersionEx itself returns.
+  Release builds: 7 = 7600, 8 = 9200, 8.1 = 9600, 10 = 10240, 11 = 22000. }
+procedure TTestWinVersionApi.Test_GetWinVersionEx_MatchesBuildNumber;
 VAR
-  OSName: string;
+  Info: TOSVersionInfo;
+  Build: Cardinal;
+  Expected: string;
 begin
-  OSName:= GetWinVersionEx;
-  Assert.IsTrue(OSName <> '', 'GetWinVersionEx should return non-empty string');
-end;
+  Info:= Default(TOSVersionInfo);
+  Info.dwOSVersionInfoSize:= SizeOf(Info);
+  Assert.IsTrue(GetVersionEx(Info), 'GetVersionEx failed');
+  Build:= Info.dwBuildNumber AND $FFFF;
 
+  if Build >= 22000 then Expected:= '11'  else
+  if Build >= 10240 then Expected:= '10'  else
+  if Build >=  9600 then Expected:= '8.1' else
+  if Build >=  9200 then Expected:= '8'   else
+  if Build >=  7600 then Expected:= '7'
+  else Expected:= '';
 
-procedure TTestWinVersionApi.Test_GetWinVersionEx_ReturnsKnownOS;
-VAR
-  OSName: string;
-  ValidNames: array of string;
-  i: Integer;
-  Found: Boolean;
-begin
-  OSName:= GetWinVersionEx;
-
-  { List of valid OS names that GetWinVersionEx can return }
-  ValidNames:= ['95', '98', '2000', 'XP', '2003', 'Vista', '2008', '7', '8', '8.1', '10', '11', 'Unknown OS'];
-
-  Found:= False;
-  for i:= Low(ValidNames) to High(ValidNames) do
-    if OSName = ValidNames[i] then
-    begin
-      Found:= True;
-      Break;
-    end;
-
-  Assert.IsTrue(Found,
-    'GetWinVersionEx should return a known OS name. Got: "' + OSName + '"');
+  if Expected = ''
+  then Assert.Pass('Older than Windows 7 (build ' + IntToStr(Build) + ') - no expected name')
+  else Assert.AreEqual(Expected, GetWinVersionEx, 'GetWinVersionEx must name the Windows of build ' + IntToStr(Build));
 end;
 
 
@@ -192,27 +180,9 @@ end;
 
 { GetWinVerNetServer Tests }
 
-procedure TTestWinVersionApi.Test_GetWinVerNetServer_ReturnsNonEmptyString;
-VAR
-  VersionStr: string;
+procedure TTestWinVersionApi.Test_GetWinVerNetServer_MatchesTOSVersion;
 begin
-  VersionStr:= GetWinVerNetServer;
-  Assert.IsTrue(VersionStr <> '', 'GetWinVerNetServer should return non-empty string');
-end;
-
-
-procedure TTestWinVersionApi.Test_GetWinVerNetServer_ContainsDot;
-VAR
-  VersionStr: string;
-begin
-  VersionStr:= GetWinVerNetServer;
-
-  { Should return version in Major.Minor format, or "Unknown OS" on failure }
-  if VersionStr <> 'Unknown OS' then
-    Assert.IsTrue(Pos('.', VersionStr) > 0,
-      'GetWinVerNetServer should return version in Major.Minor format. Got: ' + VersionStr)
-  else
-    Assert.Pass('GetWinVerNetServer returned Unknown OS (may indicate network service issue)');
+  Assert.AreEqual(ExpectedMajorMinor, GetWinVerNetServer, 'GetWinVerNetServer must return Major.Minor of the running Windows');
 end;
 
 
@@ -267,12 +237,17 @@ end;
 
 { GenerateReport Tests }
 
-procedure TTestWinVersionApi.Test_GenerateReport_ReturnsNonEmptyString;
+procedure TTestWinVersionApi.Test_GenerateReport_HoldsEachMethodValue;
+CONST
+  CRLF = #13#10;
+  TAB  = #9;
 VAR
   Report: string;
 begin
   Report:= GenerateReport;
-  Assert.IsTrue(Report <> '', 'GenerateReport should return non-empty string');
+  Assert.IsTrue(Pos('[GetWinVerNetServer]' + CRLF + TAB + GetWinVerNetServer + CRLF, Report) > 0, 'Report must hold the GetWinVerNetServer value. Report: ' + Report);
+  Assert.IsTrue(Pos('[GetWinVersion]'      + CRLF + TAB + GetWinVersion      + CRLF, Report) > 0, 'Report must hold the GetWinVersion value. Report: ' + Report);
+  Assert.IsTrue(Pos('[GetWinVersionEx]'    + CRLF + TAB + GetWinVersionEx    + CRLF, Report) > 0, 'Report must hold the GetWinVersionEx value. Report: ' + Report);
 end;
 
 

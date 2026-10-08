@@ -1,8 +1,10 @@
 unit Test.LightCore.Shell;
 
 {=============================================================================================================
+   2026.10.07
    Unit tests for LightCore.Shell.pas
    Tests the taskbar routines, GetAssociatedApp and IsApiFunctionAvailable.
+   Test_ShowTaskBar_HidesAndShows hides the real taskbar for a moment.
 =============================================================================================================}
 
 interface
@@ -30,7 +32,7 @@ type
 
     { File Association tests }
     [Test]
-    procedure Test_GetAssociatedApp_TxtExtension;
+    procedure Test_GetAssociatedApp_ProgIdCommand;
 
     [Test]
     procedure Test_GetAssociatedApp_UnknownExtension;
@@ -40,10 +42,10 @@ type
     procedure Test_AddFile2TaskbarMRU_EmptyFileName;
 
     [Test]
-    procedure Test_IsTaskbarAutoHideOn_ReturnsBoolean;
+    procedure Test_IsTaskbarAutoHideOn_MatchesAutoHideBar;
 
     [Test]
-    procedure Test_ShowTaskBar_NoException;
+    procedure Test_ShowTaskBar_HidesAndShows;
 
     { API tests }
     [Test]
@@ -59,6 +61,11 @@ type
 
 implementation
 {$IFDEF MSWINDOWS}
+
+uses
+  Winapi.Windows,
+  Winapi.ShellAPI,
+  System.Win.Registry;
 
 
 procedure TTestShell.Setup;
@@ -80,14 +87,40 @@ end;
 
 { File Association tests }
 
-procedure TTestShell.Test_GetAssociatedApp_TxtExtension;
+{ Registers a file type of its own under HKCU\Software\Classes (which HKEY_CLASSES_ROOT merges in), the way a ProgID association is stored: '.ext' points to the ProgID, the ProgID holds shell\open\command. The keys are deleted again at the end. }
+procedure TTestShell.Test_GetAssociatedApp_ProgIdCommand;
+CONST
+  AppPath = 'C:\Program Files\LightSaber Test\TestApp.exe';
 VAR
-  App: string;
+  Ext, ProgId: string;
+  Reg: TRegistry;
 begin
-  { .txt should have some associated application on most Windows systems }
-  App:= GetAssociatedApp('txt');
-  { We don't assert a specific value since it varies by system, just that it doesn't crash }
-  Assert.Pass('GetAssociatedApp executed without error for .txt');
+  Ext   := 'lstest' + IntToStr(GetCurrentProcessId);
+  ProgId:= 'LightSaberTest.' + Ext;
+
+  Reg:= TRegistry.Create(KEY_READ OR KEY_WRITE);
+  try
+    Reg.RootKey:= HKEY_CURRENT_USER;
+    try
+      Assert.IsTrue(Reg.OpenKey('Software\Classes\.' + Ext, TRUE), 'Cannot create the extension key');
+      Reg.WriteString('', ProgId);
+      Reg.CloseKey;
+      Assert.IsTrue(Reg.OpenKey('Software\Classes\' + ProgId + '\shell\open\command', TRUE), 'Cannot create the command key');
+      Reg.WriteString('', '"' + AppPath + '" "%1"');
+      Reg.CloseKey;
+
+      Assert.AreEqual(AppPath, GetAssociatedApp(Ext), 'GetAssociatedApp must follow the ProgID and strip the quotes and the "%1"');
+    finally
+      Reg.CloseKey;
+      Reg.DeleteKey('Software\Classes\' + ProgId + '\shell\open\command');
+      Reg.DeleteKey('Software\Classes\' + ProgId + '\shell\open');
+      Reg.DeleteKey('Software\Classes\' + ProgId + '\shell');
+      Reg.DeleteKey('Software\Classes\' + ProgId);
+      Reg.DeleteKey('Software\Classes\.' + Ext);
+    end;
+  finally
+    FreeAndNil(Reg);
+  end;
 end;
 
 
@@ -113,23 +146,43 @@ begin
 end;
 
 
-procedure TTestShell.Test_IsTaskbarAutoHideOn_ReturnsBoolean;
+{ An auto-hide taskbar is registered as the autohide appbar of its screen edge, so ABM_GETAUTOHIDEBAR (a different query than the ABM_GETSTATE that IsTaskbarAutoHideOn sends) returns the taskbar window exactly when auto-hide is on.
+  https://learn.microsoft.com/en-us/windows/win32/shell/abm-getautohidebar }
+procedure TTestShell.Test_IsTaskbarAutoHideOn_MatchesAutoHideBar;
 VAR
-  AutoHide: Boolean;
+  Tray, AutoHideBar: HWND;
+  Data: TAppBarData;
 begin
-  { Just verify it returns without crashing }
-  AutoHide:= IsTaskbarAutoHideOn;
-  Assert.Pass('IsTaskbarAutoHideOn returned: ' + BoolToStr(AutoHide, TRUE));
+  Tray:= FindWindow('Shell_TrayWnd', NIL);
+  if Tray = 0
+  then Assert.Pass('No taskbar window (Explorer is not running)');
+
+  Data:= Default(TAppBarData);
+  Data.cbSize:= SizeOf(Data);
+  Data.hWnd:= Tray;
+  Assert.IsTrue(SHAppBarMessage(ABM_GETTASKBARPOS, Data) <> 0, 'ABM_GETTASKBARPOS failed');
+
+  AutoHideBar:= HWND(SHAppBarMessage(ABM_GETAUTOHIDEBAR, Data));   { Data.uEdge now holds the taskbar's edge }
+  Assert.AreEqual<Boolean>(AutoHideBar = Tray, IsTaskbarAutoHideOn, 'IsTaskbarAutoHideOn must agree with ABM_GETAUTOHIDEBAR');
 end;
 
 
-procedure TTestShell.Test_ShowTaskBar_NoException;
+procedure TTestShell.Test_ShowTaskBar_HidesAndShows;
+VAR
+  Tray: HWND;
 begin
-  { Test that showing/hiding taskbar doesn't crash }
-  { Note: We immediately restore it to shown state }
-  ShowTaskBar(FALSE);
-  ShowTaskBar(TRUE);
-  Assert.Pass('ShowTaskBar executed without exception');
+  Tray:= FindWindow('Shell_TrayWnd', NIL);
+  if Tray = 0
+  then Assert.Pass('No taskbar window (Explorer is not running)');
+
+  try
+    ShowTaskBar(FALSE);
+    Assert.IsFalse(IsWindowVisible(Tray), 'ShowTaskBar(FALSE) must hide the taskbar');
+    ShowTaskBar(TRUE);
+    Assert.IsTrue(IsWindowVisible(Tray), 'ShowTaskBar(TRUE) must show the taskbar again');
+  finally
+    ShowWindow(Tray, SW_SHOW);   { Never leave the user without a taskbar, even when an assertion failed }
+  end;
 end;
 
 

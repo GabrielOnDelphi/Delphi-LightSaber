@@ -1,9 +1,13 @@
 unit Test.LightCore.Download;
 
 {=============================================================================================================
+   2026.10.07
    Unit tests for LightCore.Download.pas
    Tests HTTP download functionality
-   Note: Network tests are limited to avoid external dependencies
+
+   The download tests talk to TLocalHttpServer, a small HTTP server on 127.0.0.1 that the test starts itself,
+   so they check the exact content without the Internet and fail when the download code is broken.
+   TLocalHttpServer and CanConnect are also used by Test.LightCore.Win.Download.
 =============================================================================================================}
 
 interface
@@ -11,12 +15,41 @@ interface
 uses
   DUnitX.TestFramework,
   System.SysUtils,
-  system.classes,
+  System.Classes,
   System.IOUtils,
+  System.SyncObjs,
+  System.Net.Socket,
   System.Net.URLClient,
   LightCore.Download;
 
-type
+CONST
+  { The body TLocalHttpServer sends. ASCII only, so every decoder reads it the same way. }
+  LOCAL_TEST_BODY = 'LightSaber download test' + #13#10 + 'Second line 0123456789';
+
+TYPE
+  { An HTTP/1.1 server on 127.0.0.1, on a free port, that answers every request with the same body and
+    records the head of every request it received. One background thread accepts the connections. }
+  TLocalHttpServer = class
+  strict private
+    FListener: TSocket;
+    FThread: TThread;
+    FResponse: TBytes;
+    FRequests: string;
+    procedure Serve;
+    procedure AnswerClient(Client: TSocket);
+  public
+    constructor Create(CONST Body: string);
+    destructor Destroy; override;
+    function  Url(CONST Path: string = '/'): string;
+    procedure Stop;                                  { Raises if the server thread died on an exception }
+    property  Requests: string read FRequests;       { Every request head received. Read it only after Stop. }
+  end;
+
+{ TRUE if this EXE can open a TCP connection to Host:Port. A probe that uses neither WinINet nor THTTPClient. }
+function CanConnect(CONST Host: string; Port: Word; OUT ErrorText: string): Boolean;
+
+
+TYPE
   [TestFixture]
   TTestDownload = class
   private
@@ -36,11 +69,7 @@ type
     [Test]
     procedure TestHttpOptions_DefaultValues;
 
-    { Constants Tests }
-    [Test]
-    procedure TestConstants;
-
-    { Download Tests - require network access }
+    { Download Tests }
     [Test]
     procedure TestDownloadAsString_ValidUrl;
 
@@ -69,6 +98,150 @@ type
 implementation
 
 
+{-------------------------------------------------------------------------------------------------------------
+   TLocalHttpServer
+-------------------------------------------------------------------------------------------------------------}
+constructor TLocalHttpServer.Create(CONST Body: string);
+VAR
+  BodyBytes: TBytes;
+  Head: string;
+begin
+  inherited Create;
+  BodyBytes:= TEncoding.UTF8.GetBytes(Body);
+  Head:= 'HTTP/1.1 200 OK' + #13#10
+       + 'Content-Type: text/plain; charset=utf-8' + #13#10
+       + 'Content-Length: ' + IntToStr(Length(BodyBytes)) + #13#10
+       + 'Connection: close' + #13#10
+       + #13#10;
+  FResponse:= TEncoding.ASCII.GetBytes(Head) + BodyBytes;
+
+  FListener:= TSocket.Create(TSocketType.TCP);
+  FListener.Listen('127.0.0.1', '', 0);   { Port 0 = the OS picks a free port }
+
+  FThread:= TThread.CreateAnonymousThread(Serve);
+  FThread.FreeOnTerminate:= FALSE;
+  FThread.Start;
+end;
+
+
+destructor TLocalHttpServer.Destroy;
+begin
+  if FThread <> NIL then
+    begin
+      FThread.Terminate;
+      FThread.WaitFor;
+      FreeAndNil(FThread);
+    end;
+
+  { A listening TSocket counts as Connected, so TSocket.Destroy would call shutdown() on it, which raises WSAENOTCONN. ForceClosed skips shutdown(). }
+  if FListener <> NIL then
+    begin
+      FListener.Close(TRUE);
+      FreeAndNil(FListener);
+    end;
+  inherited;
+end;
+
+
+function TLocalHttpServer.Url(CONST Path: string = '/'): string;
+begin
+  Result:= 'http://127.0.0.1:' + IntToStr(FListener.LocalPort) + Path;
+end;
+
+
+{ Runs in the server thread }
+procedure TLocalHttpServer.Serve;
+VAR
+  Client: TSocket;
+begin
+  while NOT TThread.CheckTerminated do
+    begin
+      Client:= FListener.Accept(50);   { NIL after 50 ms without a connection }
+      if Client <> NIL then
+        try
+          AnswerClient(Client);
+        finally
+          FreeAndNil(Client);
+        end;
+    end;
+end;
+
+
+{ Reads the request head (up to the empty line), sends the response, closes the connection }
+procedure TLocalHttpServer.AnswerClient(Client: TSocket);
+VAR
+  Buffer: TBytes;
+  Count: Integer;
+  Head: string;
+begin
+  SetLength(Buffer, 4096);
+  Head:= '';
+  repeat
+    if TSocket.Select(TFDSet.Create(Client), NIL, NIL, 5000 * 1000) <> TWaitResult.wrSignaled   { Microseconds }
+    then raise ESocketError.Create('TLocalHttpServer: no request within 5 s. Received so far: ' + Head);
+    { The explicit [] matters: without it the call binds to the "var Bytes: array of Byte; Offset; Count" overload (Buffer[0] as a 1-byte array, Offset 4096), which returns a negative count and reads nothing (measured) }
+    Count:= Client.Receive(Buffer[0], Length(Buffer), []);
+    if Count > 0
+    then Head:= Head + TEncoding.ASCII.GetString(Buffer, 0, Count);
+  until (Count <= 0) OR (Pos(#13#10#13#10, Head) > 0);
+
+  FRequests:= FRequests + Head;
+  Client.Send(FResponse);
+  { ForceClosed: skip shutdown(), which raises WSAENOTCONN when the client has already closed its side. closesocket still sends the pending data. }
+  Client.Close(TRUE);
+end;
+
+
+procedure TLocalHttpServer.Stop;
+VAR
+  ErrorText: string;
+begin
+  if FThread = NIL then EXIT;
+
+  FThread.Terminate;
+  FThread.WaitFor;
+  ErrorText:= '';
+  if FThread.FatalException <> NIL
+  then ErrorText:= FThread.FatalException.ClassName + ': ' + Exception(FThread.FatalException).Message;
+  FreeAndNil(FThread);
+
+  if ErrorText <> ''
+  then raise Exception.Create('TLocalHttpServer: the server thread failed. ' + ErrorText);
+end;
+
+
+
+
+function CanConnect(CONST Host: string; Port: Word; OUT ErrorText: string): Boolean;
+VAR
+  Sock: TSocket;
+begin
+  Result:= FALSE;
+  ErrorText:= '';
+  Sock:= TSocket.Create(TSocketType.TCP);
+  try
+    try
+      Sock.Connect(Host, '', '', Port);
+      Sock.Close(TRUE);
+      Result:= TRUE;
+    except
+      on E: ESocketError do
+        begin
+          { The failure is the answer of the probe: it is returned, not hidden }
+          ErrorText:= E.ClassName + ': ' + E.Message;
+        end;
+    end;
+  finally
+    FreeAndNil(Sock);
+  end;
+end;
+
+
+
+
+{-------------------------------------------------------------------------------------------------------------
+   TTestDownload
+-------------------------------------------------------------------------------------------------------------}
 procedure TTestDownload.Setup;
 begin
   FTestDir:= TPath.Combine(TPath.GetTempPath, 'DownloadTest_' + TGUID.NewGuid.ToString);
@@ -122,30 +295,23 @@ begin
 end;
 
 
-{ Constants Tests }
-
-procedure TTestDownload.TestConstants;
-begin
-  Assert.AreEqual(200, HTTP_STATUS_OK);
-end;
-
-
 { Download Tests }
 
 procedure TTestDownload.TestDownloadAsString_ValidUrl;
-var Content, ErrorMsg: string;
+var
+  Server: TLocalHttpServer;
+  Content, ErrorMsg: string;
 begin
-  { Test with example.com - a simple, reliable test URL }
-  Content:= DownloadAsString('https://example.com/', ErrorMsg);
+  Server:= TLocalHttpServer.Create(LOCAL_TEST_BODY);
+  try
+    Content:= DownloadAsString(Server.Url('/page.html'), ErrorMsg);
+    Server.Stop;
+  finally
+    FreeAndNil(Server);
+  end;
 
-  if ErrorMsg <> ''
-  then Assert.Pass('Network unavailable: ' + ErrorMsg)
-  else
-    begin
-      Assert.IsNotEmpty(Content);
-      Assert.AreEqual('', ErrorMsg);
-      Assert.IsTrue(Pos('Example Domain', Content) > 0, 'Should contain expected content');
-    end;
+  Assert.AreEqual('', ErrorMsg);
+  Assert.AreEqual(LOCAL_TEST_BODY, Content, 'DownloadAsString must return the exact body');
 end;
 
 procedure TTestDownload.TestDownloadAsString_InvalidUrl;
@@ -160,19 +326,21 @@ end;
 
 procedure TTestDownload.TestDownloadToFile_ValidUrl;
 var
+  Server: TLocalHttpServer;
   FilePath, ErrorMsg: string;
 begin
   FilePath:= TPath.Combine(FTestDir, 'download.html');
-  DownloadToFile('https://example.com/', FilePath, ErrorMsg);
+  Server:= TLocalHttpServer.Create(LOCAL_TEST_BODY);
+  try
+    DownloadToFile(Server.Url('/download.html'), FilePath, ErrorMsg);
+    Server.Stop;
+  finally
+    FreeAndNil(Server);
+  end;
 
-  if ErrorMsg <> ''
-  then Assert.Pass('Network unavailable: ' + ErrorMsg)
-  else
-    begin
-      Assert.AreEqual('', ErrorMsg);
-      Assert.IsTrue(FileExists(FilePath), 'File should have been created');
-      Assert.IsTrue(TFile.ReadAllText(FilePath).Length > 0, 'File should have content');
-    end;
+  Assert.AreEqual('', ErrorMsg);
+  Assert.IsTrue(FileExists(FilePath), 'File should have been created');
+  Assert.AreEqual(LOCAL_TEST_BODY, TFile.ReadAllText(FilePath, TEncoding.UTF8), 'The file must hold the exact body');
 end;
 
 procedure TTestDownload.TestDownloadToFile_InvalidUrl;
@@ -189,37 +357,46 @@ end;
 
 procedure TTestDownload.TestDownloadToStream_ValidUrl;
 var
+  Server: TLocalHttpServer;
   Stream: TMemoryStream;
   ErrorMsg: string;
+  Bytes: TBytes;
 begin
-  Stream:= DownloadToStream('https://example.com/', ErrorMsg);
+  Stream:= NIL;
+  Server:= TLocalHttpServer.Create(LOCAL_TEST_BODY);
   try
-    if ErrorMsg <> ''
-    then Assert.Pass('Network unavailable: ' + ErrorMsg)
-    else
-      begin
-        Assert.IsNotNull(Stream);
-        Assert.IsTrue(Stream.Size > 0, 'Stream should have content');
-      end;
+    try
+      Stream:= DownloadToStream(Server.Url, ErrorMsg);
+      Server.Stop;
+
+      Assert.AreEqual('', ErrorMsg);
+      Assert.IsNotNull(Stream, 'DownloadToStream must return a stream on success');
+      SetLength(Bytes, Stream.Size);
+      Stream.Position:= 0;
+      Stream.ReadBuffer(Bytes, Length(Bytes));
+      Assert.AreEqual(LOCAL_TEST_BODY, TEncoding.UTF8.GetString(Bytes), 'The stream must hold the exact body');
+    finally
+      FreeAndNil(Stream);
+    end;
   finally
-    FreeAndNil(Stream);
+    FreeAndNil(Server);
   end;
 end;
 
 procedure TTestDownload.TestDownloadAsString_SimpleOverload;
 var
+  Server: TLocalHttpServer;
   Content: string;
 begin
-  { Test the simple overload that ignores errors }
-  Content:= DownloadAsString('https://example.com/');
+  Server:= TLocalHttpServer.Create(LOCAL_TEST_BODY);
+  try
+    Content:= DownloadAsString(Server.Url);
+    Server.Stop;
+  finally
+    FreeAndNil(Server);
+  end;
 
-  if Content = ''
-  then Assert.Pass('Network unavailable')
-  else
-    begin
-      Assert.IsNotEmpty(Content);
-      Assert.IsTrue(Pos('Example Domain', Content) > 0, 'Should contain expected content');
-    end;
+  Assert.AreEqual(LOCAL_TEST_BODY, Content, 'The simple overload must return the exact body');
 end;
 
 procedure TTestDownload.TestDownloadAsString_SimpleOverload_InvalidUrl;
@@ -233,24 +410,26 @@ end;
 
 procedure TTestDownload.TestDownloadWithCustomOptions;
 var
+  Server: TLocalHttpServer;
   Content, ErrorMsg: string;
   Options: RHttpOptions;
 begin
-  { Test with custom options }
   Options.Reset;
   Options.ConnectionTimeout:= 30000;
   Options.ResponseTimeout:= 30000;
   Options.UserAgent:= 'TestAgent/1.0';
 
-  Content:= DownloadAsString('https://example.com/', ErrorMsg, nil, @Options);
+  Server:= TLocalHttpServer.Create(LOCAL_TEST_BODY);
+  try
+    Content:= DownloadAsString(Server.Url, ErrorMsg, nil, @Options);
+    Server.Stop;
 
-  if ErrorMsg <> ''
-  then Assert.Pass('Network unavailable: ' + ErrorMsg)
-  else
-    begin
-      Assert.IsNotEmpty(Content);
-      Assert.AreEqual('', ErrorMsg);
-    end;
+    Assert.AreEqual('', ErrorMsg);
+    Assert.AreEqual(LOCAL_TEST_BODY, Content);
+    Assert.IsTrue(Pos(#13#10'User-Agent: TestAgent/1.0'#13#10, Server.Requests) > 0, 'The request must carry the custom user agent. Request: ' + Server.Requests);
+  finally
+    FreeAndNil(Server);
+  end;
 end;
 
 

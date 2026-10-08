@@ -4,8 +4,7 @@ unit Test.LightCore.Win.Sound;
    Unit tests for LightCore.Win.Sound.pas
    Tests sound utility functions with focus on parameter validation.
 
-   Note: Many sound functions produce actual audio output, so tests focus on
-   edge cases and parameter validation rather than verifying sound quality.
+   Only tests that make NO sound are kept: a test that would play a sound does not belong in this suite.
 
    The whole fixture is compiled only when MSWINDOWS is defined, because LightCore.Win.Sound is Windows-only.
    The tests of the other sound routines are in Test.LightCore.Sound.pas.
@@ -27,9 +26,6 @@ type
     { PlayWinSound Tests }
     [Test]
     procedure TestPlayWinSound_EmptyString_NoException;
-
-    [Test]
-    procedure TestPlayWinSound_ValidName_NoException;
   end;
 {$ENDIF}
 
@@ -44,26 +40,12 @@ uses
 
 procedure TTestWinSound.TestPlayWinSound_EmptyString_NoException;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       PlayWinSound('');
     end,
-    Exception,
     'PlayWinSound with empty string should not raise exception');
-end;
-
-
-procedure TTestWinSound.TestPlayWinSound_ValidName_NoException;
-begin
-  { Using a system sound that should exist on all Windows installations }
-  Assert.WillNotRaise(
-    procedure
-    begin
-      PlayWinSound('SystemAsterisk');
-    end,
-    Exception,
-    'PlayWinSound with valid system sound name should not raise exception');
 end;
 
 

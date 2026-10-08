@@ -218,12 +218,11 @@ begin
     { Wrap in a watchdog: any execution longer than ~2 seconds means we're looping. }
     Success:= TRUE;
     Width:= 999; Height:= 999;
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         Success:= GetJpgSize(Stream, Width, Height);
       end,
-      Exception,
       'GetJpgSize should not raise on malformed segment length');
 
     Assert.IsFalse(Success, 'GetJpgSize must return False for malformed segment length');

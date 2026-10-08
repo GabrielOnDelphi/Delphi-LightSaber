@@ -299,9 +299,11 @@ var
   Input, Output: string;
 begin
   Input:= 'Line1' + CRLF + CRLF + CRLF + CRLF + 'Line2';
-  Output:= UnwrapText(Input, '', True, False);
-  { Multiple line breaks should be reduced }
-  Assert.IsFalse(Pos(CRLF + CRLF + CRLF, Output) > 0, 'Should reduce multiple line breaks');
+  { '#enter' makes a line break a separator, so a break that follows another break is kept.
+    Without RemoveExtraEnters the result would be 'Line1' + 3 x CRLF + 'Line2'. The 4 breaks
+    collapse to 2, the first is joined (it follows '1'), the second is kept. }
+  Output:= UnwrapText(Input, '#enter', True, False);
+  Assert.AreEqual('Line1' + CRLF + 'Line2', Output, 'RemoveExtraEnters must collapse the empty lines');
 end;
 
 

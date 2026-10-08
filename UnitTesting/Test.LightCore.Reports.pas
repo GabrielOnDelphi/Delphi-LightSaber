@@ -49,7 +49,7 @@ type
     procedure TestGenerateAppRep_ContainsLastUsedFolder;
 
     [Test]
-    procedure TestGenerateAppRep_ReturnsNonEmpty;
+    procedure TestGenerateAppRep_HoldsAppNameValue;
 
     { GenerateCoreReport Tests }
     [Test]
@@ -62,7 +62,7 @@ type
     procedure TestGenerateCoreReport_ContainsCompilerHeader;
 
     [Test]
-    procedure TestGenerateCoreReport_ReturnsNonEmpty;
+    procedure TestGenerateCoreReport_HoldsAppAndPlatformReports;
 
     [Test]
     procedure TestGenerateCoreReport_MultipleLines;
@@ -78,7 +78,7 @@ type
 implementation
 
 uses
-  LightCore;
+  LightCore, LightCore.Platform;
 
 
 procedure TTestLightCoreReports.Setup;
@@ -160,9 +160,12 @@ begin
 end;
 
 
-procedure TTestLightCoreReports.TestGenerateAppRep_ReturnsNonEmpty;
+procedure TTestLightCoreReports.TestGenerateAppRep_HoldsAppNameValue;
+var
+  Report: string;
 begin
-  Assert.IsNotEmpty(GenerateAppRep);
+  Report:= GenerateAppRep;
+  Assert.IsTrue(Pos('  AppName: ' + Tab + Tab + TAppDataCore.AppName + CRLF, Report) > 0, 'The AppName line must carry TAppDataCore.AppName. Report: ' + Report);
 end;
 
 
@@ -195,9 +198,13 @@ begin
 end;
 
 
-procedure TTestLightCoreReports.TestGenerateCoreReport_ReturnsNonEmpty;
+procedure TTestLightCoreReports.TestGenerateCoreReport_HoldsAppAndPlatformReports;
+var
+  Report: string;
 begin
-  Assert.IsNotEmpty(GenerateCoreReport);
+  Report:= GenerateCoreReport;
+  Assert.AreEqual(1, Pos(GenerateAppRep + CRLF + CRLF, Report), 'The core report must open with the whole app report');
+  Assert.IsTrue(Pos(GeneratePlatformRep, Report) > 0, 'The core report must hold the whole platform report');
 end;
 
 

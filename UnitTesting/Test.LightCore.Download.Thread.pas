@@ -20,6 +20,11 @@ uses
 type
   [TestFixture]
   TTestDownloadThread = class
+  private
+    FDoneCount: Integer;
+    FDoneSender: TObject;
+    FDoneThreadID: TThreadID;
+    procedure DownloadDone(Sender: TObject);
   public
     { Constructor/Destructor Tests }
     [Test]
@@ -61,21 +66,9 @@ type
     [Test]
     procedure TestHttpRetCode_InitiallyEmpty;
 
-    [Test]
-    procedure TestUserAgent_CanBeSet;
-
-    [Test]
-    procedure TestHeader_CanBeSet;
-
-    [Test]
-    procedure TestReferer_CanBeSet;
-
-    [Test]
-    procedure TestSSL_CanBeSet;
-
     { Event Tests }
     [Test]
-    procedure TestOnDownloadDone_CanBeAssigned;
+    procedure TestOnDownloadDone_FiresInMainThread;
   end;
 
 implementation
@@ -132,7 +125,7 @@ end;
 procedure TTestDownloadThread.TestDestroy_NoMemoryLeak;
 begin
   // Test that create/destroy cycle works without memory leaks
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     var
       Downloader: TWinInetObj;
@@ -142,7 +135,6 @@ begin
       Downloader.Header:= 'Test Header';
       FreeAndNil(Downloader);
     end,
-    Exception,
     'Create/Destroy cycle should work without errors');
 end;
 
@@ -212,12 +204,11 @@ var
 begin
   Downloader:= TWinInetObj.Create;
   TRY
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         Downloader.URL:= 'http://example.com/file.txt';
       end,
-      Exception,
       'Should accept valid HTTP URL');
 
     Assert.AreEqual('http://example.com/file.txt', Downloader.URL, 'URL should be set');
@@ -233,12 +224,11 @@ var
 begin
   Downloader:= TWinInetObj.Create;
   TRY
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         Downloader.URL:= 'https://example.com/file.txt';
       end,
-      Exception,
       'Should accept valid HTTPS URL');
 
     Assert.AreEqual('https://example.com/file.txt', Downloader.URL, 'URL should be set');
@@ -298,82 +288,48 @@ begin
 end;
 
 
-procedure TTestDownloadThread.TestUserAgent_CanBeSet;
-var
-  Downloader: TWinInetObj;
-begin
-  Downloader:= TWinInetObj.Create;
-  TRY
-    Downloader.UserAgent:= 'Mozilla/5.0';
-    Assert.AreEqual('Mozilla/5.0', Downloader.UserAgent, 'UserAgent should be set');
-  FINALLY
-    FreeAndNil(Downloader);
-  END;
-end;
-
-
-procedure TTestDownloadThread.TestHeader_CanBeSet;
-var
-  Downloader: TWinInetObj;
-begin
-  Downloader:= TWinInetObj.Create;
-  TRY
-    Downloader.Header:= 'Accept-Charset: utf-8';
-    Assert.AreEqual('Accept-Charset: utf-8', Downloader.Header, 'Header should be set');
-  FINALLY
-    FreeAndNil(Downloader);
-  END;
-end;
-
-
-procedure TTestDownloadThread.TestReferer_CanBeSet;
-var
-  Downloader: TWinInetObj;
-begin
-  Downloader:= TWinInetObj.Create;
-  TRY
-    Downloader.Referer:= 'https://google.com';
-    Assert.AreEqual('https://google.com', Downloader.Referer, 'Referer should be set');
-  FINALLY
-    FreeAndNil(Downloader);
-  END;
-end;
-
-
-procedure TTestDownloadThread.TestSSL_CanBeSet;
-var
-  Downloader: TWinInetObj;
-begin
-  Downloader:= TWinInetObj.Create;
-  TRY
-    Downloader.SSL:= True;
-    Assert.IsTrue(Downloader.SSL, 'SSL should be True');
-  FINALLY
-    FreeAndNil(Downloader);
-  END;
-end;
-
-
 { Event Tests }
 
-procedure TTestDownloadThread.TestOnDownloadDone_CanBeAssigned;
+procedure TTestDownloadThread.DownloadDone(Sender: TObject);
+begin
+  Inc(FDoneCount);
+  FDoneSender:= Sender;
+  FDoneThreadID:= TThread.CurrentThread.ThreadID;
+end;
+
+
+{ Needs no network: port 1 on the loopback address refuses the connection at once, so the download fails fast,
+  and OnDownloadDone must fire anyway - once, with the downloader as Sender, in the main thread (Synchronize). }
+procedure TTestDownloadThread.TestOnDownloadDone_FiresInMainThread;
 var
   Downloader: TWinInetObj;
+  Waited: Integer;
 begin
+  FDoneCount:= 0;
+  FDoneSender:= NIL;
+  FDoneThreadID:= 0;
+
   Downloader:= TWinInetObj.Create;
   TRY
-    // Initially should be nil
-    Assert.IsNull(TMethod(Downloader.OnDownloadDone).Code, 'OnDownloadDone should be NIL initially');
+    Downloader.URL:= 'http://127.0.0.1:1/';
+    Downloader.OnDownloadDone:= DownloadDone;
+    Downloader.Start;
 
-    // We can't easily test assignment without a real method reference
-    // Just verify the property is accessible
-    Assert.WillNotRaise(
-      procedure
+    { Synchronize waits for the main thread, so the main thread must serve it while it waits }
+    Waited:= 0;
+    while NOT Downloader.Finished AND (Waited < 30000) DO
       begin
-        Downloader.OnDownloadDone:= NIL;
-      end,
-      Exception,
-      'Should be able to set OnDownloadDone to NIL');
+        CheckSynchronize(10);
+        Inc(Waited, 10);
+      end;
+    Assert.IsTrue(Downloader.Finished, 'Precondition: the download thread ended within 30 s');
+    Downloader.WaitFor;
+
+    Assert.AreEqual(1, FDoneCount, 'OnDownloadDone must fire exactly once');
+    Assert.AreSame(Downloader, FDoneSender, 'Sender must be the downloader');
+    Assert.IsTrue(FDoneThreadID = MainThreadID, 'OnDownloadDone must run in the main thread');
+    Assert.IsFalse(Downloader.DownloadSuccess, 'Precondition: the refused connection gives no data');
+    Assert.AreNotEqual('', Downloader.HttpRetCode, 'The failed download must leave an error text');
   FINALLY
     FreeAndNil(Downloader);
   END;

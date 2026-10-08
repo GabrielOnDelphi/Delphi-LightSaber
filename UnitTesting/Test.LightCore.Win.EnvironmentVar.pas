@@ -59,7 +59,7 @@ type
     procedure Test_GetEnvironmentVars_ExistingUserVar;
 
     [Test]
-    procedure Test_GetEnvironmentVars_Path_User;
+    procedure Test_GetEnvironmentVars_ExpandsReference;
 
     { SetEnvironmentVars tests }
     [Test]
@@ -203,15 +203,21 @@ begin
 end;
 
 
-procedure TTestWinEnvironmentVar.Test_GetEnvironmentVars_Path_User;
+{ A user variable stored as REG_EXPAND_SZ, like the user's Path, holds references such as %SystemRoot%. The value is written straight into the registry (not into the process environment), so the test also proves GetEnvironmentVars reads the registry. TearDown deletes it. }
+procedure TTestWinEnvironmentVar.Test_GetEnvironmentVars_ExpandsReference;
 VAR
-  Value: string;
+  Reg: TRegistry;
 begin
-  { PATH may exist in user environment (though often empty or not present) }
-  { This test verifies the function doesn't crash on valid variable names }
-  Value:= GetEnvironmentVars('Path', True);
-  { No assertion on value since PATH might not exist in user env }
-  Assert.Pass('GetEnvironmentVars did not raise exception');
+  Reg:= TRegistry.Create(KEY_WRITE);
+  TRY
+    Reg.RootKey:= HKEY_CURRENT_USER;
+    Assert.IsTrue(Reg.OpenKey('Environment', False), 'Could not open HKCU\Environment');
+    Reg.WriteExpandString(TEST_VAR_NAME, '%SystemRoot%\LightSaberTest');
+  FINALLY
+    FreeAndNil(Reg);
+  END;
+
+  Assert.AreEqual(System.SysUtils.GetEnvironmentVariable('SystemRoot') +'\LightSaberTest', GetEnvironmentVars(TEST_VAR_NAME, True), 'The %SystemRoot% reference must be expanded');
 end;
 
 

@@ -94,12 +94,11 @@ begin
   Assert.IsNotNull(Application.MainForm, 'Precondition: a main form must exist for this test to mean anything');
   LightCore.INIFileQuick.WriteString(IniKeySkin, '');
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       FormSkinsRes.LoadLastStyle('');
     end,
-    Exception,
     'FormSkinsRes must have NO before-CreateMainForm guard: QuickSilver JpgCompressor calls it from FormPostInitialize, where the main form already exists');
 end;
 

@@ -30,21 +30,6 @@ type
     [TearDown]
     procedure TearDown;
 
-    { Basic Tests }
-    [Test]
-    procedure TestAppDataType;
-
-    { Pending AutoState Tests }
-    [Test]
-    procedure TestPendingAutoState_Record;
-
-    { AutoState Enum Tests }
-    [Test]
-    procedure TestAutoState_Values;
-
-    [Test]
-    procedure TestAutoState_Ordering;
-
     { Version Tests }
     [Test]
     procedure TestGetAppVersion;
@@ -53,36 +38,17 @@ type
     [Test]
     procedure TestMinimize_NoMainForm;
 
-    { StartMinim Flag Tests }
-    [Test]
-    procedure TestStartMinim_SetGet;
-
-    { Unattended Tests }
-    [Test]
-    procedure TestUnattended_SetGet;
-
     { Log Form Tests (without actual form creation) }
     [Test]
     procedure TestRamLogExists;
   end;
 
-  { Tests for TPendingAutoState record }
-  [TestFixture]
-  TTestPendingAutoState = class
-  public
-    [Test]
-    procedure TestRecord_ClassName;
-
-    [Test]
-    procedure TestRecord_AutoState;
-
-    [Test]
-    procedure TestRecord_QueuedBeforeRun;
-  end;
-
 implementation
 
 uses
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  {$ENDIF}
   FMX.Forms,
   LightFmx.Common.AppData;
 
@@ -100,62 +66,45 @@ begin
 end;
 
 
-{ Basic Tests }
-
-procedure TTestFmxAppData.TestAppDataType;
-begin
-  Assert.IsNotNull(AppData, 'AppData should be created');
-  Assert.InheritsFrom(AppData.ClassType, TAppDataCore, 'AppData should inherit from TAppDataCore');
-end;
-
-
-{ Pending AutoState Tests }
-
-procedure TTestFmxAppData.TestPendingAutoState_Record;
-var
-  Pending: TPendingAutoState;
-begin
-  Pending.ClassName:= 'TTestForm';
-  Pending.AutoState:= asFull;
-  Pending.QueuedBeforeRun:= True;
-
-  Assert.AreEqual('TTestForm', Pending.ClassName);
-  Assert.AreEqual(asFull, Pending.AutoState);
-  Assert.IsTrue(Pending.QueuedBeforeRun);
-end;
-
-
-{ AutoState Enum Tests }
-
-procedure TTestFmxAppData.TestAutoState_Values;
-begin
-  // Verify enum values exist
-  Assert.AreEqual(0, Ord(asUndefined), 'asUndefined should be 0');
-  Assert.AreEqual(1, Ord(asNone), 'asNone should be 1');
-  Assert.AreEqual(2, Ord(asPosOnly), 'asPosOnly should be 2');
-  Assert.AreEqual(3, Ord(asFull), 'asFull should be 3');
-end;
-
-procedure TTestFmxAppData.TestAutoState_Ordering;
-begin
-  // Verify ordering for comparison operations used in code
-  Assert.IsTrue(asNone < asPosOnly, 'asNone should be less than asPosOnly');
-  Assert.IsTrue(asPosOnly < asFull, 'asPosOnly should be less than asFull');
-  Assert.IsTrue(asNone > asUndefined, 'asNone should be greater than asUndefined');
-end;
-
-
 { Version Tests }
 
+{ This unit may be linked by more than one test EXE, so on Windows the expected version is read from the running EXE
+  itself, straight through GetFileVersionInfo/VerQueryValue. FMX's IFMXApplicationService.AppVersion returns only
+  Major.Minor on Windows (TPlatformWin.GetVersionString in FMX.Platform.Win.pas).
+  Tests_LightFmx.dproj gives its EXE the version 1.2.3.4, linked by the $R *.res line in Tests_LightFmx.dpr; that EXE must always take the real leg. }
 procedure TTestFmxAppData.TestGetAppVersion;
-var
-  Version: string;
+{$IFDEF MSWINDOWS}
+CONST
+  VersionedTestExe = 'Tests_LightFmx.exe';
+VAR
+  Size, Dummy, InfoLen: DWORD;
+  Buffer: TBytes;
+  Info: PVSFixedFileInfo;
+  Expected: string;
 begin
-  Version:= AppData.GetAppVersion;   // The real claim: must not raise, even when the exe has no version resource
-  if Version = ''
-  then Assert.Pass('No version resource in the test exe — GetAppVersion returned empty without raising')
-  else Assert.IsTrue(Pos('.', Version) > 0, 'Version should be dotted (n.n.n.n) but was: ' + Version);
+  Expected:= '';
+  Size:= GetFileVersionInfoSize(PChar(ParamStr(0)), Dummy);
+  if Size > 0 then
+    begin
+      SetLength(Buffer, Size);
+      if GetFileVersionInfo(PChar(ParamStr(0)), 0, Size, Buffer)
+      AND VerQueryValue(Buffer, '\', Pointer(Info), InfoLen)
+      AND (InfoLen >= SizeOf(TVSFixedFileInfo))
+      then Expected:= IntToStr(HiWord(Info.dwFileVersionMS))+ '.'+ IntToStr(LoWord(Info.dwFileVersionMS));
+    end;
+
+  if Expected = '' then
+    if SameText(ExtractFileName(ParamStr(0)), VersionedTestExe)
+    then Assert.Fail(VersionedTestExe + ' must carry a version resource ($R *.res in its .dpr, VerInfo_* in its .dproj)')
+    else Assert.Pass('No version resource in ' + ExtractFileName(ParamStr(0)));
+
+  Assert.AreEqual(Expected, AppData.GetAppVersion, 'GetAppVersion must return the Major.Minor of the running EXE');
 end;
+{$ELSE}
+begin
+  Assert.IsNotEmpty(AppData.GetAppVersion, 'GetAppVersion must return the version of the app package');
+end;
+{$ENDIF}
 
 
 { Minimizing Tests }
@@ -165,47 +114,15 @@ begin
   // When MainForm is nil, Minimize should exit gracefully without exception
   if Application.MainForm = NIL then
   begin
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         AppData.Minimize;
       end,
-      Exception,
       'Minimize should not raise when MainForm is nil');
   end
   else
     Assert.Pass('MainForm exists - skipping nil test');
-end;
-
-
-{ StartMinim Flag Tests }
-
-procedure TTestFmxAppData.TestStartMinim_SetGet;
-var
-  OldValue: Boolean;
-begin
-  OldValue:= AppData.StartMinim;
-  try
-    AppData.StartMinim:= True;
-    Assert.IsTrue(AppData.StartMinim);
-
-    AppData.StartMinim:= False;
-    Assert.IsFalse(AppData.StartMinim);
-  finally
-    AppData.StartMinim:= OldValue;
-  end;
-end;
-
-
-{ Unattended Tests }
-
-procedure TTestFmxAppData.TestUnattended_SetGet;
-begin
-  TAppDataCore.Unattended:= True;
-  Assert.IsTrue(TAppDataCore.Unattended);
-
-  TAppDataCore.Unattended:= False;
-  Assert.IsFalse(TAppDataCore.Unattended);
 end;
 
 
@@ -217,50 +134,7 @@ begin
 end;
 
 
-{ TTestPendingAutoState }
-
-procedure TTestPendingAutoState.TestRecord_ClassName;
-var
-  Pending: TPendingAutoState;
-begin
-  Pending.ClassName:= 'TMyCustomForm';
-  Assert.AreEqual('TMyCustomForm', Pending.ClassName);
-
-  Pending.ClassName:= '';
-  Assert.AreEqual('', Pending.ClassName);
-end;
-
-procedure TTestPendingAutoState.TestRecord_AutoState;
-var
-  Pending: TPendingAutoState;
-begin
-  Pending.AutoState:= asUndefined;
-  Assert.AreEqual(asUndefined, Pending.AutoState);
-
-  Pending.AutoState:= asNone;
-  Assert.AreEqual(asNone, Pending.AutoState);
-
-  Pending.AutoState:= asPosOnly;
-  Assert.AreEqual(asPosOnly, Pending.AutoState);
-
-  Pending.AutoState:= asFull;
-  Assert.AreEqual(asFull, Pending.AutoState);
-end;
-
-procedure TTestPendingAutoState.TestRecord_QueuedBeforeRun;
-var
-  Pending: TPendingAutoState;
-begin
-  Pending.QueuedBeforeRun:= True;
-  Assert.IsTrue(Pending.QueuedBeforeRun);
-
-  Pending.QueuedBeforeRun:= False;
-  Assert.IsFalse(Pending.QueuedBeforeRun);
-end;
-
-
 initialization
   TDUnitX.RegisterTestFixture(TTestFmxAppData);
-  TDUnitX.RegisterTestFixture(TTestPendingAutoState);
 
 end.

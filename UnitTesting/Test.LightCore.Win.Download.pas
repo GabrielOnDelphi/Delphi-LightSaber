@@ -1,11 +1,14 @@
 unit Test.LightCore.Win.Download;
 
 {=============================================================================================================
+   2026.10.07
    Unit tests for LightCore.Win.Download.pas
    Tests HTTP download functionality using WinINet API.
 
-   Note: Network tests require internet connectivity. Tests are designed to pass gracefully
-   when network is unavailable.
+   The HTTP tests talk to TLocalHttpServer (declared in Test.LightCore.Download), a small HTTP server on
+   127.0.0.1 that the test starts itself, so they check the exact content and the request without the Internet.
+   Only TestDownloadBytes_HttpsUrl needs the Internet (TLocalHttpServer has no TLS). Its skip leg runs only
+   when an independent TCP probe also fails to reach the host.
 =============================================================================================================}
 
 interface
@@ -31,13 +34,6 @@ type
 
     [TearDown]
     procedure TearDown;
-
-    { Constants Tests }
-    [Test]
-    procedure TestConstants_UserAgentApp_NotEmpty;
-
-    [Test]
-    procedure TestConstants_UserAgentMoz_NotEmpty;
 
     { DownloadAsString Tests }
     [Test]
@@ -91,6 +87,9 @@ type
 implementation
 {$IFDEF MSWINDOWS}
 
+uses
+  Test.LightCore.Download;
+
 
 procedure TTestDownloadWinInet.Setup;
 begin
@@ -112,38 +111,22 @@ begin
 end;
 
 
-{ Constants Tests }
-
-procedure TTestDownloadWinInet.TestConstants_UserAgentApp_NotEmpty;
-begin
-  Assert.IsNotEmpty(USER_AGENT_APP, 'USER_AGENT_APP should not be empty');
-  Assert.IsTrue(Pos('DelphiApp', USER_AGENT_APP) > 0, 'USER_AGENT_APP should contain application identifier');
-end;
-
-
-procedure TTestDownloadWinInet.TestConstants_UserAgentMoz_NotEmpty;
-begin
-  Assert.IsNotEmpty(USER_AGENT_MOZ, 'USER_AGENT_MOZ should not be empty');
-  Assert.IsTrue(Pos('Mozilla', USER_AGENT_MOZ) > 0, 'USER_AGENT_MOZ should contain Mozilla identifier');
-end;
-
-
 { DownloadAsString Tests }
 
 procedure TTestDownloadWinInet.TestDownloadAsString_ValidUrl;
 var
+  Server: TLocalHttpServer;
   Content: string;
 begin
-  { Test with example.com - a simple, reliable test URL }
-  Content:= DownloadAsString('http://example.com/');
+  Server:= TLocalHttpServer.Create(LOCAL_TEST_BODY);
+  try
+    Content:= DownloadAsString(Server.Url('/page.html'));
+    Server.Stop;
+  finally
+    FreeAndNil(Server);
+  end;
 
-  if Content = ''
-  then Assert.Pass('Network unavailable or request failed')
-  else
-    begin
-      Assert.IsNotEmpty(Content);
-      Assert.IsTrue(Pos('Example Domain', Content) > 0, 'Should contain expected content from example.com');
-    end;
+  Assert.AreEqual(LOCAL_TEST_BODY, Content, 'DownloadAsString must return the exact body');
 end;
 
 
@@ -179,18 +162,21 @@ end;
 
 procedure TTestDownloadWinInet.TestDownloadBytes_ValidUrl_ReturnsSuccess;
 var
+  Server: TLocalHttpServer;
   Data: TBytes;
   ErrorCode: Cardinal;
 begin
-  ErrorCode:= DownloadBytes('http://example.com/', '', Data);
+  Server:= TLocalHttpServer.Create(LOCAL_TEST_BODY);
+  try
+    ErrorCode:= DownloadBytes(Server.Url, '', Data);
+    Server.Stop;
 
-  if ErrorCode <> ERROR_SUCCESS
-  then Assert.Pass('Network unavailable, error code: ' + IntToStr(ErrorCode))
-  else
-    begin
-      Assert.AreEqual(Cardinal(ERROR_SUCCESS), ErrorCode, 'Should return ERROR_SUCCESS');
-      Assert.IsTrue(Length(Data) > 0, 'Should have downloaded some data');
-    end;
+    Assert.AreEqual(Cardinal(ERROR_SUCCESS), ErrorCode, 'Should return ERROR_SUCCESS');
+    Assert.AreEqual(LOCAL_TEST_BODY, TEncoding.UTF8.GetString(Data), 'DownloadBytes must return the exact body');
+    Assert.IsTrue(Pos('GET / HTTP/1.1', Server.Requests) = 1, 'A download without PostData must send a GET for "/". Request: ' + Server.Requests);
+  finally
+    FreeAndNil(Server);
+  end;
 end;
 
 
@@ -220,19 +206,21 @@ end;
 
 procedure TTestDownloadWinInet.TestDownloadBytes_WithReferer;
 var
+  Server: TLocalHttpServer;
   Data: TBytes;
   ErrorCode: Cardinal;
 begin
-  { Test that referer parameter is accepted and doesn't cause errors }
-  ErrorCode:= DownloadBytes('http://example.com/', 'http://google.com/', Data);
+  Server:= TLocalHttpServer.Create(LOCAL_TEST_BODY);
+  try
+    ErrorCode:= DownloadBytes(Server.Url, 'http://google.com/', Data);
+    Server.Stop;
 
-  if ErrorCode <> ERROR_SUCCESS
-  then Assert.Pass('Network unavailable, error code: ' + IntToStr(ErrorCode))
-  else
-    begin
-      Assert.AreEqual(Cardinal(ERROR_SUCCESS), ErrorCode);
-      Assert.IsTrue(Length(Data) > 0, 'Should have downloaded data with referer');
-    end;
+    Assert.AreEqual(Cardinal(ERROR_SUCCESS), ErrorCode);
+    Assert.AreEqual(LOCAL_TEST_BODY, TEncoding.UTF8.GetString(Data));
+    Assert.IsTrue(Pos(#13#10'Referer: http://google.com/'#13#10, Server.Requests) > 0, 'The request must carry the referer. Request: ' + Server.Requests);
+  finally
+    FreeAndNil(Server);
+  end;
 end;
 
 
@@ -240,20 +228,22 @@ end;
 
 procedure TTestDownloadWinInet.TestDownloadToFile_ValidUrl_CreatesFile;
 var
+  Server: TLocalHttpServer;
   FilePath: string;
   ErrorCode: Cardinal;
 begin
   FilePath:= TPath.Combine(FTestDir, 'download.html');
-  ErrorCode:= DownloadToFile('http://example.com/', '', FilePath);
+  Server:= TLocalHttpServer.Create(LOCAL_TEST_BODY);
+  try
+    ErrorCode:= DownloadToFile(Server.Url('/download.html'), '', FilePath);
+    Server.Stop;
+  finally
+    FreeAndNil(Server);
+  end;
 
-  if ErrorCode <> ERROR_SUCCESS
-  then Assert.Pass('Network unavailable, error code: ' + IntToStr(ErrorCode))
-  else
-    begin
-      Assert.AreEqual(Cardinal(ERROR_SUCCESS), ErrorCode);
-      Assert.IsTrue(FileExists(FilePath), 'File should have been created');
-      Assert.IsTrue(TFile.ReadAllText(FilePath).Length > 0, 'File should have content');
-    end;
+  Assert.AreEqual(Cardinal(ERROR_SUCCESS), ErrorCode);
+  Assert.IsTrue(FileExists(FilePath), 'File should have been created');
+  Assert.AreEqual(LOCAL_TEST_BODY, TFile.ReadAllText(FilePath, TEncoding.UTF8), 'The file must hold the exact body');
 end;
 
 
@@ -290,21 +280,25 @@ end;
 
 { SSL Tests }
 
+{ TLocalHttpServer has no TLS, so this one test still needs the Internet. When the download fails, an
+  independent TCP probe (System.Net.Socket, not WinINet) decides: the skip runs only if the probe cannot reach
+  example.com:443 either. If the probe connects and the download fails, the download code is broken. }
 procedure TTestDownloadWinInet.TestDownloadBytes_HttpsUrl;
 var
   Data: TBytes;
   ErrorCode: Cardinal;
+  ProbeError: string;
 begin
-  { Test HTTPS with SSL flag }
   ErrorCode:= DownloadBytes('https://example.com/', '', Data, '', TRUE);
 
-  if ErrorCode <> ERROR_SUCCESS
-  then Assert.Pass('Network unavailable or SSL error, code: ' + IntToStr(ErrorCode))
-  else
+  if (ErrorCode <> ERROR_SUCCESS) AND NOT CanConnect('example.com', 443, ProbeError) then
     begin
-      Assert.AreEqual(Cardinal(ERROR_SUCCESS), ErrorCode);
-      Assert.IsTrue(Length(Data) > 0, 'Should download data over HTTPS');
+      Assert.AreEqual(0, Length(Data), 'A failed download must return no data');
+      Assert.Pass('No network for this EXE. DownloadBytes error ' + IntToStr(ErrorCode) + '; probe: ' + ProbeError);
     end;
+
+  Assert.AreEqual(Cardinal(ERROR_SUCCESS), ErrorCode, 'example.com:443 is reachable, so the HTTPS download must succeed');
+  Assert.IsTrue(Pos('Example Domain', TEncoding.UTF8.GetString(Data)) > 0, 'Should download the example.com page over HTTPS');
 end;
 
 
@@ -312,37 +306,41 @@ end;
 
 procedure TTestDownloadWinInet.TestDownloadBytes_UrlWithQueryParams;
 var
+  Server: TLocalHttpServer;
   Data: TBytes;
   ErrorCode: Cardinal;
 begin
-  { Test URL with query parameters }
-  ErrorCode:= DownloadBytes('http://example.com/?param=value&other=123', '', Data);
+  Server:= TLocalHttpServer.Create(LOCAL_TEST_BODY);
+  try
+    ErrorCode:= DownloadBytes(Server.Url('/img.php?param=value&other=123'), '', Data);
+    Server.Stop;
 
-  if ErrorCode <> ERROR_SUCCESS
-  then Assert.Pass('Network unavailable, error code: ' + IntToStr(ErrorCode))
-  else
-    begin
-      Assert.AreEqual(Cardinal(ERROR_SUCCESS), ErrorCode);
-      Assert.IsTrue(Length(Data) > 0, 'Should download data with query params');
-    end;
+    Assert.AreEqual(Cardinal(ERROR_SUCCESS), ErrorCode);
+    Assert.AreEqual(LOCAL_TEST_BODY, TEncoding.UTF8.GetString(Data));
+    Assert.IsTrue(Pos('GET /img.php?param=value&other=123 HTTP/1.1', Server.Requests) = 1, 'The request must keep the query parameters. Request: ' + Server.Requests);
+  finally
+    FreeAndNil(Server);
+  end;
 end;
 
 
 procedure TTestDownloadWinInet.TestDownloadBytes_UrlWithPort;
 var
+  Server: TLocalHttpServer;
   Data: TBytes;
   ErrorCode: Cardinal;
 begin
-  { Test URL with explicit port }
-  ErrorCode:= DownloadBytes('http://example.com:80/', '', Data);
+  { Server.Url always carries an explicit port that is neither 80 nor 443, so the download only reaches the server when DownloadBytes uses the port from the URL }
+  Server:= TLocalHttpServer.Create(LOCAL_TEST_BODY);
+  try
+    ErrorCode:= DownloadBytes(Server.Url, '', Data);
+    Server.Stop;
+  finally
+    FreeAndNil(Server);
+  end;
 
-  if ErrorCode <> ERROR_SUCCESS
-  then Assert.Pass('Network unavailable, error code: ' + IntToStr(ErrorCode))
-  else
-    begin
-      Assert.AreEqual(Cardinal(ERROR_SUCCESS), ErrorCode);
-      Assert.IsTrue(Length(Data) > 0, 'Should download data with explicit port');
-    end;
+  Assert.AreEqual(Cardinal(ERROR_SUCCESS), ErrorCode);
+  Assert.AreEqual(LOCAL_TEST_BODY, TEncoding.UTF8.GetString(Data), 'Should download data from the explicit port');
 end;
 
 

@@ -26,7 +26,10 @@ type
   TTestFormTranslSelector = class
   private
     FTestForm: TObject;
+    FCreatedLangFolder: Boolean;     { TRUE if Setup had to create the Lang folder }
+    FCreatedFiles: TStringList;      { The language files Setup wrote; TearDown deletes exactly these }
     procedure CleanupForm;
+    procedure WriteLangFile(CONST LangName, Author: string);
   public
     [Setup]
     procedure Setup;
@@ -36,13 +39,7 @@ type
 
     { Form Creation Tests }
     [Test]
-    procedure TestFormClassExists;
-
-    [Test]
     procedure TestFormCreate_Succeeds;
-
-    [Test]
-    procedure TestFormCreate_WithNilOwner;
 
     { Component Tests }
     [Test]
@@ -118,10 +115,7 @@ type
 
     { Utility Function Tests }
     [Test]
-    procedure TestGetSelectedFileName_EmptyWhenNoSelection;
-
-    [Test]
-    procedure TestGetSelectedFilePath_EmptyWhenNoSelection;
+    procedure TestApplyLanguage_ReadsSelectedFilePath;
 
     [Test]
     procedure TestIsEnglish_TrueWhenNoSelection;
@@ -138,10 +132,7 @@ type
 
     { Selection Tests }
     [Test]
-    procedure TestGetSelectedFileName_ReturnsIniExtension;
-
-    [Test]
-    procedure TestListBox_SelectionWorks;
+    procedure TestApplyLanguage_AddsIniExtension;
   end;
 
 implementation
@@ -149,21 +140,63 @@ implementation
 uses
   LightCore.AppData,
   LightCore.IO,
+  LightCore.TextFile,
   LightVcl.Visual.AppData,
   LightVcl.Common.Translate,
   FormTranslSelector;
 
 
+CONST
+  TestLangA = 'ZzTestLangA';
+  TestLangB = 'ZzTestLangB';
+
+
+{ Writes <Lang folder>\<LangName>.ini holding only the translator credits. An existing file is left alone. }
+procedure TTestFormTranslSelector.WriteLangFile(CONST LangName, Author: string);
+VAR
+  FileName: string;
+begin
+  FileName:= AppData.Translator.GetLangFolder + LangName + '.ini';
+  if FileExists(FileName) then EXIT;
+
+  StringToFile(FileName, '[Authors]' + sLineBreak + 'Name=' + Author + sLineBreak);
+  FCreatedFiles.Add(FileName);
+end;
+
+
+{ The form lists the .ini files of the Lang folder. That folder is usually missing on a test PC, so every
+  test gets two language files of its own, and TearDown removes them again. }
 procedure TTestFormTranslSelector.Setup;
+VAR
+  LangFolder: string;
 begin
   Assert.IsNotNull(AppData, 'AppData must be initialized before running tests');
+  Assert.IsNotNull(AppData.Translator, 'AppData.Translator must be initialized before running tests');
   FTestForm:= NIL;
+  FCreatedFiles:= TStringList.Create;
+
+  LangFolder:= AppData.Translator.GetLangFolder;
+  FCreatedLangFolder:= NOT DirectoryExists(LangFolder);
+  if FCreatedLangFolder
+  then ForceDirectories(LangFolder);
+
+  WriteLangFile(TestLangA, 'Test Author A');
+  WriteLangFile(TestLangB, 'Test Author B');
 end;
 
 
 procedure TTestFormTranslSelector.TearDown;
+VAR
+  FileName: string;
 begin
   CleanupForm;
+
+  for FileName in FCreatedFiles DO
+    System.SysUtils.DeleteFile(FileName);
+  FreeAndNil(FCreatedFiles);
+
+  if FCreatedLangFolder
+  then RemoveDir(AppData.Translator.GetLangFolder);
 end;
 
 
@@ -182,12 +215,6 @@ end;
 
 { Form Creation Tests }
 
-procedure TTestFormTranslSelector.TestFormClassExists;
-begin
-  Assert.IsNotNull(TfrmTranslSelector, 'TfrmTranslSelector class should exist');
-end;
-
-
 procedure TTestFormTranslSelector.TestFormCreate_Succeeds;
 var
   Form: TfrmTranslSelector;
@@ -196,17 +223,6 @@ begin
   FTestForm:= Form;
 
   Assert.IsNotNull(Form, 'Form creation should succeed');
-end;
-
-
-procedure TTestFormTranslSelector.TestFormCreate_WithNilOwner;
-var
-  Form: TfrmTranslSelector;
-begin
-  Form:= TfrmTranslSelector.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsNull(Form.Owner, 'Owner should be nil when created with nil');
 end;
 
 
@@ -338,11 +354,14 @@ begin
   Form:= TfrmTranslSelector.Create(NIL);
   FTestForm:= Form;
 
-  { FormCreate calls PopulateLanguageFiles: one entry per .ini file in the Lang folder }
+  { FormCreate calls PopulateLanguageFiles: one entry per .ini file in the Lang folder, without the extension }
   Files:= ListFilesOf(AppData.Translator.GetLangFolder, '*.ini', TRUE, FALSE);
   TRY
+    Assert.IsTrue(Files.Count >= 2, 'Setup wrote 2 language files');
     Assert.AreEqual(Files.Count, Form.ListBox.Items.Count,
       'ListBox should hold one entry per language file');
+    Assert.IsTrue(Form.ListBox.Items.IndexOf(TestLangA) >= 0, 'ListBox must list ' + TestLangA);
+    Assert.IsTrue(Form.ListBox.Items.IndexOf(TestLangB) >= 0, 'ListBox must list ' + TestLangB);
   FINALLY
     FreeAndNil(Files);
   END;
@@ -494,35 +513,33 @@ end;
 
 { Utility Function Tests }
 
-procedure TTestFormTranslSelector.TestGetSelectedFileName_EmptyWhenNoSelection;
+{ GetSelectedFileName and GetSelectedFilePath are private; their one caller is ApplyLanguage, which the
+  published ListBoxDblClick runs. ApplyLanguage loads the file at GetSelectedFilePath into the global
+  translator, so the two tests below restore the translator's language and credits afterwards. }
+
+procedure TTestFormTranslSelector.TestApplyLanguage_ReadsSelectedFilePath;
 var
   Form: TfrmTranslSelector;
+  OldLanguage, OldAuthors: string;
 begin
   Form:= TfrmTranslSelector.Create(NIL);
   FTestForm:= Form;
 
-  { Ensure no selection }
-  Form.ListBox.ItemIndex:= -1;
+  OldLanguage:= AppData.Translator.CurLanguage;
+  OldAuthors := AppData.Translator.Authors;
+  TRY
+    Form.ListBox.ItemIndex:= Form.ListBox.Items.IndexOf(TestLangB);
+    Assert.IsTrue(Form.ListBox.ItemIndex >= 0, TestLangB + ' must be listed');
 
-  { Use RTTI or direct access - since GetSelectedFileName is private,
-    we test indirectly via IsEnglish which returns True when no selection }
-  Assert.AreEqual(-1, Form.ListBox.ItemIndex,
-    'ItemIndex should be -1 when no selection');
-end;
+    Form.ListBoxDblClick(Form);
 
-
-procedure TTestFormTranslSelector.TestGetSelectedFilePath_EmptyWhenNoSelection;
-var
-  Form: TfrmTranslSelector;
-begin
-  Form:= TfrmTranslSelector.Create(NIL);
-  FTestForm:= Form;
-
-  Form.ListBox.ItemIndex:= -1;
-
-  { Test indirectly - IsEnglish returns True when ItemIndex < 0 }
-  Assert.IsTrue(Form.IsEnglish,
-    'IsEnglish should return True when no selection (indicating empty path)');
+    { The credits come from the [Authors] section of the file at GetSelectedFilePath }
+    Assert.IsTrue(Form.lblAuthors.Visible, 'The selected language file must be found and applied');
+    Assert.AreEqual('Translated by: Test Author B', Form.lblAuthors.Caption, 'Credits read from ' + TestLangB + '.ini');
+  FINALLY
+    AppData.Translator.CurLanguage:= OldLanguage;
+    AppData.Translator.Authors:= OldAuthors;
+  END;
 end;
 
 
@@ -547,6 +564,7 @@ begin
   Form:= TfrmTranslSelector.Create(NIL);
   FTestForm:= Form;
 
+  Form.ListBox.Items.Clear;   // FormCreate pre-populated it from the Lang folder
   Form.ListBox.Items.Add('English');
   Form.ListBox.ItemIndex:= 0;
 
@@ -603,44 +621,29 @@ end;
 
 { Selection Tests }
 
-procedure TTestFormTranslSelector.TestGetSelectedFileName_ReturnsIniExtension;
+procedure TTestFormTranslSelector.TestApplyLanguage_AddsIniExtension;
 var
   Form: TfrmTranslSelector;
+  OldLanguage, OldAuthors: string;
 begin
   Form:= TfrmTranslSelector.Create(NIL);
   FTestForm:= Form;
 
-  Form.ListBox.Items.Clear;   // FormCreate pre-populated it from the Lang folder
-  Form.ListBox.Items.Add('German');
-  Form.ListBox.ItemIndex:= 0;
+  OldLanguage:= AppData.Translator.CurLanguage;
+  OldAuthors := AppData.Translator.Authors;
+  TRY
+    { The list holds names without extension; GetSelectedFileName must add '.ini' }
+    Form.ListBox.ItemIndex:= Form.ListBox.Items.IndexOf(TestLangA);
+    Assert.IsTrue(Form.ListBox.ItemIndex >= 0, TestLangA + ' must be listed');
 
-  { We can't directly test GetSelectedFileName since it's private,
-    but we can verify IsEnglish uses the correct item }
-  Assert.IsFalse(Form.IsEnglish,
-    'Selection should work correctly');
-  Assert.AreEqual('German', Form.ListBox.Items[Form.ListBox.ItemIndex],
-    'Selected item should match');
-end;
+    Form.ListBoxDblClick(Form);
 
-
-procedure TTestFormTranslSelector.TestListBox_SelectionWorks;
-var
-  Form: TfrmTranslSelector;
-begin
-  Form:= TfrmTranslSelector.Create(NIL);
-  FTestForm:= Form;
-
-  Form.ListBox.Items.Clear;   // FormCreate pre-populated it from the Lang folder
-  Form.ListBox.Items.Add('English');
-  Form.ListBox.Items.Add('German');
-  Form.ListBox.Items.Add('French');
-
-  Form.ListBox.ItemIndex:= 1;
-
-  Assert.AreEqual(1, Form.ListBox.ItemIndex,
-    'ItemIndex should be 1');
-  Assert.AreEqual('German', Form.ListBox.Items[Form.ListBox.ItemIndex],
-    'Selected item should be German');
+    Assert.AreEqual(TestLangA + '.ini', AppData.Translator.CurLanguageName, 'The translator must get the file name with .ini');
+    Assert.AreEqual(AppData.Translator.GetLangFolder + TestLangA + '.ini', AppData.Translator.CurLanguage, 'Full path in the Lang folder');
+  FINALLY
+    AppData.Translator.CurLanguage:= OldLanguage;
+    AppData.Translator.Authors:= OldAuthors;
+  END;
 end;
 
 
