@@ -53,7 +53,7 @@ type
     procedure Test_KeepOnTop_NilForm_RaisesException;
 
     [Test]
-    procedure Test_KeepOnTop_ValidForm_NoException;
+    procedure Test_KeepOnTop_ValidForm_SetsAndClearsTopmost;
 
     { MaximizeForm Tests }
     [Test]
@@ -92,12 +92,11 @@ end;
 
 
 procedure TTestWindow.Test_FindWindowByTitle_PartialMatch_FindsWindow;
+VAR
+  FormHandle: HWND;
 begin
-  { Search for 'Program Manager' which is the desktop window title }
-  FindWindowByTitle('Program Manager', True, False);
-  { This may or may not find a window depending on Windows version/settings }
-  { Just verify it doesn't crash }
-  Assert.Pass('FindWindowByTitle executed without error');
+  FormHandle:= FTestForm.Handle;   { Creates the window, titled 'LightSaber Test Window' in Setup }
+  Assert.AreEqual(FormHandle, FindWindowByTitle('lightsaber test win', TRUE, FALSE), 'A partial, case-insensitive title must find the test form');
 end;
 
 
@@ -154,17 +153,13 @@ begin
 end;
 
 
-procedure TTestWindow.Test_KeepOnTop_ValidForm_NoException;
+procedure TTestWindow.Test_KeepOnTop_ValidForm_SetsAndClearsTopmost;
 begin
-  Assert.WillNotRaise(
-    procedure
-    begin
-      KeepOnTop(FTestForm, HWND_TOPMOST);
-      KeepOnTop(FTestForm, HWND_NOTOPMOST);
-    end,
-    Exception,
-    'KeepOnTop with valid form should not raise exception'
-  );
+  KeepOnTop(FTestForm, HWND_TOPMOST);
+  Assert.IsTrue(GetWindowLong(FTestForm.Handle, GWL_EXSTYLE) AND WS_EX_TOPMOST <> 0, 'KeepOnTop(HWND_TOPMOST) must make the form topmost');
+
+  KeepOnTop(FTestForm, HWND_NOTOPMOST);
+  Assert.IsTrue(GetWindowLong(FTestForm.Handle, GWL_EXSTYLE) AND WS_EX_TOPMOST = 0, 'KeepOnTop(HWND_NOTOPMOST) must clear the topmost flag');
 end;
 
 

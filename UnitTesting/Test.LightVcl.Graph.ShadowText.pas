@@ -4,11 +4,10 @@
    Unit tests for LightVcl.Graph.ShadowText.pas
    Tests shadow text drawing functions with various color types and configurations.
 
-   Note: These tests create temporary bitmaps to test drawing functions.
-   Visual verification would require manual inspection, but we test that:
-   - Functions don't raise exceptions
-   - Functions return valid results
-   - System colors are handled correctly
+   Note: These tests draw on a temporary bitmap and read its pixels back:
+   - the text and shadow colours (system colours converted with ColorToRGB) appear on the canvas
+   - DT_CENTER / DT_RIGHT move the text, DT_WORDBREAK raises the returned height
+   - an empty string paints nothing
 
    Includes TestInsight support: define TESTINSIGHT in project options.
 =============================================================================================================}
@@ -27,6 +26,10 @@ type
   TTestShadowText = class
   private
     FBitmap: TBitmap;
+    procedure PrepareCanvas(Background: TColor);
+    function  CountPixels(Color: TColor): Integer;
+    function  InkColumns(Background: TColor; out MinX, MaxX: Integer): Boolean;
+    procedure CheckColorsPainted(TextColor, ShadowColor: TColor; UseRect: Boolean);
   public
     [Setup]
     procedure Setup;
@@ -131,6 +134,74 @@ begin
 end;
 
 
+{ Fills the bitmap and selects a big, non-antialiased font, so the text and shadow colours land on the pixels unblended }
+procedure TTestShadowText.PrepareCanvas(Background: TColor);
+begin
+  FBitmap.Canvas.Brush.Color:= Background;
+  FBitmap.Canvas.FillRect(Rect(0, 0, FBitmap.Width, FBitmap.Height));
+  FBitmap.Canvas.Font.Name:= 'Arial';
+  FBitmap.Canvas.Font.Size:= 24;
+  FBitmap.Canvas.Font.Style:= [fsBold];
+  FBitmap.Canvas.Font.Quality:= fqNonAntialiased;
+end;
+
+
+function TTestShadowText.CountPixels(Color: TColor): Integer;
+var
+  x, y: Integer;
+  RGBColor: TColorRef;
+  Line: PRGBTriple;
+begin
+  Result:= 0;
+  RGBColor:= ColorToRGB(Color);
+  for y:= 0 to FBitmap.Height - 1 do
+  begin
+    Line:= FBitmap.ScanLine[y];
+    for x:= 0 to FBitmap.Width - 1 do
+    begin
+      if  (Line.rgbtRed   = GetRValue(RGBColor))
+      AND (Line.rgbtGreen = GetGValue(RGBColor))
+      AND (Line.rgbtBlue  = GetBValue(RGBColor))
+      then Inc(Result);
+      Inc(Line);
+    end;
+  end;
+end;
+
+
+{ Returns the first and the last column that holds a pixel different from Background }
+function TTestShadowText.InkColumns(Background: TColor; out MinX, MaxX: Integer): Boolean;
+var
+  x, y: Integer;
+  Bkg: TColorRef;
+begin
+  MinX:= MaxInt;
+  MaxX:= -1;
+  Bkg:= ColorToRGB(Background);
+  for y:= 0 to FBitmap.Height - 1 do
+    for x:= 0 to FBitmap.Width - 1 do
+      if TColorRef(FBitmap.Canvas.Pixels[x, y]) <> Bkg then
+      begin
+        if x < MinX then MinX:= x;
+        if x > MaxX then MaxX:= x;
+      end;
+  Result:= MaxX >= 0;
+end;
+
+
+{ Draws on a green background and demands that both colours, converted with ColorToRGB, appear on the canvas }
+procedure TTestShadowText.CheckColorsPainted(TextColor, ShadowColor: TColor; UseRect: Boolean);
+begin
+  PrepareCanvas(RGB(0, 128, 0));
+  if UseRect
+  then DrawShadowText(FBitmap.Canvas, 'WWWW', Rect(10, 10, 390, 190), TextColor, ShadowColor, 3)
+  else DrawShadowText(FBitmap.Canvas, 'WWWW', 10, 10, TextColor, ShadowColor, 3);
+
+  Assert.IsTrue(CountPixels(TextColor)   > 20, 'The text colour must appear on the canvas');
+  Assert.IsTrue(CountPixels(ShadowColor) > 20, 'The shadow colour must appear on the canvas');
+end;
+
+
 { Basic DrawShadowText Tests - X,Y overload }
 
 procedure TTestShadowText.TestDrawShadowText_XY_BasicCall;
@@ -160,12 +231,7 @@ end;
 
 procedure TTestShadowText.TestDrawShadowText_XY_SystemColors;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      DrawShadowText(FBitmap.Canvas, 'Test', 10, 10, clBtnFace, clBtnShadow);
-    end,
-    'DrawShadowText should handle system colors without exception');
+  CheckColorsPainted(clActiveCaption, clBtnShadow, FALSE);
 end;
 
 
@@ -246,58 +312,48 @@ end;
 
 
 procedure TTestShadowText.TestDrawShadowText_Rect_SystemColors;
-var
-  TextRect: TRect;
 begin
-  TextRect:= Rect(10, 10, 300, 100);
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      DrawShadowText(FBitmap.Canvas, 'Test', TextRect, clBtnFace, clBtnShadow, 2);
-    end,
-    'DrawShadowText should handle system colors without exception');
+  CheckColorsPainted(clBtnFace, clBtnShadow, TRUE);
 end;
 
 
 procedure TTestShadowText.TestDrawShadowText_Rect_CenterAligned;
 var
-  TextRect: TRect;
+  MinX, MaxX, TextW, ExpectedLeft: Integer;
 begin
-  TextRect:= Rect(10, 10, 300, 100);
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      DrawShadowText(FBitmap.Canvas, 'Centered Text', TextRect, clBlack, clGray, 2, DT_CENTER);
-    end,
-    'DrawShadowText should handle DT_CENTER flag');
+  PrepareCanvas(clWhite);
+  TextW:= FBitmap.Canvas.TextWidth('Centered');
+  DrawShadowText(FBitmap.Canvas, 'Centered', Rect(10, 10, 390, 100), clBlack, clGray, 2, DT_CENTER);
+
+  Assert.IsTrue(InkColumns(clWhite, MinX, MaxX), 'Something must be painted');
+  ExpectedLeft:= 10 + (380 - TextW) div 2;
+  Assert.IsTrue(Abs(MinX - ExpectedLeft) <= 4, 'Centred text must start at about ' + IntToStr(ExpectedLeft) + ', starts at ' + IntToStr(MinX));
 end;
 
 
 procedure TTestShadowText.TestDrawShadowText_Rect_RightAligned;
 var
-  TextRect: TRect;
+  MinX, MaxX, TextW: Integer;
 begin
-  TextRect:= Rect(10, 10, 300, 100);
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      DrawShadowText(FBitmap.Canvas, 'Right Aligned', TextRect, clBlack, clGray, 2, DT_RIGHT);
-    end,
-    'DrawShadowText should handle DT_RIGHT flag');
+  PrepareCanvas(clWhite);
+  TextW:= FBitmap.Canvas.TextWidth('Right');
+  DrawShadowText(FBitmap.Canvas, 'Right', Rect(10, 10, 390, 100), clBlack, clGray, 2, DT_RIGHT);
+
+  Assert.IsTrue(InkColumns(clWhite, MinX, MaxX), 'Something must be painted');
+  Assert.IsTrue(Abs(MinX - (390 - TextW)) <= 4, 'Right-aligned text must start at about ' + IntToStr(390 - TextW) + ', starts at ' + IntToStr(MinX));
 end;
 
 
 procedure TTestShadowText.TestDrawShadowText_Rect_WordBreak;
 var
-  TextRect: TRect;
+  Height1, HeightWrapped: Integer;
 begin
-  TextRect:= Rect(10, 10, 100, 100);  { Narrow rect to force word break }
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      DrawShadowText(FBitmap.Canvas, 'This is a long text that should wrap', TextRect, clBlack, clGray, 2, DT_WORDBREAK);
-    end,
-    'DrawShadowText should handle DT_WORDBREAK flag');
+  { One line, then the same kind of text in a rect too narrow for it: with DT_WORDBREAK the returned height must cover several lines }
+  Height1:= DrawShadowText(FBitmap.Canvas, 'Wrap', Rect(10, 10, 390, 190), clBlack, clGray, 2, DT_LEFT);
+  HeightWrapped:= DrawShadowText(FBitmap.Canvas, 'This is a long text that should wrap', Rect(10, 10, 100, 190), clBlack, clGray, 2, DT_WORDBREAK);
+
+  Assert.IsTrue(Height1 > 0, 'A single line must have a height');
+  Assert.IsTrue(HeightWrapped >= 2 * Height1, 'Wrapped text must be at least two lines high: single ' + IntToStr(Height1) + ', wrapped ' + IntToStr(HeightWrapped));
 end;
 
 
@@ -320,45 +376,25 @@ end;
 
 procedure TTestShadowText.TestDrawShadowText_RGBColors;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      DrawShadowText(FBitmap.Canvas, 'RGB Test', 10, 10, RGB(255, 0, 0), RGB(128, 128, 128));
-    end,
-    'DrawShadowText should handle RGB colors');
+  CheckColorsPainted(RGB(255, 0, 0), RGB(128, 128, 128), FALSE);
 end;
 
 
 procedure TTestShadowText.TestDrawShadowText_SystemColorClBtnFace;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      DrawShadowText(FBitmap.Canvas, 'BtnFace Test', 10, 10, clBtnFace, clBtnShadow);
-    end,
-    'DrawShadowText should handle clBtnFace system color');
+  CheckColorsPainted(clBtnFace, clBtnShadow, FALSE);
 end;
 
 
 procedure TTestShadowText.TestDrawShadowText_SystemColorClWindow;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      DrawShadowText(FBitmap.Canvas, 'Window Test', 10, 10, clWindowText, clWindow);
-    end,
-    'DrawShadowText should handle clWindowText/clWindow system colors');
+  CheckColorsPainted(clWindowText, clWindow, FALSE);
 end;
 
 
 procedure TTestShadowText.TestDrawShadowText_SystemColorClHighlight;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      DrawShadowText(FBitmap.Canvas, 'Highlight Test', 10, 10, clHighlightText, clHighlight);
-    end,
-    'DrawShadowText should handle clHighlightText/clHighlight system colors');
+  CheckColorsPainted(clHighlightText, clHighlight, FALSE);
 end;
 
 

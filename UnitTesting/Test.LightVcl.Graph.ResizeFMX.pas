@@ -176,9 +176,12 @@ begin
 
   ResizeFMX(FBitmap, 200, 200);
 
-  { FMX CreateThumbnail typically only shrinks, but test the call }
-  Assert.IsTrue(FBitmap.Width > 0, 'Width should be positive');
-  Assert.IsTrue(FBitmap.Height > 0, 'Height should be positive');
+  { FMX CreateThumbnail creates a bitmap of exactly the requested size and draws the source scaled to fit into it
+    (c:\Delphi\Delphi 13\source\fmx\FMX.Graphics.pas, TBitmap.CreateThumbnail) }
+  Assert.AreEqual(200, FBitmap.Width,  'Width must be the requested 200');
+  Assert.AreEqual(200, FBitmap.Height, 'Height must be the requested 200');
+  Assert.AreEqual(IntToHex(Integer(clWhite), 6), IntToHex(Integer(ColorToRGB(FBitmap.Canvas.Pixels[100, 100]) and $FFFFFF), 6),
+    'The white source must be scaled up over the whole thumbnail');
 end;
 
 

@@ -137,6 +137,10 @@ uses
   LightVcl.Graph.Cache,
   LightCore.IO;
 
+type
+  { Reaches the protected AddToCache / DeleteThumb / DeleteImage of TCacheObj }
+  TCacheObjCracker = class(TCacheObj);
+
 { TTestGraphCache }
 
 procedure TTestGraphCache.Setup;
@@ -310,15 +314,21 @@ end;
 
 procedure TTestGraphCache.TestAddToCache_NonExistentFile_ReturnsEmpty;
 var
-  Cache: TCacheObj;
+  Cache: TCacheObjCracker;
+  First, Second: string;
 begin
-  { Note: AddToCache is protected, so we test indirectly via GetThumbFor }
-  { This test verifies the behavior through the public interface }
-  Cache:= TCacheObj.Create(FCacheFolder);
+  { AddToCache is called directly (GetThumbFor checks FileExists itself and never reaches it).
+    A missing file must return '' and must not use up a thumbnail number. }
+  Cache:= TCacheObjCracker.Create(FCacheFolder);
   try
-    { GetThumbFor calls AddToCache internally }
-    Assert.IsEmpty(Cache.GetThumbFor(TPath.Combine(FTestFolder, 'NonExistent.bmp')),
-      'Should return empty for non-existent file');
+    First:= Cache.AddToCache(FTestImagePath);
+    Assert.IsNotEmpty(First, 'A real image must be added');
+
+    Assert.IsEmpty(Cache.AddToCache(TPath.Combine(FTestFolder, 'NonExistent.bmp')), 'Should return empty for non-existent file');
+    Assert.AreEqual(-1, Cache.ImagePosDB(TPath.Combine(FTestFolder, 'NonExistent.bmp')), 'A missing file must not enter the DB');
+
+    Second:= Cache.AddToCache(FTestImagePath2);
+    Assert.AreEqual(StrToInt(Copy(First, 1, 9)) + 1, StrToInt(Copy(Second, 1, 9)), 'The missing file must not consume a thumbnail number');
   finally
     FreeAndNil(Cache);
   end;
@@ -411,19 +421,24 @@ end;
 
 procedure TTestGraphCache.TestDeleteThumb_ByPosition_DeletesFromDB;
 var
-  Cache: TCacheObj;
+  Cache: TCacheObjCracker;
   Position: Integer;
+  ThumbPath1, ThumbPath2: string;
 begin
-  Cache:= TCacheObj.Create(FCacheFolder);
+  Cache:= TCacheObjCracker.Create(FCacheFolder);
   try
-    Cache.GetThumbFor(FTestImagePath);  { Add to cache }
-    Position:= Cache.ImagePosDB(LowerCase(FTestImagePath));
+    ThumbPath1:= Cache.GetThumbFor(FTestImagePath);
+    ThumbPath2:= Cache.GetThumbFor(FTestImagePath2);
+    Position:= Cache.ImagePosDB(FTestImagePath);
     Assert.IsTrue(Position >= 0, 'Image should be in cache');
 
-    { Note: DeleteThumb is protected. We test via MaintainCache or ClearCache }
-    Cache.ClearCache;
-    Position:= Cache.ImagePosDB(LowerCase(FTestImagePath));
-    Assert.AreEqual(-1, Position, 'Image should no longer be in cache after clear');
+    Assert.IsTrue(Cache.DeleteThumb(Position), 'DeleteThumb must report the thumbnail file as deleted');
+    Assert.AreEqual(-1, Cache.ImagePosDB(FTestImagePath), 'Image should no longer be in the DB');
+    Assert.IsFalse(FileExists(ThumbPath1), 'The thumbnail file must be deleted from disk');
+
+    { The other entry is untouched }
+    Assert.IsTrue(Cache.ImagePosDB(FTestImagePath2) >= 0, 'The other image must stay in the DB');
+    Assert.IsTrue(FileExists(ThumbPath2), 'The other thumbnail file must stay on disk');
   finally
     FreeAndNil(Cache);
   end;
@@ -431,14 +446,26 @@ end;
 
 procedure TTestGraphCache.TestDeleteThumb_InvalidPosition_RaisesException;
 var
-  Cache: TCacheObj;
+  Cache: TCacheObjCracker;
 begin
-  Cache:= TCacheObj.Create(FCacheFolder);
+  Cache:= TCacheObjCracker.Create(FCacheFolder);
   try
-    Cache.GetThumbFor(FTestImagePath);  { Add something to cache }
-    { DeleteThumb is protected, so we can only test this indirectly }
-    { The exception is tested via the public API that calls DeleteThumb }
-    Assert.Pass('DeleteThumb raises exception for invalid position (tested via protected access)');
+    Cache.GetThumbFor(FTestImagePath);  { One entry: position 0 }
+    Assert.WillRaise(
+      procedure
+      begin
+        Cache.DeleteThumb(-1);
+      end,
+      Exception,
+      'A negative position must raise');
+    Assert.WillRaise(
+      procedure
+      begin
+        Cache.DeleteThumb(1);
+      end,
+      Exception,
+      'A position past the end must raise');
+    Assert.IsTrue(Cache.ImagePosDB(FTestImagePath) >= 0, 'A refused delete must leave the entry in the DB');
   finally
     FreeAndNil(Cache);
   end;
@@ -446,12 +473,17 @@ end;
 
 procedure TTestGraphCache.TestDeleteThumb_EmptyDB_RaisesException;
 var
-  Cache: TCacheObj;
+  Cache: TCacheObjCracker;
 begin
-  Cache:= TCacheObj.Create(FCacheFolder);
+  Cache:= TCacheObjCracker.Create(FCacheFolder);
   try
-    { Empty cache - any delete attempt via protected method would raise }
-    Assert.Pass('DeleteThumb raises exception on empty DB (tested via protected access)');
+    Assert.WillRaise(
+      procedure
+      begin
+        Cache.DeleteThumb(0);
+      end,
+      Exception,
+      'DeleteThumb on an empty DB must raise');
   finally
     FreeAndNil(Cache);
   end;
@@ -459,18 +491,18 @@ end;
 
 procedure TTestGraphCache.TestDeleteThumb_ByName_DeletesFromDB;
 var
-  Cache: TCacheObj;
-  Position: Integer;
+  Cache: TCacheObjCracker;
+  ThumbPath, ShortPath: string;
 begin
-  Cache:= TCacheObj.Create(FCacheFolder);
+  Cache:= TCacheObjCracker.Create(FCacheFolder);
   try
-    Cache.GetThumbFor(FTestImagePath);
-    Position:= Cache.ImagePosDB(LowerCase(FTestImagePath));
-    Assert.IsTrue(Position >= 0, 'Image should be in cache');
+    ThumbPath:= Cache.GetThumbFor(FTestImagePath);
+    Assert.IsTrue(Cache.ImagePosDB(FTestImagePath, ShortPath) >= 0, 'Image should be in cache');
 
-    { Test via ClearCache which internally handles deletion }
-    Cache.ClearCache;
-    Assert.AreEqual(-1, Cache.ImagePosDB(LowerCase(FTestImagePath)), 'Should be removed');
+    Assert.IsTrue(Cache.DeleteThumb(ShortPath), 'DeleteThumb(name) must report the thumbnail file as deleted');
+    Assert.AreEqual(-1, Cache.ImagePosDB(FTestImagePath), 'Should be removed from the DB');
+    Assert.AreEqual(-1, Cache.ThumbPosDB(ShortPath), 'The thumb name should be removed from the DB');
+    Assert.IsFalse(FileExists(ThumbPath), 'The thumbnail file must be deleted from disk');
   finally
     FreeAndNil(Cache);
   end;
@@ -478,12 +510,19 @@ end;
 
 procedure TTestGraphCache.TestDeleteThumb_ByName_NotFound_RaisesException;
 var
-  Cache: TCacheObj;
+  Cache: TCacheObjCracker;
 begin
-  Cache:= TCacheObj.Create(FCacheFolder);
+  Cache:= TCacheObjCracker.Create(FCacheFolder);
   try
-    { DeleteThumb by name raises exception if not found }
-    Assert.Pass('DeleteThumb(name) raises exception when not found (tested via protected access)');
+    Cache.GetThumbFor(FTestImagePath);
+    Assert.WillRaise(
+      procedure
+      begin
+        Cache.DeleteThumb('999999999.JPG');
+      end,
+      Exception,
+      'DeleteThumb(name) must raise when the name is not in the DB');
+    Assert.IsTrue(Cache.ImagePosDB(FTestImagePath) >= 0, 'A refused delete must leave the other entry in the DB');
   finally
     FreeAndNil(Cache);
   end;
@@ -493,20 +532,23 @@ end;
 
 procedure TTestGraphCache.TestDeleteImage_DeletesFileAndThumb;
 var
-  Cache: TCacheObj;
-  TempImage: string;
+  Cache: TCacheObjCracker;
+  TempImage, ThumbPath: string;
 begin
   { Create a temporary image that can be deleted }
   TempImage:= TPath.Combine(FTestFolder, 'TempToDelete.bmp');
   CreateTestImage(TempImage, 100, 100);
 
-  Cache:= TCacheObj.Create(FCacheFolder);
+  Cache:= TCacheObjCracker.Create(FCacheFolder);
   try
-    Cache.GetThumbFor(TempImage);  { Add to cache }
-    Assert.IsTrue(Cache.ImagePosDB(LowerCase(TempImage)) >= 0, 'Should be in cache');
+    ThumbPath:= Cache.GetThumbFor(TempImage);  { Add to cache }
+    Assert.IsTrue(Cache.ImagePosDB(TempImage) >= 0, 'Should be in cache');
+    Assert.IsTrue(FileExists(ThumbPath), 'The thumbnail must exist before the delete');
 
-    { DeleteImage is protected - tested indirectly }
-    Assert.Pass('DeleteImage deletes file and thumbnail (tested via protected access)');
+    Assert.IsTrue(Cache.DeleteImage(TempImage), 'DeleteImage must report the image as deleted');
+    Assert.IsFalse(FileExists(TempImage), 'The original image must be deleted from disk');
+    Assert.AreEqual(-1, Cache.ImagePosDB(TempImage), 'The image must be removed from the DB');
+    Assert.IsFalse(FileExists(ThumbPath), 'The thumbnail file must be deleted from disk');
   finally
     FreeAndNil(Cache);
   end;

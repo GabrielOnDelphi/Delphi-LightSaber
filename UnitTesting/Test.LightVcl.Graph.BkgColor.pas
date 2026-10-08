@@ -369,6 +369,15 @@ begin
   { Size should remain unchanged - border is drawn inside }
   Assert.AreEqual(OrigWidth, FTestBitmap.Width, 'Width should remain unchanged');
   Assert.AreEqual(OrigHeight, FTestBitmap.Height, 'Height should remain unchanged');
+
+  { The 5-pixel border is red on all four edges; the pixel just inside it stays blue }
+  Assert.AreEqual(Integer(clRed),  Integer(FTestBitmap.Canvas.Pixels[0, 40]),  'Left edge must be red');
+  Assert.AreEqual(Integer(clRed),  Integer(FTestBitmap.Canvas.Pixels[4, 40]),  'Column 4 is inside a 5-pixel border');
+  Assert.AreEqual(Integer(clRed),  Integer(FTestBitmap.Canvas.Pixels[50, 0]),  'Top edge must be red');
+  Assert.AreEqual(Integer(clRed),  Integer(FTestBitmap.Canvas.Pixels[99, 40]), 'Right edge must be red');
+  Assert.AreEqual(Integer(clRed),  Integer(FTestBitmap.Canvas.Pixels[50, 79]), 'Bottom edge must be red');
+  Assert.AreEqual(Integer(clBlue), Integer(FTestBitmap.Canvas.Pixels[5, 40]),  'Column 5 is outside the border');
+  Assert.AreEqual(Integer(clBlue), Integer(FTestBitmap.Canvas.Pixels[50, 40]), 'Center must stay blue');
 end;
 
 
@@ -385,6 +394,8 @@ begin
   { No change with zero border }
   Assert.AreEqual(OrigWidth, FTestBitmap.Width, 'Width should remain unchanged');
   Assert.AreEqual(OrigHeight, FTestBitmap.Height, 'Height should remain unchanged');
+  Assert.AreEqual(Integer(clBlue), Integer(FTestBitmap.Canvas.Pixels[0, 0]),   'A zero border must not paint the corner');
+  Assert.AreEqual(Integer(clBlue), Integer(FTestBitmap.Canvas.Pixels[99, 79]), 'A zero border must not paint the far corner');
 end;
 
 

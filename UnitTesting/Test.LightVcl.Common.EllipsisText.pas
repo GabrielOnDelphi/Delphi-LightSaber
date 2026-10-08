@@ -198,12 +198,10 @@ procedure TTestEllipsisText.TestShortenString_MaxLengthZero;
 var
   Result: string;
 begin
-  { With MaxLength 0, the div 2 gives 0, minus 2 gives -2, so Copy returns empty }
   Result:= ShortenString('Hello', 0);
 
-  { The function behavior with 0 max length }
-  Assert.IsTrue(Length(Result) <= Length('Hello'),
-    'Result should not exceed original length');
+  { No room for anything: not even the 2-char ellipsis may be returned }
+  Assert.AreEqual('', Result, 'MaxLength = 0 must return an empty string');
 end;
 
 
@@ -213,8 +211,8 @@ var
 begin
   Result:= ShortenString('Hello World', 1);
 
-  { Function will still try to shorten }
-  Assert.Pass('Function handles MaxLength=1 without exception');
+  { No room for the 2-char ellipsis: the result is the first MaxLength characters, never longer }
+  Assert.AreEqual('H', Result, 'MaxLength = 1 must return 1 character');
 end;
 
 

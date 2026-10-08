@@ -35,9 +35,6 @@ type
 
     { Constructor/Destructor Tests }
     [Test]
-    procedure TestCreate_InitializesProperly;
-
-    [Test]
     procedure TestCreate_BitmapNotNil;
 
     [Test]
@@ -45,9 +42,6 @@ type
 
     [Test]
     procedure TestCreate_DefaultFilePath;
-
-    [Test]
-    procedure TestDestroy_NoMemoryLeak;
 
     { Width Property Tests }
     [Test]
@@ -60,9 +54,6 @@ type
     procedure TestSetWidth_AboveMaximum_ClampsToMax;
 
     [Test]
-    procedure TestSetWidth_SameValue_NoChange;
-
-    [Test]
     procedure TestSetWidth_UpdatesBitmapSize;
 
     { FilePath Property Tests }
@@ -71,9 +62,6 @@ type
 
     [Test]
     procedure TestSetFilePath_EmptyPath;
-
-    [Test]
-    procedure TestSetFilePath_SamePath_NoChange;
 
     { GenerateThumbnail Tests }
     [Test]
@@ -152,19 +140,6 @@ end;
 
 { Constructor/Destructor Tests }
 
-procedure TTestGraphResizeWinThumb.TestCreate_InitializesProperly;
-var
-  Thumb: TFileThumb;
-begin
-  Thumb:= TFileThumb.Create;
-  TRY
-    Assert.IsNotNull(Thumb, 'TFileThumb should be created');
-  FINALLY
-    FreeAndNil(Thumb);
-  END;
-end;
-
-
 procedure TTestGraphResizeWinThumb.TestCreate_BitmapNotNil;
 var
   Thumb: TFileThumb;
@@ -201,21 +176,6 @@ begin
   FINALLY
     FreeAndNil(Thumb);
   END;
-end;
-
-
-procedure TTestGraphResizeWinThumb.TestDestroy_NoMemoryLeak;
-var
-  Thumb: TFileThumb;
-begin
-  { This test verifies the destructor runs without issues.
-    Memory leak detection is handled by FastMM or similar memory manager. }
-  Thumb:= TFileThumb.Create;
-  Thumb.Width:= 200;
-  Thumb.FilePath:= 'C:\nonexistent.bmp';
-  FreeAndNil(Thumb);
-
-  Assert.IsNull(Thumb, 'Thumb should be nil after FreeAndNil');
 end;
 
 
@@ -268,22 +228,6 @@ begin
 end;
 
 
-procedure TTestGraphResizeWinThumb.TestSetWidth_SameValue_NoChange;
-var
-  Thumb: TFileThumb;
-  OriginalWidth: Integer;
-begin
-  Thumb:= TFileThumb.Create;
-  TRY
-    OriginalWidth:= Thumb.Width;
-    Thumb.Width:= OriginalWidth;  // Set same value
-    Assert.AreEqual(OriginalWidth, Thumb.Width, 'Width should remain unchanged');
-  FINALLY
-    FreeAndNil(Thumb);
-  END;
-end;
-
-
 procedure TTestGraphResizeWinThumb.TestSetWidth_UpdatesBitmapSize;
 var
   Thumb: TFileThumb;
@@ -324,21 +268,6 @@ begin
     Thumb.FilePath:= 'C:\Test\image.jpg';
     Thumb.FilePath:= '';
     Assert.AreEqual('', Thumb.FilePath, 'FilePath should be empty');
-  FINALLY
-    FreeAndNil(Thumb);
-  END;
-end;
-
-
-procedure TTestGraphResizeWinThumb.TestSetFilePath_SamePath_NoChange;
-var
-  Thumb: TFileThumb;
-begin
-  Thumb:= TFileThumb.Create;
-  TRY
-    Thumb.FilePath:= 'C:\Test\image.jpg';
-    Thumb.FilePath:= 'C:\Test\image.jpg';  // Same path
-    Assert.AreEqual('C:\Test\image.jpg', Thumb.FilePath, 'FilePath should remain unchanged');
   FINALLY
     FreeAndNil(Thumb);
   END;
@@ -395,10 +324,15 @@ begin
   TRY
     Thumb.Width:= 150;
     Thumb.FilePath:= '';  // Empty path, but bitmap should still be sized
+    { Shrink and blacken the bitmap behind the setter's back, so only GenerateThumbnail can restore it }
+    Thumb.ThumbBmp.SetSize(10, 10);
+    Thumb.ThumbBmp.Canvas.Brush.Color:= clBlack;
+    Thumb.ThumbBmp.Canvas.FillRect(Rect(0, 0, 10, 10));
     Thumb.GenerateThumbnail;
 
     Assert.AreEqual(150, Thumb.ThumbBmp.Width, 'Bitmap width should be set');
     Assert.AreEqual(150, Thumb.ThumbBmp.Height, 'Bitmap height should be set');
+    Assert.AreEqual(Integer(ColorToRGB(clWindow)), Integer(Thumb.ThumbBmp.Canvas.Pixels[75, 75]), 'Blank thumbnail must be filled with the window colour');
   FINALLY
     FreeAndNil(Thumb);
   END;
@@ -423,9 +357,10 @@ begin
       end,
       'Thumb.GenerateThumbnail must not raise');
 
-    // Verify bitmap was generated (size should be set)
     Assert.AreEqual(64, Thumb.ThumbBmp.Width, 'Thumbnail width should be 64');
     Assert.AreEqual(64, Thumb.ThumbBmp.Height, 'Thumbnail height should be 64');
+    { The source is solid red, the blank fill is clWindow: a red centre proves the shell thumbnail was produced }
+    Assert.AreEqual(Integer(clRed), Integer(Thumb.ThumbBmp.Canvas.Pixels[32, 32]), 'Centre pixel must be red (the source image)');
   FINALLY
     FreeAndNil(Thumb);
   END;
@@ -482,10 +417,15 @@ begin
   TRY
     Thumb.Width:= 120;
     Thumb.FilePath:= '';  // Empty path, but bitmap should still be sized
+    { Shrink and blacken the bitmap behind the setter's back, so only GenerateThumbnail2 can restore it }
+    Thumb.ThumbBmp.SetSize(10, 10);
+    Thumb.ThumbBmp.Canvas.Brush.Color:= clBlack;
+    Thumb.ThumbBmp.Canvas.FillRect(Rect(0, 0, 10, 10));
     Thumb.GenerateThumbnail2;
 
     Assert.AreEqual(120, Thumb.ThumbBmp.Width, 'Bitmap width should be set');
     Assert.AreEqual(120, Thumb.ThumbBmp.Height, 'Bitmap height should be set');
+    Assert.AreEqual(Integer(ColorToRGB(clWindow)), Integer(Thumb.ThumbBmp.Canvas.Pixels[60, 60]), 'Blank thumbnail must be filled with the window colour');
   FINALLY
     FreeAndNil(Thumb);
   END;

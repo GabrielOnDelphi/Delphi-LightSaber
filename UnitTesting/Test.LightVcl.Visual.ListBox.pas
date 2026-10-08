@@ -1,6 +1,7 @@
 ﻿unit Test.LightVcl.Visual.ListBox;
 
 {=============================================================================================================
+   2026.10.07
    Unit tests for LightVcl.Visual.ListBox.pas
    Tests TCubicListBox enhanced listbox functionality.
 
@@ -23,6 +24,16 @@ type
   public
     Value: Integer;
     constructor Create(AValue: Integer);
+  end;
+
+  { Writes its name into a log when it is freed }
+  TFreeSpy = class
+  private
+    FLog: TStrings;
+    FName: string;
+  public
+    constructor Create(aLog: TStrings; CONST aName: string);
+    destructor Destroy; override;
   end;
 
   [TestFixture]
@@ -171,10 +182,6 @@ type
     [Test]
     procedure TestMoveItemsTo_MoreThanAvailable;
 
-    { VisibleItems Tests }
-    [Test]
-    procedure TestVisibleItems_ZeroItemHeight;
-
     { DeleteSelected Tests }
     [Test]
     procedure TestDeleteSelected_DeletesSelected;
@@ -206,6 +213,22 @@ constructor TTestData.Create(AValue: Integer);
 begin
   inherited Create;
   Value:= AValue;
+end;
+
+
+{ TFreeSpy }
+
+constructor TFreeSpy.Create(aLog: TStrings; CONST aName: string);
+begin
+  inherited Create;
+  FLog:= aLog;
+  FName:= aName;
+end;
+
+destructor TFreeSpy.Destroy;
+begin
+  FLog.Add(FName);
+  inherited Destroy;
 end;
 
 
@@ -838,27 +861,6 @@ begin
 end;
 
 
-{ VisibleItems Tests }
-
-procedure TTestCubicListBox.TestVisibleItems_ZeroItemHeight;
-VAR
-  Before: Integer;
-begin
-  { This test used to expect VisibleItems = 0 after setting ItemHeight to 0. It cannot happen:
-    TCustomListBox.SetItemHeight only stores a value that is GREATER than zero
-    (Vcl.StdCtrls.pas:7620 - "if (FItemHeight <> Value) and (Value > 0)"), so writing 0 is simply
-    dropped and the item height keeps its old value. The guard "if ItemHeight <= 0 then 0" inside
-    TCubicListBox.VisibleItems is therefore unreachable through the property. }
-  Before:= FListBox.ItemHeight;
-  Assert.IsTrue(Before > 0, 'A listbox always starts with a positive ItemHeight');
-
-  FListBox.ItemHeight:= 0;
-
-  Assert.AreEqual(Before, FListBox.ItemHeight, 'The VCL refuses an ItemHeight of 0');
-  Assert.IsTrue(FListBox.VisibleItems >= 0, 'VisibleItems must never go negative');
-end;
-
-
 { DeleteSelected Tests }
 
 procedure TTestCubicListBox.TestDeleteSelected_DeletesSelected;
@@ -878,19 +880,25 @@ end;
 
 procedure TTestCubicListBox.TestDeleteSelected_FreesObjects;
 var
-  Obj: TTestData;
+  FreeLog: TStringList;
+  FirstObj: TFreeSpy;
 begin
-  Obj:= TTestData.Create(42);
+  FreeLog:= TStringList.Create;
+  FirstObj:= TFreeSpy.Create(FreeLog, 'First');   { Not selected: freed below by the test }
+  try
+    FListBox.Items.AddObject('First', FirstObj);
+    FListBox.Items.AddObject('Second', TFreeSpy.Create(FreeLog, 'Second'));
+    FListBox.Items.Add('Third');
 
-  FListBox.Items.Add('First');
-  FListBox.Items.AddObject('Second', Obj);
-  FListBox.Items.Add('Third');
+    FListBox.Selected[1]:= TRUE;
+    FListBox.DeleteSelected(TRUE);  // FreeObject = TRUE
 
-  FListBox.Selected[1]:= TRUE;
-  FListBox.DeleteSelected(TRUE);  // FreeObject = TRUE
-
-  Assert.AreEqual(2, FListBox.Items.Count);
-  // Object should be freed, we can't check its Value anymore
+    Assert.AreEqual(2, FListBox.Items.Count);
+    Assert.AreEqual('Second', FreeLog.CommaText, 'DeleteSelected(TRUE) must free the object of the deleted item, and only that one');
+  finally
+    FreeAndNil(FirstObj);
+    FreeAndNil(FreeLog);
+  end;
 end;
 
 

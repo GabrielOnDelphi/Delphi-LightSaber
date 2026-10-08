@@ -1,6 +1,7 @@
 ﻿unit Test.LightVcl.Visual.Memo;
 
 {=============================================================================================================
+   2026.10.07
    Unit tests for LightVcl.Visual.Memo.pas (TLightMemo)
 
    Note: TLightMemo is a VCL control that requires a parent window handle for many operations.
@@ -16,6 +17,7 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.Classes,
+  Winapi.Messages,     { EM_GETFIRSTVISIBLELINE }
   Vcl.Controls,        { alClient }
   Vcl.Forms,
   Vcl.StdCtrls,
@@ -36,9 +38,6 @@ type
     procedure TearDown;
 
     { Basic Tests }
-    [Test]
-    procedure TestCreate;
-
     [Test]
     procedure TestDefaultSearchOptions;
 
@@ -237,18 +236,6 @@ end;
 
 
 { Basic Tests }
-
-procedure TTesTLightMemo.TestCreate;
-var
-  Memo: TLightMemo;
-begin
-  Memo:= TLightMemo.Create(nil);
-  try
-    Assert.IsNotNull(Memo);
-  finally
-    FreeAndNil(Memo);
-  end;
-end;
 
 procedure TTesTLightMemo.TestDefaultSearchOptions;
 var
@@ -720,16 +707,32 @@ end;
 
 { CenterInView Tests }
 
+{ An out-of-bounds line number must leave the scroll position alone }
 procedure TTesTLightMemo.TestCenterInView_OutOfBounds;
+CONST
+  LineCount = 200;
+var
+  i, FirstVisible: Integer;
 begin
   SetupMemo;
   FMemo.Clear;
-  FMemo.Lines.Add('Line 1');
-  FMemo.Lines.Add('Line 2');
-  // Should not raise exception for out-of-bounds
+  FMemo.Lines.BeginUpdate;
+  try
+    for i:= 0 to LineCount - 1 do
+      FMemo.Lines.Add('Line ' + IntToStr(i));
+  finally
+    FMemo.Lines.EndUpdate;
+  end;
+
+  FMemo.CenterInView(LineCount DIV 2);
+  FirstVisible:= Integer(FMemo.Perform(EM_GETFIRSTVISIBLELINE, 0, 0));
+  Assert.IsTrue(FirstVisible > 0, 'Precondition: CenterInView(100) must scroll away from the top');
+
   FMemo.CenterInView(-1);
-  FMemo.CenterInView(100);
-  Assert.Pass('CenterInView did not crash with out-of-bounds values');
+  Assert.AreEqual(FirstVisible, Integer(FMemo.Perform(EM_GETFIRSTVISIBLELINE, 0, 0)), 'CenterInView(-1) must not scroll');
+
+  FMemo.CenterInView(LineCount);
+  Assert.AreEqual(FirstVisible, Integer(FMemo.Perform(EM_GETFIRSTVISIBLELINE, 0, 0)), 'CenterInView(Lines.Count) must not scroll');
 end;
 
 

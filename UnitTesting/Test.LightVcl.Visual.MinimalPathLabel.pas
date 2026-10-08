@@ -1,6 +1,7 @@
 ﻿unit Test.LightVcl.Visual.MinimalPathLabel;
 
 {=============================================================================================================
+   2026.10.07
    Unit tests for LightVcl.Visual.MinimalPathLabel.pas
    Tests the TMinimalPathLabel component that truncates file paths to fit within label width.
 
@@ -31,9 +32,6 @@ type
     procedure TearDown;
 
     { Constructor Tests }
-    [Test]
-    procedure TestCreate_NotNil;
-
     [Test]
     procedure TestCreate_DefaultShowHint;
 
@@ -124,19 +122,6 @@ end;
 
 
 { Constructor Tests }
-
-procedure TTestMinimalPathLabel.TestCreate_NotNil;
-var
-  Lbl: TMinimalPathLabel;
-begin
-  Lbl:= TMinimalPathLabel.Create(FForm);
-  try
-    Assert.IsNotNull(Lbl, 'Component should be created');
-  finally
-    FreeAndNil(Lbl);
-  end;
-end;
-
 
 procedure TTestMinimalPathLabel.TestCreate_DefaultShowHint;
 var
@@ -311,16 +296,18 @@ begin
   LongPath:= 'C:\Very\Long\Path\That\Goes\On\And\On\Forever\File.txt';
   Lbl:= TMinimalPathLabel.Create(FForm);
   Lbl.Parent:= FForm;
+  Lbl.AutoSize:= FALSE;   { Otherwise TLabel changes the width itself after every caption change }
   Lbl.Width:= 400;
   try
     Lbl.CaptionMin:= LongPath;
     CaptionBefore:= Lbl.Caption;
+    Assert.AreEqual(LongPath, CaptionBefore, 'Precondition: the path fits into 400 pixels');
 
     Lbl.Width:= 100; // Resize to much narrower
 
-    // Caption should change after resize (unless path was already truncated or fits)
-    // At minimum, no exception should be raised
-    Assert.Pass('Resize completed without exception');
+    Assert.IsTrue(Length(Lbl.Caption) < Length(LongPath), 'Resize must shorten the caption: ' + Lbl.Caption);
+    Assert.IsTrue(Pos('...', Lbl.Caption) > 0, 'The shortened caption must hold the ellipsis: ' + Lbl.Caption);
+    Assert.AreEqual(LongPath, Lbl.CaptionMin, 'The full path must be kept');
   finally
     FreeAndNil(Lbl);
   end;
@@ -473,14 +460,17 @@ var
   Lbl: TMinimalPathLabel;
   UnicodePath: string;
 begin
-  UnicodePath:= 'C:\Users\Utilisateur\Documents\Projets\Fichier.txt';
+  { Latin (U-umlaut), Cyrillic and Chinese characters, written as code points so the file encoding cannot change them }
+  UnicodePath:= 'C:\Users\' + #$00DC + 'ser\' + #$0414#$043E#$043A + '\' + #$6587#$4EF6 + '.txt';
   Lbl:= TMinimalPathLabel.Create(FForm);
   Lbl.Parent:= FForm;
+  Lbl.AutoSize:= FALSE;
   Lbl.Width:= 400;
   try
     Lbl.CaptionMin:= UnicodePath;
 
     Assert.AreEqual(UnicodePath, Lbl.CaptionMin, 'Unicode path should be stored correctly');
+    Assert.AreEqual(UnicodePath, Lbl.Caption, 'A short Unicode path must be shown unchanged');
   finally
     FreeAndNil(Lbl);
   end;

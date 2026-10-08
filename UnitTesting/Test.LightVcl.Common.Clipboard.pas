@@ -510,24 +510,18 @@ procedure TTestClipboard.TestStringToClipboard_ZeroRetries;
 begin
   { With MaxRetries=0, the loop condition is RetryCount >= MaxRetries = 0 >= 0 = TRUE,
     so it should still try once (Inc happens before check) }
-  StringToClipboard('Test', 0);
-
-  { Function will attempt at least once before checking retry count }
-  Assert.Pass('Function handles zero retries without exception');
+  ClearClipboard;
+  Assert.IsTrue(StringToClipboard('ZeroRetries text', 0), 'StringToClipboard must still write once with MaxRetries = 0');
+  Assert.AreEqual('ZeroRetries text', GetClipboardText, 'The text written with MaxRetries = 0 must be on the clipboard');
 end;
 
 
 procedure TTestClipboard.TestStringFromClipboard_ZeroTimeout;
-var
-  ReadText: string;
 begin
-  SetClipboardText('Test');
+  SetClipboardText('ZeroTimeout text');
 
-  { With MaxWaitTime=0, should still attempt at least once }
-  ReadText:= StringFromClipboard(0);
-
-  { If clipboard access succeeds on first try, should return text }
-  Assert.Pass('Function handles zero timeout without exception');
+  { With MaxWaitTime=0 the REPEAT loop still reads once }
+  Assert.AreEqual('ZeroTimeout text', StringFromClipboard(0), 'StringFromClipboard must still read once with MaxWaitTime = 0');
 end;
 
 

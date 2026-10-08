@@ -45,7 +45,7 @@ type
 
     { BatteryAsText Tests }
     [Test]
-    procedure TestBatteryAsText_ReturnsNonEmpty;
+    procedure TestBatteryAsText_ExactText;
 
     [Test]
     procedure TestBatteryAsText_NoErrorMessage;
@@ -63,15 +63,12 @@ type
     { IsScreenSaverOn Tests }
     [Test]
     procedure TestIsScreenSaverOn_ReturnsBool;
-
-    { TPowerType Enum Tests }
-    [Test]
-    procedure TestTPowerType_HasExpectedValues;
   end;
 
 implementation
 
 uses
+  Winapi.Windows,
   LightVcl.Common.PowerUtils;
 
 
@@ -89,12 +86,21 @@ end;
 
 { PowerStatus Tests }
 
+{ Expected TPowerType from the documented ACLineStatus codes: 0 = offline (battery), 1 = online (AC), 255 = unknown.
+  https://learn.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-system_power_status }
 procedure TTestPowerUtils.TestPowerStatus_ReturnsValidValue;
 var
-  Status: TPowerType;
+  SysPowerStatus: TSystemPowerStatus;
+  Expected: TPowerType;
 begin
-  Status:= PowerStatus;
-  Assert.IsTrue(Status in [pwTypeBat, pwTypeAC, pwUnknown], 'PowerStatus should return a valid TPowerType');
+  Assert.IsTrue(GetSystemPowerStatus(SysPowerStatus), 'GetSystemPowerStatus failed');
+  case SysPowerStatus.ACLineStatus of
+    0: Expected:= pwTypeBat;
+    1: Expected:= pwTypeAC;
+  else Expected:= pwUnknown;
+  end;
+
+  Assert.AreEqual(Ord(Expected), Ord(PowerStatus), 'PowerStatus for ACLineStatus = ' + IntToStr(SysPowerStatus.ACLineStatus));
 end;
 
 
@@ -107,17 +113,20 @@ begin
 end;
 
 
+{ The expected text follows from the documented ACLineStatus code (same page as above) }
 procedure TTestPowerUtils.TestPowerStatusString_ContainsExpectedText;
 var
-  StatusStr: string;
+  SysPowerStatus: TSystemPowerStatus;
+  Expected: string;
 begin
-  StatusStr:= PowerStatusString;
-  // Should contain one of the expected phrases
-  Assert.IsTrue(
-    (Pos('batteries', StatusStr) > 0) OR
-    (Pos('AC', StatusStr) > 0) OR
-    (Pos('unavailable', StatusStr) > 0),
-    'PowerStatusString should contain expected text');
+  Assert.IsTrue(GetSystemPowerStatus(SysPowerStatus), 'GetSystemPowerStatus failed');
+  case SysPowerStatus.ACLineStatus of
+    0: Expected:= 'Running on batteries!';
+    1: Expected:= 'Running on AC.';
+  else Expected:= 'Power supply status unavailable.';
+  end;
+
+  Assert.AreEqual(Expected, PowerStatusString, 'PowerStatusString for ACLineStatus = ' + IntToStr(SysPowerStatus.ACLineStatus));
 end;
 
 
@@ -145,76 +154,145 @@ end;
 
 { BatteryAsText Tests }
 
-procedure TTestPowerUtils.TestBatteryAsText_ReturnsNonEmpty;
+{ The exact text, built from the documented BatteryFlag bits: 1 = High, 2 = Low, 4 = Critical, 8 = Charging,
+  128 = no system battery, 255 = unknown; no bit set = 'Normal' (same page as above) }
+procedure TTestPowerUtils.TestBatteryAsText_ExactText;
+CONST
+  BitNames: array[0..3] of string = ('High', 'Low', 'Critical', 'Charging');
 var
-  Text: string;
+  SysPowerStatus: TSystemPowerStatus;
+  Expected: string;
+  Bit: Integer;
 begin
-  Text:= BatteryAsText;
-  Assert.IsNotEmpty(Text, 'BatteryAsText should return non-empty string');
+  Assert.IsTrue(GetSystemPowerStatus(SysPowerStatus), 'GetSystemPowerStatus failed');
+
+  if SysPowerStatus.BatteryFlag = 255
+  then Expected:= 'Unknown status'
+  else
+    if (SysPowerStatus.BatteryFlag AND 128) = 128
+    then Expected:= 'No system battery'
+    else
+      begin
+        Expected:= '';
+        for Bit:= 0 to 3 DO
+          if (SysPowerStatus.BatteryFlag AND (1 SHL Bit)) <> 0 then
+            begin
+              if Expected <> '' then Expected:= Expected + ' ';
+              Expected:= Expected + BitNames[Bit];
+            end;
+        if Expected = '' then Expected:= 'Normal';
+      end;
+
+  Assert.AreEqual(Expected, BatteryAsText, 'BatteryAsText for BatteryFlag = ' + IntToStr(SysPowerStatus.BatteryFlag));
 end;
 
 
+{ BatteryFlag codes: 128 = no system battery, 255 = unknown (same page as above) }
 procedure TTestPowerUtils.TestBatteryAsText_NoErrorMessage;
 var
+  SysPowerStatus: TSystemPowerStatus;
   Text: string;
 begin
+  Assert.IsTrue(GetSystemPowerStatus(SysPowerStatus), 'GetSystemPowerStatus failed');
   Text:= BatteryAsText;
-  // If system call succeeds, should not contain error message
-  // (might still contain error if running in unusual environment)
-  Assert.Pass('BatteryAsText executed without exception');
+
+  Assert.AreNotEqual('Could not get the SYSTEM POWER STATUS', Text, 'GetSystemPowerStatus works here, so no error text');
+  if SysPowerStatus.BatteryFlag = 255
+  then Assert.AreEqual('Unknown status', Text)
+  else
+    if (SysPowerStatus.BatteryFlag AND 128) = 128
+    then Assert.AreEqual('No system battery', Text)
+    else
+      if (SysPowerStatus.BatteryFlag AND 1) = 1
+      then Assert.IsTrue(Pos('High', Text) = 1, 'BatteryFlag has bit 1 (High): ' + Text)
+      else Assert.IsTrue(Pos('High', Text) = 0, 'BatteryFlag lacks bit 1 (High): ' + Text);
 end;
 
 
-{ Power Capability Tests }
+{ Power Capability Tests
+  These routines are bare 'external' declarations, so the only thing that can be wrong is the export they bind to.
+  The reference calls the documented export of powrprof.dll by name. }
+
+type
+  TPowrProfQuery = function: Boolean; stdcall;
+
+function CallPowrProf(CONST ExportName: string): Boolean;
+VAR
+  Lib: HMODULE;
+  Query: TPowrProfQuery;
+begin
+  Lib:= LoadLibrary('powrprof.dll');
+  Assert.IsTrue(Lib <> 0, 'powrprof.dll not loaded');
+  TRY
+    Query:= TPowrProfQuery(GetProcAddress(Lib, PChar(ExportName)));
+    Assert.IsTrue(Assigned(Query), 'powrprof.dll has no export ' + ExportName);
+    Result:= Query();
+  FINALLY
+    FreeLibrary(Lib);
+  END;
+end;
+
 
 procedure TTestPowerUtils.TestIsHibernateAllowed_ReturnsBool;
-var
-  Allowed: Boolean;
 begin
-  // This just tests that the external function can be called
-  Allowed:= IsHibernateAllowed;
-  Assert.IsTrue((Allowed = TRUE) OR (Allowed = FALSE), 'IsHibernateAllowed should return valid Boolean');
+  Assert.IsTrue(CallPowrProf('IsPwrHibernateAllowed') = IsHibernateAllowed, 'IsHibernateAllowed must bind IsPwrHibernateAllowed');
 end;
 
 
 procedure TTestPowerUtils.TestIsPwrSuspendAllowed_ReturnsBool;
-var
-  Allowed: Boolean;
 begin
-  Allowed:= IsPwrSuspendAllowed;
-  Assert.IsTrue((Allowed = TRUE) OR (Allowed = FALSE), 'IsPwrSuspendAllowed should return valid Boolean');
+  Assert.IsTrue(CallPowrProf('IsPwrSuspendAllowed') = IsPwrSuspendAllowed, 'IsPwrSuspendAllowed must bind IsPwrSuspendAllowed');
 end;
 
 
 procedure TTestPowerUtils.TestIsPwrShutdownAllowed_ReturnsBool;
-var
-  Allowed: Boolean;
 begin
-  Allowed:= IsPwrShutdownAllowed;
-  Assert.IsTrue((Allowed = TRUE) OR (Allowed = FALSE), 'IsPwrShutdownAllowed should return valid Boolean');
+  Assert.IsTrue(CallPowrProf('IsPwrShutdownAllowed') = IsPwrShutdownAllowed, 'IsPwrShutdownAllowed must bind IsPwrShutdownAllowed');
 end;
 
 
 { IsScreenSaverOn Tests }
 
-procedure TTestPowerUtils.TestIsScreenSaverOn_ReturnsBool;
-var
-  IsOn: Boolean;
+function FakeSaverWndProc(Wnd: HWND; Msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall;
 begin
-  // Screen saver should normally be off during test execution
-  IsOn:= IsScreenSaverOn;
-  Assert.IsTrue((IsOn = TRUE) OR (IsOn = FALSE), 'IsScreenSaverOn should return valid Boolean');
+  Result:= DefWindowProc(Wnd, Msg, wParam, lParam);
 end;
 
 
-{ TPowerType Enum Tests }
-
-procedure TTestPowerUtils.TestTPowerType_HasExpectedValues;
+{ Registers a hidden top-level window of the class a running screen saver uses, so IsScreenSaverOn must see it }
+procedure TTestPowerUtils.TestIsScreenSaverOn_ReturnsBool;
+CONST
+  SaverClass = 'WindowsScreenSaverClass';
+VAR
+  WndClass: TWndClass;
+  Wnd: HWND;
 begin
-  // Verify enum values exist and are distinct
-  Assert.AreNotEqual(Ord(pwTypeBat), Ord(pwTypeAC), 'pwTypeBat and pwTypeAC should be different');
-  Assert.AreNotEqual(Ord(pwTypeBat), Ord(pwUnknown), 'pwTypeBat and pwUnknown should be different');
-  Assert.AreNotEqual(Ord(pwTypeAC), Ord(pwUnknown), 'pwTypeAC and pwUnknown should be different');
+  if FindWindow(SaverClass, NIL) <> 0 then
+    begin
+      Assert.Pass('A real screen saver is running - the fake one cannot be told apart');
+      EXIT;
+    end;
+
+  Assert.IsFalse(IsScreenSaverOn, 'No screen saver window exists yet');
+
+  FillChar(WndClass, SizeOf(WndClass), 0);
+  WndClass.lpfnWndProc  := @FakeSaverWndProc;
+  WndClass.hInstance    := HInstance;
+  WndClass.lpszClassName:= SaverClass;
+  Assert.IsTrue(Winapi.Windows.RegisterClass(WndClass) <> 0, 'RegisterClass failed');
+  TRY
+    Wnd:= CreateWindowEx(0, SaverClass, 'Fake screen saver', WS_POPUP, 0, 0, 1, 1, 0, 0, HInstance, NIL);
+    Assert.IsTrue(Wnd <> 0, 'CreateWindowEx failed');
+    TRY
+      Assert.IsTrue(IsScreenSaverOn, 'A window of class ' + SaverClass + ' exists, so the screen saver is on');
+    FINALLY
+      DestroyWindow(Wnd);
+    END;
+  FINALLY
+    Winapi.Windows.UnregisterClass(SaverClass, HInstance);
+  END;
+
+  Assert.IsFalse(IsScreenSaverOn, 'The fake screen saver window is gone');
 end;
 
 

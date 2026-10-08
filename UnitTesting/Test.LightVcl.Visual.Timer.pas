@@ -22,6 +22,9 @@ type
   private
     FTimer: TCubicTimer;
     FStandardTimer: TTimer;
+    FFireCount: Integer;
+    procedure TimerFired(Sender: TObject);
+    function MsFromResetToFirstFire(Timer: TTimer; ResetProc: TProc): Int64;
   public
     [Setup]
     procedure Setup;
@@ -63,10 +66,6 @@ type
     [Test]
     procedure TestResetTimer_NilTimer_RaisesAssertion;
 
-    { Initial State Tests }
-    [Test]
-    procedure TestCreate_InheritsFromTTimer;
-
     { Integration Tests }
     [Test]
     procedure TestRestartThenStop_DisablesTimer;
@@ -81,7 +80,46 @@ type
 implementation
 
 uses
+  System.Diagnostics,
   Vcl.Forms;
+
+CONST
+  TestInterval = 500;   { ms }
+  SleepBeforeReset = 350;   { ms. Less than TestInterval, so the first countdown has not elapsed yet }
+
+
+procedure TTestCubicTimer.TimerFired(Sender: TObject);
+begin
+  Inc(FFireCount);
+end;
+
+
+{ Starts Timer, waits SleepBeforeReset ms WITHOUT a message pump (so no WM_TIMER can be dispatched), calls ResetProc,
+  then pumps messages until the first OnTimer. Returns the ms from ResetProc to that OnTimer.
+  A reset that restarts the countdown gives about TestInterval; a reset that does nothing gives about TestInterval - SleepBeforeReset.
+  A slow PC can only make the result larger, never smaller. }
+function TTestCubicTimer.MsFromResetToFirstFire(Timer: TTimer; ResetProc: TProc): Int64;
+var
+  Watch: TStopwatch;
+begin
+  FFireCount:= 0;
+  Timer.OnTimer:= TimerFired;
+  Timer.Interval:= TestInterval;
+  Timer.Enabled:= TRUE;
+  Sleep(SleepBeforeReset);
+
+  ResetProc();
+  Watch:= TStopwatch.StartNew;
+  while (FFireCount = 0) AND (Watch.ElapsedMilliseconds < 5000) DO
+    begin
+      Application.ProcessMessages;
+      Sleep(5);
+    end;
+  Result:= Watch.ElapsedMilliseconds;
+  Timer.Enabled:= FALSE;
+
+  Assert.IsTrue(FFireCount > 0, 'Precondition: the timer fired within 5 seconds');
+end;
 
 
 procedure TTestCubicTimer.Setup;
@@ -138,12 +176,12 @@ end;
 { Reset Tests }
 
 procedure TTestCubicTimer.TestReset_WhenEnabled_RestartsTimer;
+var
+  Ms: Int64;
 begin
-  FTimer.Enabled:= TRUE;
+  Ms:= MsFromResetToFirstFire(FTimer, procedure begin FTimer.Reset; end);
 
-  FTimer.Reset;
-
-  Assert.IsTrue(FTimer.Enabled, 'Reset should keep timer enabled when it was enabled');
+  Assert.IsTrue(Ms >= TestInterval - 100, 'Reset must restart the countdown: OnTimer came ' + IntToStr(Ms) + ' ms after Reset');
 end;
 
 
@@ -182,12 +220,12 @@ end;
 { ResetTimer Standalone Function Tests }
 
 procedure TTestCubicTimer.TestResetTimer_WhenEnabled_ResetsTimer;
+var
+  Ms: Int64;
 begin
-  FStandardTimer.Enabled:= TRUE;
+  Ms:= MsFromResetToFirstFire(FStandardTimer, procedure begin ResetTimer(FStandardTimer); end);
 
-  ResetTimer(FStandardTimer);
-
-  Assert.IsTrue(FStandardTimer.Enabled, 'ResetTimer should keep timer enabled');
+  Assert.IsTrue(Ms >= TestInterval - 100, 'ResetTimer must restart the countdown: OnTimer came ' + IntToStr(Ms) + ' ms after ResetTimer');
 end;
 
 
@@ -210,15 +248,6 @@ begin
     end,
     EAssertionFailed,
     'ResetTimer should raise assertion when Timer is nil');
-end;
-
-
-{ Initial State Tests }
-
-procedure TTestCubicTimer.TestCreate_InheritsFromTTimer;
-begin
-  Assert.IsTrue(FTimer is TTimer, 'TCubicTimer should inherit from TTimer');
-  Assert.IsTrue(FTimer.Interval > 0, 'Timer should have a valid interval');
 end;
 
 

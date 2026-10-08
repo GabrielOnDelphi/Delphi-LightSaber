@@ -51,8 +51,6 @@ type
     procedure TestIsRainShelter_EmptyString;
 
     { TRainShelter Tests }
-    [Test]
-    procedure TestRainShelter_Create;
 
     [Test]
     procedure TestRainShelter_SaveLoad_RoundTrip;
@@ -174,20 +172,6 @@ end;
 
 
 { TRainShelter Tests }
-
-procedure TTestRainDrop.TestRainShelter_Create;
-VAR
-  Shelter: TRainShelter;
-begin
-  Shelter:= TRainShelter.Create;
-  TRY
-    Assert.IsTrue(Shelter.OrigImage = NIL, 'OrigImage should be nil after creation');
-    Assert.AreEqual('', Shelter.FileName, 'FileName should be empty after creation');
-  FINALLY
-    FreeAndNil(Shelter);
-  END;
-end;
-
 
 procedure TTestRainDrop.TestRainShelter_SaveLoad_RoundTrip;
 VAR
@@ -365,9 +349,12 @@ procedure TTestRainDrop.TestRainShelter_Clear_ResetsPixelMap;
 VAR
   Shelter: TRainShelter;
   Mask: TBitmap;
+  Stream: TFileStream;
+  InvalidFile: string;
 begin
   Shelter:= TRainShelter.Create;
   Mask:= NIL;
+  InvalidFile:= TPath.Combine(FTestDir, 'InvalidRainDrop_' + IntToStr(Random(MaxInt)) + RainDrop);
   TRY
     { Setup and save a shelter with pixel map data }
     Shelter.OrigImage:= CreateTestBitmap(20, 20);
@@ -379,23 +366,24 @@ begin
     Shelter.LoadFromFile(FTestFile);
     Assert.AreEqual(20, Length(Shelter.PixelMap), 'PixelMap should be populated after load');
 
-    { Simulate Clear being called (LoadFromFile calls Clear at start) }
-    { Load a different file or call Clear indirectly by loading invalid file }
-    { Actually, let's test by loading the same file again - Clear is called first }
-    Shelter.LoadFromFile(FTestFile);
+    { LoadFromFile calls Clear first. An invalid file stops right after the header check,
+      so only Clear can empty what the valid load left behind. }
+    Stream:= TFileStream.Create(InvalidFile, fmCreate);
+    TRY
+      Stream.WriteData(Integer(12345));
+      Stream.WriteData(Integer(67890));
+    FINALLY
+      FreeAndNil(Stream);
+    END;
 
-    { The PixelMap should still be valid (repopulated) }
-    Assert.AreEqual(20, Length(Shelter.PixelMap), 'PixelMap should be repopulated after second load');
-
-    { Now test that PixelMap is cleared when OrigImage is freed }
-    FreeAndNil(Shelter);
-    Shelter:= TRainShelter.Create;
-
-    { After creation, PixelMap should be empty }
-    Assert.AreEqual(0, Length(Shelter.PixelMap), 'PixelMap should be empty on new instance');
+    Assert.IsFalse(Shelter.LoadFromFile(InvalidFile), 'The invalid file must not load');
+    Assert.AreEqual(0, Length(Shelter.PixelMap), 'Clear must empty the PixelMap of the previous load');
+    Assert.IsTrue(Shelter.OrigImage = NIL, 'Clear must free the OrigImage of the previous load');
   FINALLY
     FreeAndNil(Mask);
     FreeAndNil(Shelter);
+    if TFile.Exists(InvalidFile)
+    then TFile.Delete(InvalidFile);
   END;
 end;
 

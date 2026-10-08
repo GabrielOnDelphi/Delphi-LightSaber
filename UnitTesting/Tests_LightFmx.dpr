@@ -67,6 +67,8 @@ uses
   FormScreenCapture                   in '..\FrameFMX\FormScreenCapture.pas',
   Test.FormScreenCapture              in 'Test.FormScreenCapture.pas';
 
+{$R *.res}   { The version resource that MSBuild builds from VerInfo_* in the .dproj; Test.LightFmx.Common.AppData reads it }
+
 {$IFNDEF TESTINSIGHT}
 var
   runner: ITestRunner;
@@ -104,7 +106,7 @@ begin
     nunitLogger:= TDUnitXXMLNUnitFileLogger.Create(TDUnitX.Options.XMLOutputFile);
     runner.AddLogger(nunitLogger);
 
-    runner.FailsOnNoAsserts:= FALSE;
+    runner.FailsOnNoAsserts:= TRUE;
 
     results:= runner.Execute;
     if not results.AllPassed then

@@ -75,6 +75,8 @@ uses
   LightVcl.Visual.ThumbViewerM in '..\FrameVCL\LightVcl.Visual.ThumbViewerM.pas',
   Test.LightVcl.Visual.ThumbViewerM in 'Test.LightVcl.Visual.ThumbViewerM.pas';
 
+{$R *.res}   { The version resource that MSBuild builds from VerInfo_* in the .dproj; Test.LightVcl.Visual.AppData reads it }
+
 {$IFNDEF TESTINSIGHT}
 var
   runner: ITestRunner;
@@ -128,7 +130,7 @@ begin
     nunitLogger:= TDUnitXXMLNUnitFileLogger.Create(TDUnitX.Options.XMLOutputFile);
     runner.AddLogger(nunitLogger);
 
-    runner.FailsOnNoAsserts:= FALSE;
+    runner.FailsOnNoAsserts:= TRUE;
 
     // Run tests
     results:= runner.Execute;

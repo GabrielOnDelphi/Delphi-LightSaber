@@ -39,9 +39,6 @@ type
 
     { Creation Tests }
     [Test]
-    procedure TestCreate_Succeeds;
-
-    [Test]
     procedure TestCreate_DefaultProperties;
 
     [Test]
@@ -130,10 +127,7 @@ type
     [Test]
     procedure TestAutoScroll_CanBeDisabled;
 
-    { Clear Tests }
-    [Test]
-    procedure TestClear_RemovesAllLines;
-
+    { Copy Tests }
     [Test]
     procedure TestCopyAll_NoException;
 
@@ -153,7 +147,10 @@ type
 implementation
 
 uses
+  Winapi.Windows,
+  Winapi.Messages,
   System.IOUtils,
+  Vcl.Clipbrd,
   LightCore.AppData,
   LightVcl.Visual.AppData,
   LightVcl.Visual.RichLog,
@@ -201,18 +198,6 @@ end;
 
 
 { Creation Tests }
-
-procedure TTestRichLog.TestCreate_Succeeds;
-var
-  RichLog: TRichLog;
-begin
-  RichLog:= TRichLog.Create(FTestForm);
-  RichLog.Parent:= FTestForm;
-  FRichLog:= RichLog;
-
-  Assert.IsNotNull(RichLog, 'RichLog creation should succeed');
-end;
-
 
 procedure TTestRichLog.TestCreate_DefaultProperties;
 var
@@ -277,9 +262,12 @@ begin
   RichLog.Parent:= FTestForm;
   FRichLog:= RichLog;
 
+  RichLog.Clear;
   RichLog.Verbosity:= lvrVerbose;
+  RichLog.AddVerb('VerboseLine');
 
   Assert.AreEqual(lvrVerbose, RichLog.Verbosity, 'Should be able to set verbosity to lvrVerbose');
+  Assert.IsTrue(Pos('VerboseLine', RichLog.Text) > 0, 'At lvrVerbose a verbose message must be shown');
 end;
 
 
@@ -291,9 +279,14 @@ begin
   RichLog.Parent:= FTestForm;
   FRichLog:= RichLog;
 
+  RichLog.Clear;
   RichLog.Verbosity:= lvrErrors;
+  RichLog.AddWarn('WarnLine');
+  RichLog.AddError('ErrorLine');
 
   Assert.AreEqual(lvrErrors, RichLog.Verbosity, 'Should be able to set verbosity to lvrErrors');
+  Assert.AreEqual(0, Pos('WarnLine', RichLog.Text), 'At lvrErrors a warning must be filtered out');
+  Assert.IsTrue(Pos('ErrorLine', RichLog.Text) > 0, 'At lvrErrors an error must be shown');
 end;
 
 
@@ -452,19 +445,20 @@ end;
 procedure TTestRichLog.TestAddBold_AddsFormattedMessage;
 var
   RichLog: TRichLog;
+  P: Integer;
 begin
   RichLog:= TRichLog.Create(FTestForm);
   RichLog.Parent:= FTestForm;
   FRichLog:= RichLog;
 
   RichLog.Clear;
+  RichLog.AddBold('Bold message');
 
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      RichLog.AddBold('Bold message');
-    end,
-    'RichLog.AddBold(Bold message) must not raise');
+  P:= RichLog.FindText('Bold message', 0, Length(RichLog.Text), []);
+  Assert.IsTrue(P >= 0, 'AddBold must add the text');
+  RichLog.SelStart := P;
+  RichLog.SelLength:= Length('Bold message');
+  Assert.IsTrue(fsBold in RichLog.SelAttributes.Style, 'AddBold must write the text in bold');
 end;
 
 
@@ -662,35 +656,27 @@ end;
 procedure TTestRichLog.TestAutoScroll_CanBeDisabled;
 var
   RichLog: TRichLog;
+  Msg: TMsg;
 begin
   RichLog:= TRichLog.Create(FTestForm);
   RichLog.Parent:= FTestForm;
   FRichLog:= RichLog;
 
+  RichLog.HandleNeeded;
+  while PeekMessage(Msg, RichLog.Handle, WM_VSCROLL, WM_VSCROLL, PM_REMOVE) do;   { Drop any scroll already queued }
+
+  { ScrollDown posts WM_VSCROLL to the control: with AutoScroll off, nothing may be posted }
   RichLog.AutoScroll:= FALSE;
+  RichLog.AddMsg('Line without scroll');
+  Assert.IsFalse(PeekMessage(Msg, RichLog.Handle, WM_VSCROLL, WM_VSCROLL, PM_REMOVE), 'AutoScroll=FALSE must not scroll');
 
-  Assert.IsFalse(RichLog.AutoScroll, 'AutoScroll should be disableable');
+  RichLog.AutoScroll:= TRUE;
+  RichLog.AddMsg('Line with scroll');
+  Assert.IsTrue(PeekMessage(Msg, RichLog.Handle, WM_VSCROLL, WM_VSCROLL, PM_REMOVE), 'AutoScroll=TRUE must scroll');
 end;
 
 
-{ Clear Tests }
-
-procedure TTestRichLog.TestClear_RemovesAllLines;
-var
-  RichLog: TRichLog;
-begin
-  RichLog:= TRichLog.Create(FTestForm);
-  RichLog.Parent:= FTestForm;
-  FRichLog:= RichLog;
-
-  RichLog.AddMsg('Test line 1');
-  RichLog.AddMsg('Test line 2');
-
-  RichLog.Clear;
-
-  Assert.IsTrue(RichLog.Lines.Count <= 1, 'Clear should remove all lines (RichEdit may keep 1 empty line)');
-end;
-
+{ Copy Tests }
 
 procedure TTestRichLog.TestCopyAll_NoException;
 var
@@ -700,14 +686,12 @@ begin
   RichLog.Parent:= FTestForm;
   FRichLog:= RichLog;
 
+  RichLog.Clear;
   RichLog.AddMsg('Test content');
+  Clipboard.Clear;
 
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      RichLog.CopyAll;
-    end,
-    'RichLog.CopyAll must not raise');
+  RichLog.CopyAll;
+  Assert.AreEqual('Test content', Trim(Clipboard.AsText), 'CopyAll must put the whole log on the clipboard');
 end;
 
 
@@ -723,13 +707,12 @@ begin
 
   RichLog.Clear;
   RichLog.AddMsg('Test line');
+  RichLog.Lines.Add('');
+  RichLog.Lines.Add('');
+  Assert.AreEqual('', RichLog.Lines[RichLog.Lines.Count-1], 'Precondition: the log ends with an empty row');
 
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      RichLog.RemoveLastEmptyRows;
-    end,
-    'RichLog.RemoveLastEmptyRows must not raise');
+  RichLog.RemoveLastEmptyRows;
+  Assert.AreEqual('Test line', RichLog.Lines[RichLog.Lines.Count-1], 'The empty rows at the end must be gone');
 end;
 
 
@@ -738,7 +721,7 @@ end;
 procedure TTestRichLog.TestSaveAsRtf_NoException;
 var
   RichLog: TRichLog;
-  TempFile: string;
+  TempFile, Content: string;
 begin
   RichLog:= TRichLog.Create(FTestForm);
   RichLog.Parent:= FTestForm;
@@ -750,15 +733,14 @@ begin
   TempFile:= System.IOUtils.TPath.Combine(System.IOUtils.TPath.GetTempPath, 'test_richlog.rtf');
 
   try
-    Assert.WillNotRaiseAny(
-      procedure
-      begin
-        RichLog.SaveAsRtf(TempFile);
-      end,
-      'RichLog.SaveAsRtf(TempFile) must not raise');
+    RichLog.SaveAsRtf(TempFile);
+    Assert.IsTrue(FileExists(TempFile), 'SaveAsRtf must write the file');
+    Content:= TFile.ReadAllText(TempFile);
+    Assert.IsTrue(Content.StartsWith('{\rtf'), 'The file must be RTF, not plain text');
+    Assert.IsTrue(Pos('Test content', Content) > 0, 'The file must hold the log text');
   finally
     if FileExists(TempFile)
-    then DeleteFile(TempFile);
+    then System.SysUtils.DeleteFile(TempFile);
   end;
 end;
 

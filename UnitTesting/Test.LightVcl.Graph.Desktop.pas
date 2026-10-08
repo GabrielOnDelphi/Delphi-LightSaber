@@ -173,12 +173,11 @@ begin
   Handle:= GetDesktopHandle;
   { Desktop handle should be obtainable. May be 0 if desktop is in an unusual state }
   { This is more of a smoke test to ensure the function doesn't crash }
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       Handle:= GetDesktopHandle;
     end,
-    Exception,
     'GetDesktopHandle should not raise an exception');
 end;
 

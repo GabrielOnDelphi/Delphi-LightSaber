@@ -24,6 +24,7 @@ type
     FForm: TForm;
     FTestFolder: string;
     FTestFile: string;
+    function ChildControl(Owner: TComponent; CONST aName: string): TControl;
   public
     [Setup]
     procedure Setup;
@@ -32,9 +33,6 @@ type
     procedure TearDown;
 
     { Constructor Tests }
-    [Test]
-    procedure TestCreate_NotNil;
-
     [Test]
     procedure TestCreate_DefaultInputType;
 
@@ -132,7 +130,7 @@ type
 
     { GetFiles Tests }
     [Test]
-    procedure TestGetFiles_NoException;
+    procedure TestGetFiles_ListsMatchingFiles;
   end;
 
 implementation
@@ -171,19 +169,15 @@ begin
 end;
 
 
-{ Constructor Tests }
-
-procedure TTesTlightPathEdit.TestCreate_NotNil;
-var
-  PathEdit: TlightPathEdit;
+{ The buttons and the edit box are private fields; TlightPathEdit owns them and gives each a Name }
+function TTesTlightPathEdit.ChildControl(Owner: TComponent; CONST aName: string): TControl;
 begin
-  PathEdit:= TlightPathEdit.Create(FForm);
-  try
-    Assert.IsNotNull(PathEdit, 'Component should be created');
-  finally
-    FreeAndNil(PathEdit);
-  end;
+  Result:= Owner.FindComponent(aName) as TControl;
+  Assert.IsNotNull(Result, 'Child control not found: ' + aName);
 end;
+
+
+{ Constructor Tests }
 
 
 procedure TTesTlightPathEdit.TestCreate_DefaultInputType;
@@ -506,8 +500,10 @@ begin
   PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
+    PathEdit.ShowCreateBtn:= FALSE;   { Default is TRUE, so go through FALSE first }
     PathEdit.ShowCreateBtn:= TRUE;
     Assert.IsTrue(PathEdit.ShowCreateBtn, 'ShowCreateBtn should be TRUE');
+    Assert.IsTrue(ChildControl(PathEdit, 'ButtonCreate').Visible, 'The Create button must be visible');
   finally
     FreeAndNil(PathEdit);
   end;
@@ -536,8 +532,10 @@ begin
   PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
+    PathEdit.ShowOpenSrc:= FALSE;     { Default is TRUE, so go through FALSE first }
     PathEdit.ShowOpenSrc:= TRUE;
     Assert.IsTrue(PathEdit.ShowOpenSrc, 'ShowOpenSrc should be TRUE');
+    Assert.IsTrue(ChildControl(PathEdit, 'ButtonExplore').Visible, 'The Explore button must be visible');
   finally
     FreeAndNil(PathEdit);
   end;
@@ -581,8 +579,10 @@ begin
   PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
+    PathEdit.ShowApplyBtn:= TRUE;     { Default is FALSE, so go through TRUE first }
     PathEdit.ShowApplyBtn:= FALSE;
     Assert.IsFalse(PathEdit.ShowApplyBtn, 'ShowApplyBtn should be FALSE');
+    Assert.IsFalse(ChildControl(PathEdit, 'ButtonApply').Visible, 'The Apply button must be hidden');
   finally
     FreeAndNil(PathEdit);
   end;
@@ -632,6 +632,9 @@ begin
   try
     PathEdit.Enabled:= FALSE;
     Assert.IsFalse(PathEdit.Enabled, 'Enabled should be FALSE');
+    { SetEnabled must pass the state to the children; the VCL does not do that by itself }
+    Assert.IsFalse(ChildControl(PathEdit, 'PathEdit').Enabled,       'The edit box must be disabled');
+    Assert.IsFalse(ChildControl(PathEdit, 'ButtonExplore').Enabled,  'The Explore button must be disabled');
   finally
     FreeAndNil(PathEdit);
   end;
@@ -648,6 +651,8 @@ begin
     PathEdit.Enabled:= FALSE;
     PathEdit.Enabled:= TRUE;
     Assert.IsTrue(PathEdit.Enabled, 'Enabled should be TRUE');
+    Assert.IsTrue(ChildControl(PathEdit, 'PathEdit').Enabled,       'The edit box must be enabled again');
+    Assert.IsTrue(ChildControl(PathEdit, 'ButtonExplore').Enabled,  'The Explore button must be enabled again');
   finally
     FreeAndNil(PathEdit);
   end;
@@ -656,7 +661,7 @@ end;
 
 { GetFiles Tests }
 
-procedure TTesTlightPathEdit.TestGetFiles_NoException;
+procedure TTesTlightPathEdit.TestGetFiles_ListsMatchingFiles;
 var
   PathEdit: TlightPathEdit;
   Files: TStringList;
@@ -665,16 +670,14 @@ begin
   PathEdit.Parent:= FForm;
   try
     PathEdit.Path:= FTestFolder;
-    Assert.WillNotRaise(
-      procedure
-      begin
-        Files:= PathEdit.GetFiles('*.txt', True, False, nil);
-        try
-          { Just check it doesn't raise }
-        finally
-          FreeAndNil(Files);
-        end;
-      end);
+    TFile.WriteAllText(TPath.Combine(FTestFolder, 'Other.dat'), 'x');   { Must be filtered out by the mask }
+    Files:= PathEdit.GetFiles('*.txt', True, False, nil);
+    try
+      Assert.AreEqual(1, Files.Count, 'Only the one .txt file must be listed');
+      Assert.AreEqual(FTestFile, Files[0], 'GetFiles must return the full path of the file in Path');
+    finally
+      FreeAndNil(Files);
+    end;
   finally
     FreeAndNil(PathEdit);
   end;

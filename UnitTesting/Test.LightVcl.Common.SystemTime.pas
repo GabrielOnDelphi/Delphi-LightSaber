@@ -61,7 +61,7 @@ type
 
     { SystemTimeIsInvalid Tests }
     [Test]
-    procedure Test_SystemTimeIsInvalid_ReturnsBoolean;
+    procedure Test_SystemTimeIsInvalid_MatchesSystemFileTime;
 
     [Test]
     procedure Test_SystemTimeIsInvalid_NormallyReturnsFalse;
@@ -88,7 +88,7 @@ type
 
     { DelayEx Tests - Limited testing due to ProcessMessages }
     [Test]
-    procedure Test_DelayEx_DoesNotCrash;
+    procedure Test_DelayEx_ZeroReturnsAtOnce;
 
     [Test]
     procedure Test_DelayEx_WaitsApproximateTime;
@@ -150,13 +150,32 @@ end;
 
 { UserIdleTime Tests }
 
+{ Injects a zero-distance mouse move, which resets the input-idle timer that GetLastInputInfo reads.
+  Returns FALSE when Windows refuses the injection (UIPI: a foreground window of higher integrity). }
+function InjectUserInput: Boolean;
+VAR
+  Input: TInput;
+begin
+  FillChar(Input, SizeOf(Input), 0);
+  Input.Itype:= INPUT_MOUSE;
+  Input.mi.dwFlags:= MOUSEEVENTF_MOVE;   { dx = dy = 0: the cursor does not move }
+  Result:= SendInput(1, Input, SizeOf(Input)) = 1;
+end;
+
+
 procedure TTestSystemTime.Test_UserIdleTime_ReturnsValue;
 VAR
   IdleTime: Cardinal;
 begin
-  { Just verify it returns without crashing }
+  if NOT InjectUserInput then
+    begin
+      Assert.Pass('SendInput was refused - the idle timer cannot be reset on this desktop');
+      EXIT;
+    end;
+
+  { The input arrived a few milliseconds ago: zero whole seconds of idle time }
   IdleTime:= UserIdleTime;
-  Assert.Pass('UserIdleTime returned: ' + IntToStr(IdleTime) + ' seconds');
+  Assert.AreEqual(0, Integer(IdleTime), 'UserIdleTime right after an input event');
 end;
 
 
@@ -164,24 +183,61 @@ procedure TTestSystemTime.Test_UserIdleTime_ReturnsReasonableValue;
 VAR
   IdleTime: Cardinal;
 begin
-  IdleTime:= UserIdleTime;
+  if NOT InjectUserInput then
+    begin
+      Assert.Pass('SendInput was refused - the idle timer cannot be reset on this desktop');
+      EXIT;
+    end;
 
-  { User idle time should be less than system uptime }
-  { Maximum reasonable idle time is 1 year in seconds }
-  Assert.IsTrue(IdleTime < 365 * 24 * 60 * 60,
-    'User idle time should be reasonable (< 1 year)');
+  { 1.1 seconds after the input the result is 1 second (0 if the person at the PC touched the mouse meanwhile).
+    A result in milliseconds would be about 1100. }
+  Sleep(1100);
+  IdleTime:= UserIdleTime;
+  Assert.IsTrue(IdleTime <= 2, 'UserIdleTime must count SECONDS. 1.1 s after an input it returned ' + IntToStr(IdleTime));
 end;
 
 
 { GetSysFileTime Tests }
 
+{ The files GetSysFileTime documents for an NT kernel, in its order: the SOFTWARE registry hive, then
+  pagefile.sys on C: to F:. A normal user cannot see the hive, so on most PCs the answer is c:\pagefile.sys.
+  Returns the first visible one and its last-write time (local time, read by the RTL's FileAge). }
+function ExpectedSysFile(out FileName: string; out FileTime: TDateTime): Boolean;
+VAR
+  Buffer: array[0..MAX_PATH - 1] of Char;
+  WinDir, Candidate: string;
+  Candidates: TArray<string>;
+begin
+  GetWindowsDirectory(Buffer, MAX_PATH);
+  WinDir:= IncludeTrailingPathDelimiter(Buffer);
+  Candidates:= [WinDir + 'system32\config\software', WinDir + 'config\software',
+                'c:\pagefile.sys', 'd:\pagefile.sys', 'e:\pagefile.sys', 'f:\pagefile.sys'];
+
+  FileName:= '';
+  FileTime:= 0;
+  for Candidate in Candidates DO
+    if FileExists(Candidate) then
+      begin
+        FileName:= Candidate;
+        EXIT(System.SysUtils.FileAge(FileName, FileTime));
+      end;
+  Result:= FALSE;
+end;
+
+
 procedure TTestSystemTime.Test_GetSysFileTime_ReturnsValue;
 VAR
-  SysTime: TDateTime;
+  SysTime, Expected: TDateTime;
+  FileName: string;
 begin
-  { This may return 0 if no suitable system file is found, which is valid }
+  if NOT ExpectedSysFile(FileName, Expected) then
+    begin
+      Assert.Pass('None of the system files GetSysFileTime uses is readable on this PC');
+      EXIT;
+    end;
+
   SysTime:= GetSysFileTime;
-  Assert.Pass('GetSysFileTime returned: ' + DateTimeToStr(SysTime));
+  Assert.AreEqual(Expected, SysTime, 2 / SecsPerDay, 'GetSysFileTime must return the last-write time of ' + FileName);
 end;
 
 
@@ -209,13 +265,19 @@ end;
 
 { SystemTimeIsInvalid Tests }
 
-procedure TTestSystemTime.Test_SystemTimeIsInvalid_ReturnsBoolean;
+procedure TTestSystemTime.Test_SystemTimeIsInvalid_MatchesSystemFileTime;
 VAR
-  IsInvalid: Boolean;
+  FileTime: TDateTime;
+  FileName: string;
 begin
-  { Just verify it returns without crashing }
-  IsInvalid:= SystemTimeIsInvalid;
-  Assert.Pass('SystemTimeIsInvalid returned: ' + BoolToStr(IsInvalid, True));
+  if NOT ExpectedSysFile(FileName, FileTime) then
+    begin
+      Assert.Pass('None of the system files GetSysFileTime uses is readable on this PC');
+      EXIT;
+    end;
+
+  { The clock is "invalid" exactly when it is earlier than the system file's last-write time }
+  Assert.IsTrue((Now < FileTime) = SystemTimeIsInvalid, 'SystemTimeIsInvalid must compare Now with the time of ' + FileName + ': ' + DateTimeToStr(FileTime));
 end;
 
 
@@ -328,12 +390,16 @@ end;
 
 { DelayEx Tests }
 
-procedure TTestSystemTime.Test_DelayEx_DoesNotCrash;
+procedure TTestSystemTime.Test_DelayEx_ZeroReturnsAtOnce;
+VAR
+  StartTick, ElapsedMs: UInt64;
 begin
-  { Just verify it executes without crashing }
-  { Using a very short delay to keep tests fast }
-  DelayEx(10);
-  Assert.Pass('DelayEx completed without crashing');
+  StartTick:= GetTickCount64;
+  DelayEx(0);
+  ElapsedMs:= GetTickCount64 - StartTick;
+
+  { One pass of the loop: Sleep(1) plus one message pump, well under 50 ms }
+  Assert.IsTrue(ElapsedMs < 50, 'DelayEx(0) must return at once. Elapsed: ' + IntToStr(ElapsedMs) + ' ms');
 end;
 
 

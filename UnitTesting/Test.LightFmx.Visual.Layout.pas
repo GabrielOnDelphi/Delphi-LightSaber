@@ -28,6 +28,9 @@ type
   TTestLightLayout = class
   private
     FLayout: TLightLayoutTestAccess;
+    class var RegisteredPage: string;
+    class var RegisteredClasses: string;
+    class procedure CaptureRegistration(const Page: string; const ComponentClasses: array of TComponentClass); static;
   public
     [Setup]
     procedure Setup;
@@ -38,9 +41,6 @@ type
     { Constructor Tests }
     [Test]
     procedure TestCreate_DefaultVisibleAtRuntime;
-
-    [Test]
-    procedure TestCreate_InheritsFromTLayout;
 
     { Property Tests }
     [Test]
@@ -61,7 +61,7 @@ type
 
     { Component Registration }
     [Test]
-    procedure TestRegister_NoException;
+    procedure TestRegister_RegistersComponents;
   end;
 
 implementation
@@ -97,12 +97,6 @@ begin
 end;
 
 
-procedure TTestLightLayout.TestCreate_InheritsFromTLayout;
-begin
-  Assert.IsTrue(FLayout is TLayout, 'TLightLayout should inherit from TLayout');
-end;
-
-
 { Property Tests }
 
 procedure TTestLightLayout.TestSetVisibleAtRuntime_True;
@@ -133,11 +127,13 @@ end;
 
 procedure TTestLightLayout.TestLoaded_VisibleAtRuntimeTrue_ComponentVisible;
 begin
-  FLayout.VisibleAtRuntime:= True;
+  { Hide the layout directly, so VisibleAtRuntime stays True: only Loaded can make it visible again }
+  FLayout.Visible:= False;
+  Assert.IsTrue(FLayout.VisibleAtRuntime, 'Precondition: Visible does not change VisibleAtRuntime');
   // Simulate loading completion (at runtime, not design time)
   // Note: csDesigning is not in ComponentState when created without a form at design time
   FLayout.CallLoaded;
-  Assert.IsTrue(FLayout.Visible, 'Component should be visible when VisibleAtRuntime is True');
+  Assert.IsTrue(FLayout.Visible, 'Loaded must apply VisibleAtRuntime = True to Visible');
 end;
 
 
@@ -152,15 +148,36 @@ end;
 
 { Component Registration }
 
-procedure TTestLightLayout.TestRegister_NoException;
+{ Stands in for the IDE: outside the IDE RegisterComponentsProc is NIL, and System.Classes.RegisterComponents raises EComponentError. }
+class procedure TTestLightLayout.CaptureRegistration(const Page: string; const ComponentClasses: array of TComponentClass);
+var
+  CompClass: TComponentClass;
 begin
-  Assert.WillNotRaise(
-    procedure
+  RegisteredPage:= Page;
+  for CompClass in ComponentClasses do
     begin
-      Register;
-    end,
-    Exception,
-    'Register should not raise an exception');
+      if RegisteredClasses <> '' then RegisteredClasses:= RegisteredClasses + ',';
+      RegisteredClasses:= RegisteredClasses + CompClass.ClassName;
+    end;
+end;
+
+
+procedure TTestLightLayout.TestRegister_RegistersComponents;
+var
+  OldProc: procedure(const Page: string; const ComponentClasses: array of TComponentClass);
+begin
+  RegisteredPage:= '';
+  RegisteredClasses:= '';
+  OldProc:= RegisterComponentsProc;
+  RegisterComponentsProc:= TTestLightLayout.CaptureRegistration;
+  TRY
+    Register;
+  FINALLY
+    RegisterComponentsProc:= OldProc;
+  END;
+
+  Assert.AreEqual('LightSaber FMX', RegisteredPage, 'Register must use the LightSaber FMX palette page');
+  Assert.AreEqual('TLightLayout,TAutoHeightFlowLayout', RegisteredClasses, 'Register must register both layout classes');
 end;
 
 

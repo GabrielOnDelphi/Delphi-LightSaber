@@ -1,6 +1,7 @@
 ﻿unit Test.LightVcl.Visual.Panel;
 
 {=============================================================================================================
+   2026.10.07
    Unit tests for LightVcl.Visual.Panel.pas
    Tests TCubicPanel word wrap and control enumeration functionality.
 
@@ -78,6 +79,10 @@ type
 
 implementation
 
+uses
+  Vcl.Graphics,
+  Vcl.ExtCtrls;
+
 
 { TTestCubicPanel }
 
@@ -119,27 +124,123 @@ end;
 
 { WordWrap Property Tests }
 
-procedure TTestCubicPanel.TestWordWrap_SetTrue;
+{ Paints FPanel into a bitmap of the same size. The caller frees the bitmap. }
+function PaintPanel(Panel: TCubicPanel): TBitmap;
 begin
-  FPanel.WordWrap:= FALSE;
-  FPanel.WordWrap:= TRUE;
-  Assert.IsTrue(FPanel.WordWrap);
+  Panel.HandleNeeded;
+  Result:= TBitmap.Create;
+  Result.PixelFormat:= pf24bit;
+  Result.SetSize(Panel.Width, Panel.Height);
+  Panel.PaintTo(Result.Canvas.Handle, 0, 0);
 end;
 
 
-procedure TTestCubicPanel.TestWordWrap_SetFalse;
+{ Height in pixels between the first and the last row that holds a pixel different from the background
+  (read in the bottom-right corner, where no text is drawn). 0 when nothing was drawn. }
+function InkSpan(BMP: TBitmap): Integer;
+var
+  x, y, FirstRow, LastRow: Integer;
+  Bkg: TColor;
 begin
+  Bkg:= BMP.Canvas.Pixels[BMP.Width - 3, BMP.Height - 3];
+  FirstRow:= -1;
+  LastRow:= -1;
+  for y:= 0 to BMP.Height - 1 do
+    for x:= 5 to BMP.Width - 6 do
+      if BMP.Canvas.Pixels[x, y] <> Bkg then
+        begin
+          if FirstRow < 0
+          then FirstRow:= y;
+          LastRow:= y;
+          Break;
+        end;
+
+  if FirstRow < 0
+  then EXIT(0);
+  Result:= LastRow - FirstRow + 1;
+end;
+
+
+{ A caption about twice as wide as the 300 pixel panel, no bevel, a solid background }
+procedure PrepareCaption(Panel: TCubicPanel);
+begin
+  Panel.BevelOuter:= bvNone;
+  Panel.ParentBackground:= FALSE;
+  Panel.Caption:= 'Alpha Beta Gamma Delta Epsilon Zeta Eta Theta Iota Kappa Lambda Mu Nu Xi Omicron Pi Rho Sigma Tau Upsilon Phi Chi Psi Omega Alpha Beta Gamma Delta Epsilon';
+end;
+
+
+{ Height of one line of text in the panel's font }
+function LineHeight(Panel: TCubicPanel): Integer;
+var
+  BMP: TBitmap;
+begin
+  BMP:= TBitmap.Create;
+  try
+    BMP.Canvas.Font:= Panel.Font;
+    Result:= BMP.Canvas.TextHeight('Ag');
+  finally
+    FreeAndNil(BMP);
+  end;
+end;
+
+
+{ WordWrap TRUE: Paint breaks the long caption into several lines }
+procedure TTestCubicPanel.TestWordWrap_SetTrue;
+var
+  BMP: TBitmap;
+begin
+  PrepareCaption(FPanel);
   FPanel.WordWrap:= FALSE;
-  Assert.IsFalse(FPanel.WordWrap);
+  FPanel.WordWrap:= TRUE;
+
+  BMP:= PaintPanel(FPanel);
+  try
+    Assert.IsTrue(InkSpan(BMP) > LineHeight(FPanel) * 3 DIV 2, 'The caption must be drawn on more than one line. Ink span: ' + IntToStr(InkSpan(BMP)));
+  finally
+    FreeAndNil(BMP);
+  end;
+end;
+
+
+{ WordWrap FALSE: the VCL paints the caption on one line }
+procedure TTestCubicPanel.TestWordWrap_SetFalse;
+var
+  BMP: TBitmap;
+  Span: Integer;
+begin
+  PrepareCaption(FPanel);
+  FPanel.WordWrap:= FALSE;
+
+  BMP:= PaintPanel(FPanel);
+  try
+    Span:= InkSpan(BMP);
+    Assert.IsTrue(Span > 0, 'The caption must be drawn');
+    Assert.IsTrue(Span <= LineHeight(FPanel), 'The caption must be drawn on one line. Ink span: ' + IntToStr(Span));
+  finally
+    FreeAndNil(BMP);
+  end;
 end;
 
 
 { Gutter Property Tests }
 
+{ Gutter > 0 draws a purple vertical line at x = Gutter }
 procedure TTestCubicPanel.TestGutter_SetValue;
+var
+  BMP: TBitmap;
 begin
+  FPanel.BevelOuter:= bvNone;
+  FPanel.ParentBackground:= FALSE;
   FPanel.Gutter:= 50;
-  Assert.AreEqual(50, FPanel.Gutter);
+
+  BMP:= PaintPanel(FPanel);
+  try
+    Assert.AreEqual(Integer(clPurple), Integer(BMP.Canvas.Pixels[50, 150]), 'The vertical gutter line must be purple');
+    Assert.AreNotEqual(Integer(clPurple), Integer(BMP.Canvas.Pixels[150, 150]), 'Away from the gutter lines nothing is purple');
+  finally
+    FreeAndNil(BMP);
+  end;
 end;
 
 
@@ -296,7 +397,17 @@ end;
 procedure TTestCubicPanel.TestMultiplePanels_IndependentEnumeration;
 var
   Panel2: TCubicPanel;
-  Lbl1, Lbl2: TLabel;
+  Lbl1a, Lbl1b, Lbl2a, Lbl2b: TLabel;
+
+  function AddLabel(Panel: TCubicPanel; Top: Integer): TLabel;
+  begin
+    Result:= TLabel.Create(Panel);
+    Result.Parent:= Panel;
+    Result.AutoSize:= FALSE;
+    Result.Top:= Top;
+    Result.Height:= 30;   { 30 pixels high, the next label starts 25 pixels lower: they overlap, so NextControl walks to it }
+  end;
+
 begin
   // Create second panel
   Panel2:= TCubicPanel.Create(FForm);
@@ -307,30 +418,20 @@ begin
   Panel2.Height:= 100;
 
   try
-    // Add label to first panel
-    Lbl1:= TLabel.Create(FPanel);
-    Lbl1.Parent:= FPanel;
-    Lbl1.Top:= 10;
+    Lbl1a:= AddLabel(FPanel, 10);
+    Lbl1b:= AddLabel(FPanel, 35);
+    Lbl2a:= AddLabel(Panel2, 20);
+    Lbl2b:= AddLabel(Panel2, 45);
 
-    // Add label to second panel
-    Lbl2:= TLabel.Create(Panel2);
-    Lbl2.Parent:= Panel2;
-    Lbl2.Top:= 20;
-
-    // Enumerate first panel
+    { The two walks are interleaved, with no reset in between: each panel must keep its own position }
     FPanel.ResetToFirstCtrl;
-    var Ctrl1:= FPanel.NextControl;
-    Assert.AreEqual(TControl(Lbl1), Ctrl1, 'First panel should return its own control');
-
-    // Enumerate second panel - should be independent
     Panel2.ResetToFirstCtrl;
-    var Ctrl2:= Panel2.NextControl;
-    Assert.AreEqual(TControl(Lbl2), Ctrl2, 'Second panel should return its own control');
 
-    // First panel should still be able to enumerate independently
-    FPanel.ResetToFirstCtrl;
-    var Ctrl3:= FPanel.NextControl;
-    Assert.AreEqual(TControl(Lbl1), Ctrl3, 'First panel enumeration should be independent');
+    Assert.AreEqual(TControl(Lbl1a), FPanel.NextControl, 'Panel 1, step 1');
+    Assert.AreEqual(TControl(Lbl2a), Panel2.NextControl, 'Panel 2, step 1 - must not continue from panel 1');
+    Assert.AreEqual(TControl(Lbl1b), FPanel.NextControl, 'Panel 1, step 2 - must continue from its own label');
+    Assert.AreEqual(TControl(Lbl2b), Panel2.NextControl, 'Panel 2, step 2');
+    Assert.IsNull(TObject(FPanel.NextControl),'Panel 1 has no third control');
 
   finally
     FreeAndNil(Panel2);

@@ -1,6 +1,7 @@
 ﻿unit Test.LightVcl.Visual.CheckBox;
 
 {=============================================================================================================
+   2026.10.07
    Unit tests for LightVcl.Visual.CheckBox.pas
    Tests the TLightCheckBox component - an auto-resizing checkbox.
 
@@ -42,9 +43,6 @@ type
 
     [Test]
     procedure TestCreate_ValidOwner;
-
-    [Test]
-    procedure TestCreate_NilOwner;
 
     { AutoSize Property Tests }
     [Test]
@@ -90,6 +88,9 @@ implementation
 uses
   Vcl.Graphics,
   LightVcl.Visual.CheckBox;
+
+type
+  TLightCheckBoxAccess = class(TLightCheckBox);   { Opens the protected Loaded }
 
 
 procedure TTesTLightCheckBox.Setup;
@@ -150,19 +151,6 @@ begin
 end;
 
 
-procedure TTesTLightCheckBox.TestCreate_NilOwner;
-var
-  CubicCheckBox: TLightCheckBox;
-begin
-  CubicCheckBox:= TLightCheckBox.Create(NIL);
-  try
-    Assert.IsNotNull(CubicCheckBox, 'CheckBox should be created even with nil owner');
-  finally
-    FreeAndNil(CubicCheckBox);
-  end;
-end;
-
-
 { AutoSize Property Tests }
 
 procedure TTesTLightCheckBox.TestAutoSize_SetTrue_AdjustsWidth;
@@ -214,12 +202,12 @@ begin
   CubicCheckBox.Parent:= FTestForm;
   CubicCheckBox.Caption:= 'Test';
   CubicCheckBox.AutoSize:= TRUE;
-  var WidthAfterFirstSet:= CubicCheckBox.Width;
 
-  { Setting same value again should not trigger adjustment }
+  { A width set by hand survives until the next caption or font change. Setting the same AutoSize value again must not run AdjustBounds. }
+  CubicCheckBox.Width:= 500;
   CubicCheckBox.AutoSize:= TRUE;
 
-  Assert.AreEqual(WidthAfterFirstSet, CubicCheckBox.Width, 'Width should not change when setting same AutoSize value');
+  Assert.AreEqual(500, CubicCheckBox.Width, 'Setting the same AutoSize value must not re-run AdjustBounds');
   FCheckBox:= CubicCheckBox;
 end;
 
@@ -347,7 +335,7 @@ end;
 
 procedure TTesTLightCheckBox.TestPageControl_InactiveTab_StillWorks;
 var
-  CubicCheckBox: TLightCheckBox;
+  CubicCheckBox, RefCheckBox: TLightCheckBox;
 begin
   FTestForm:= TForm.CreateNew(NIL);
   FTestForm.Width:= 500;
@@ -369,6 +357,13 @@ begin
   CubicCheckBox:= TLightCheckBox.Create(FTestForm);
   CubicCheckBox.Parent:= FTabSheet2;
   CubicCheckBox.Caption:= 'Checkbox on inactive tab';
+  CubicCheckBox.Width:= 10;
+
+  { The same caption on the form itself, as a reference }
+  RefCheckBox:= TLightCheckBox.Create(FTestForm);
+  RefCheckBox.Parent:= FTestForm;
+  RefCheckBox.Caption:= CubicCheckBox.Caption;
+  RefCheckBox.AutoSize:= TRUE;
 
   { Ensure first tab is active }
   FPageControl.ActivePage:= FTabSheet1;
@@ -376,8 +371,8 @@ begin
   { Enable AutoSize - should work even on inactive tab }
   CubicCheckBox.AutoSize:= TRUE;
 
-  { Width should still be calculated correctly }
-  Assert.IsTrue(CubicCheckBox.Width > 50, 'AutoSize should work even when checkbox is on inactive tab');
+  Assert.AreNotEqual(10, CubicCheckBox.Width, 'AutoSize must resize the checkbox on the inactive tab');
+  Assert.AreEqual(RefCheckBox.Width, CubicCheckBox.Width, 'The inactive tab must give the same width as the form');
   FCheckBox:= CubicCheckBox;
 end;
 
@@ -387,18 +382,20 @@ end;
 procedure TTesTLightCheckBox.TestLoaded_TriggersAdjustBounds;
 var
   CubicCheckBox: TLightCheckBox;
+  AutoWidth: Integer;
 begin
-  { This test verifies that the Loaded method triggers AdjustBounds.
-    Since we can't easily simulate the streaming process, we verify that
-    when AutoSize is TRUE before parent is set, the control still works correctly. }
+  { Loaded (protected) is called through a cracker class: after streaming it must resize the control again. }
   FTestForm:= TForm.CreateNew(NIL);
   CubicCheckBox:= TLightCheckBox.Create(FTestForm);
   CubicCheckBox.Caption:= 'Test loaded behavior';
   CubicCheckBox.Parent:= FTestForm;
   CubicCheckBox.AutoSize:= TRUE;
+  AutoWidth:= CubicCheckBox.Width;
 
-  { The control should have been adjusted }
-  Assert.IsTrue(CubicCheckBox.Width > 30, 'Control should be properly sized after Loaded');
+  CubicCheckBox.Width:= 10;
+  TLightCheckBoxAccess(CubicCheckBox).Loaded;
+
+  Assert.AreEqual(AutoWidth, CubicCheckBox.Width, 'Loaded must run AdjustBounds');
   FCheckBox:= CubicCheckBox;
 end;
 

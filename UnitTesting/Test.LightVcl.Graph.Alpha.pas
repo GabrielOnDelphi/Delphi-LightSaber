@@ -372,20 +372,20 @@ begin
   { SmallBitmap extends beyond MainBitmap - should not crash }
   CreateTestBitmaps(50, 50, 100, 100);
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       AlphaBlendBitmaps(FMainBitmap, FSmallBitmap, 50, 0, 0);
-    end, Exception);
+    end, 'SmallBitmap larger than MainBitmap must be clipped');
 
   { Also test with offset that pushes beyond bounds }
   CreateTestBitmaps(100, 100, 50, 50);
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       AlphaBlendBitmaps(FMainBitmap, FSmallBitmap, 50, 80, 80);
-    end, Exception);
+    end, 'An offset that pushes SmallBitmap beyond MainBitmap must be clipped');
 end;
 
 
@@ -597,11 +597,11 @@ begin
     TempBmp.Canvas.FillRect(Rect(0, 0, 16, 16));
     ImageList.Add(TempBmp, NIL);
 
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         GetTransparentBitmapFromImagelist(ImageList, 0, Bitmap);
-      end, Exception);
+      end, 'GetTransparentBitmapFromImagelist must not raise on a valid index');
   FINALLY
     FreeAndNil(TempBmp);
     FreeAndNil(Bitmap);

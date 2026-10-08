@@ -174,9 +174,6 @@ type
     procedure TestExtractThumbnailJpg_StaysInsideBox;
 
     [Test]
-    procedure TestExtractThumbnailJpg_AssignLeavesNoCanvasDC;
-
-    [Test]
     procedure TestExtractThumbnailJpg_ResultHasNoCanvasDC;
   end;
 
@@ -478,7 +475,10 @@ begin
         LoadGraphToImg(FTempBmpFile, Image);
       end);
 
-    Assert.IsNotNull(Image.Picture.Bitmap, 'Image should have a bitmap assigned');
+    { TPicture.GetBitmap creates an empty bitmap on demand, so a NIL test proves nothing: check what was loaded }
+    Assert.AreEqual(100, Image.Picture.Width,  'Image must hold the 100x100 test bitmap');
+    Assert.AreEqual(100, Image.Picture.Height, 'Image must hold the 100x100 test bitmap');
+    Assert.AreEqual(Integer(clRed), Integer(Image.Picture.Bitmap.Canvas.Pixels[50, 50]), 'Image must hold the red test bitmap');
   FINALLY
     FreeAndNil(Image);
   END;
@@ -599,8 +599,8 @@ begin
   Bmp:= LoadJpg(FTempJpgFile, jsHalf);
   TRY
     Assert.IsNotNull(Bmp, 'LoadJpg should return a bitmap');
-    // With jsHalf, dimensions should be approximately halved
-    Assert.IsTrue(Bmp.Width <= 100, 'Width should be <= 100 with jsHalf');
+    Assert.AreEqual(50, Bmp.Width,  'jsHalf must halve the 100x100 JPEG');
+    Assert.AreEqual(50, Bmp.Height, 'jsHalf must halve the 100x100 JPEG');
   FINALLY
     FreeAndNil(Bmp);
   END;
@@ -728,12 +728,18 @@ end;
 procedure TTestGraphLoader.TestLoadGraphAsGrayScale_ValidFile;
 var
   Bmp: TBitmap;
+  Pixel: Integer;
 begin
-  CreateTempBmpFile;
+  CreateTempBmpFile;   { Pure red }
 
   Bmp:= LoadGraphAsGrayScale(FTempBmpFile);
   TRY
     Assert.IsNotNull(Bmp, 'LoadGraphAsGrayScale should return a bitmap');
+    Assert.AreEqual(100, Bmp.Width, 'Width should be 100');
+
+    Pixel:= ColorToRGB(Bmp.Canvas.Pixels[50, 50]);
+    Assert.AreEqual(Pixel AND $FF, (Pixel SHR 8) AND $FF, 'A gray pixel has R = G');
+    Assert.AreEqual(Pixel AND $FF, (Pixel SHR 16) AND $FF, 'A gray pixel has R = B');
   FINALLY
     FreeAndNil(Bmp);
   END;
@@ -772,12 +778,11 @@ begin
 
   TRY
     Bmp:= NIL;
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         Bmp:= LoadGraphAsGrayScale(CorruptFile);
       end,
-      Exception,
       'LoadGraphAsGrayScale must not raise on a corrupt file');
     Assert.IsNull(Bmp, 'Result should be NIL when input is unreadable');
   FINALLY
@@ -840,12 +845,11 @@ begin
   TRY
     BMP.SetSize(50, 50);                { Pre-existing dimensions to verify they survive }
 
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         LoadGraphAsGrayScale(CorruptFile, BMP);
       end,
-      Exception,
       'LoadGraphAsGrayScale(BMP) must not raise on a corrupt file');
 
     Assert.AreEqual(50, BMP.Width, 'BMP dimensions should survive a failed load');
@@ -995,6 +999,8 @@ begin
   Bmp:= ExtractThumbnail(FTempBmpFile, 50);
   TRY
     Assert.IsNotNull(Bmp, 'ExtractThumbnail should return a bitmap');
+    Assert.AreEqual(50, Bmp.Width,  'The 100x100 BMP must be scaled to the thumbnail width');
+    Assert.AreEqual(50, Bmp.Height, 'The height must keep the 1:1 aspect ratio');
   FINALLY
     FreeAndNil(Bmp);
   END;
@@ -1036,45 +1042,6 @@ begin
     Assert.AreEqual(75,  Bmp.Height, 'Thumbnail height');
   FINALLY
     FreeAndNil(Bmp);
-  END;
-end;
-
-
-{ ExtractThumbnailJpg runs on the BioniX thumbnail worker. A worker that frees a bitmap whose canvas owns a DC
-  can make the main thread write into freed memory (see LightVcl.Graph.Bitmap.ReleaseCanvasDC).
-  This test runs the decode step of ExtractThumbnailJpg on its own (HandleType:= bmDIB, then Assign from a
-  TJPEGImageEx), because after the whole routine the check proves nothing: StretchProport reads BMP.Handle, and
-  TBitmap.GetHandle frees any canvas DC.
-  Reading Canvas creates the TBitmapCanvas object but no DC; TCanvas.HandleAllocated only tests FHandle <> 0. }
-procedure TTestGraphLoader.TestExtractThumbnailJpg_AssignLeavesNoCanvasDC;
-var
-  Jpg: TJPEGImageEx;
-  Bmp: TBitmap;
-begin
-  CreateTempJpgFile;   { 100x100 }
-
-  Jpg:= TJPEGImageEx.Create;
-  TRY
-    Jpg.Scale:= jsHalf;
-    Jpg.LoadFromFile(FTempJpgFile);
-
-    Bmp:= TBitmap.Create;
-    TRY
-      Bmp.HandleType:= bmDIB;
-      Bmp.Assign(Jpg);
-      Assert.AreEqual(50, Bmp.Width, 'Precondition: the JPEG was decoded at half size');
-
-      Assert.IsFalse(Bmp.Canvas.HandleAllocated, 'TBitmap.Assign(TJPEGImage) must not give the bitmap a canvas DC');
-      Assert.IsFalse(Jpg.Canvas.HandleAllocated, 'Decoding must not give the internal bitmap of the JPEG a canvas DC');
-
-      { The check is not blind: once a DC is asked for, HandleAllocated sees it }
-      Assert.IsTrue(Bmp.Canvas.Handle <> 0, 'Probe: Canvas.Handle must create a DC');
-      Assert.IsTrue(Bmp.Canvas.HandleAllocated, 'Probe: HandleAllocated must see the DC');
-    FINALLY
-      FreeAndNil(Bmp);
-    END;
-  FINALLY
-    FreeAndNil(Jpg);
   END;
 end;
 

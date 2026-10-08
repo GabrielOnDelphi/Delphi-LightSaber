@@ -33,6 +33,8 @@ type
     FBitmap32: TBitmap32;
     procedure FillBitmapWithColor(BMP: TBitmap; Color: TColor);
     procedure FillBitmap32WithColor(BMP: TBitmap32; Color: TColor32);
+    procedure PaintRedBlock(BMP: TBitmap);
+    procedure AssertColorNear(Expected, Actual: TColor; const Msg: string);
   public
     [Setup]
     procedure Setup;
@@ -174,6 +176,29 @@ begin
 end;
 
 
+{ A 20x20 red block at X 10..29, Y 10..29: away from the border, which RotateBitmapGR32 makes transparent.
+  Rotating the 100x80 FBitmap by 90 degrees clockwise moves its center (20, 20) to (79-20, 20) = (59, 20);
+  counter-clockwise moves it to (20, 99-20) = (20, 79). }
+procedure TTestRotateGr32.PaintRedBlock(BMP: TBitmap);
+begin
+  BMP.Canvas.Brush.Color:= clRed;
+  BMP.Canvas.FillRect(Rect(10, 10, 30, 30));
+end;
+
+
+{ Resampling blurs edges a little, so each channel may differ by up to 40 }
+procedure TTestRotateGr32.AssertColorNear(Expected, Actual: TColor; const Msg: string);
+VAR E, A: Integer;
+begin
+  E:= ColorToRGB(Expected);
+  A:= ColorToRGB(Actual);
+  Assert.IsTrue((Abs((E and $FF) - (A and $FF)) <= 40)
+            AND (Abs(((E shr 8) and $FF) - ((A shr 8) and $FF)) <= 40)
+            AND (Abs(((E shr 16) and $FF) - ((A shr 16) and $FF)) <= 40),
+    Msg + ' (expected ' + IntToHex(E, 6) + ', got ' + IntToHex(A, 6) + ')');
+end;
+
+
 { TBitmap overload - Basic functionality }
 
 { Thread safety: GR32 copies to and from a TBitmap through its canvas DC. A DC left on the canvas is what the main
@@ -222,16 +247,15 @@ end;
 
 procedure TTestRotateGr32.TestRotateBitmap_90Degrees;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      RotateBitmapGR32(FBitmap, 90, True);
-    end,
-    'RotateBitmapGR32(FBitmap, 90, True) must not raise');
+  PaintRedBlock(FBitmap);
+  RotateBitmapGR32(FBitmap, 90, True);
 
-  { After 90 degree rotation with AdjustSize, dimensions should swap (approximately) }
-  Assert.IsTrue(FBitmap.Width > 0, 'Bitmap should have valid width');
-  Assert.IsTrue(FBitmap.Height > 0, 'Bitmap should have valid height');
+  Assert.AreEqual(80,  FBitmap.Width,  '90 degrees: width and height swap');
+  Assert.AreEqual(100, FBitmap.Height, '90 degrees: width and height swap');
+  { Positive angle = clockwise (the header of RotateBitmapGR32) }
+  AssertColorNear(clRed,   FBitmap.Canvas.Pixels[59, 20], 'Clockwise: the red block lands at (59, 20)');
+  AssertColorNear(clWhite, FBitmap.Canvas.Pixels[20, 79], 'Clockwise: (20, 79) stays white');
+  AssertColorNear(clWhite, FBitmap.Canvas.Pixels[20, 20], 'The red block must leave (20, 20)');
 end;
 
 
@@ -252,29 +276,28 @@ end;
 
 procedure TTestRotateGr32.TestRotateBitmap_270Degrees;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      RotateBitmapGR32(FBitmap, 270, True);
-    end,
-    'RotateBitmapGR32(FBitmap, 270, True) must not raise');
+  PaintRedBlock(FBitmap);
+  RotateBitmapGR32(FBitmap, 270, True);
 
-  Assert.IsTrue(FBitmap.Width > 0, 'Bitmap should have valid width');
-  Assert.IsTrue(FBitmap.Height > 0, 'Bitmap should have valid height');
+  Assert.AreEqual(80,  FBitmap.Width,  '270 degrees: width and height swap');
+  Assert.AreEqual(100, FBitmap.Height, '270 degrees: width and height swap');
+  { 270 clockwise = 90 counter-clockwise }
+  AssertColorNear(clRed,   FBitmap.Canvas.Pixels[20, 79], '270 degrees: the red block lands at (20, 79)');
+  AssertColorNear(clWhite, FBitmap.Canvas.Pixels[59, 20], '270 degrees: (59, 20) stays white');
 end;
 
 
 procedure TTestRotateGr32.TestRotateBitmap_ArbitraryAngle;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      RotateBitmapGR32(FBitmap, 37.5, True);
-    end,
-    'RotateBitmapGR32(FBitmap, 37.5, True) must not raise');
+  RotateBitmapGR32(FBitmap, 37.5, True);
 
-  Assert.IsTrue(FBitmap.Width > 0, 'Bitmap should have valid width');
-  Assert.IsTrue(FBitmap.Height > 0, 'Bitmap should have valid height');
+  { Bounding box of a 100x80 rectangle rotated by 37.5 degrees:
+    W = 100*cos + 80*sin = 79.34 + 48.70 = 128.04 -> 128
+    H = 100*sin + 80*cos = 60.88 + 63.47 = 124.35 -> 124 }
+  Assert.AreEqual(128, FBitmap.Width,  'Width of the rotated bounding box');
+  Assert.AreEqual(124, FBitmap.Height, 'Height of the rotated bounding box');
+  AssertColorNear(clPurple, FBitmap.Canvas.Pixels[0, 0],   'The corner outside the rotated image gets BkColor (default clPurple)');
+  AssertColorNear(clWhite,  FBitmap.Canvas.Pixels[64, 62], 'The center keeps the white of the source');
 end;
 
 
@@ -357,15 +380,13 @@ end;
 
 procedure TTestRotateGr32.TestRotateBitmap32_90Degrees;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      RotateBitmapGR32(FBitmap32, 90, True);
-    end,
-    'RotateBitmapGR32(FBitmap32, 90, True) must not raise');
+  FBitmap32.FillRectS(10, 10, 30, 30, clRed32);   { Same block as PaintRedBlock }
+  RotateBitmapGR32(FBitmap32, 90, True);
 
-  Assert.IsTrue(FBitmap32.Width > 0, 'Bitmap32 should have valid width');
-  Assert.IsTrue(FBitmap32.Height > 0, 'Bitmap32 should have valid height');
+  Assert.AreEqual(80,  FBitmap32.Width,  '90 degrees: width and height swap');
+  Assert.AreEqual(100, FBitmap32.Height, '90 degrees: width and height swap');
+  AssertColorNear(clRed,   WinColor(FBitmap32.Pixel[59, 20]), 'Clockwise: the red block lands at (59, 20)');
+  AssertColorNear(clWhite, WinColor(FBitmap32.Pixel[20, 79]), 'Clockwise: (20, 79) stays white');
 end;
 
 
@@ -416,12 +437,14 @@ begin
     Destination.PixelFormat:= pf24bit;
     FillBitmapWithColor(Destination, clBlue);
 
-    Assert.WillNotRaiseAny(
-      procedure
-      begin
-        RotateBitmapGR32(Source, Destination, 30, 50, 50);
-      end,
-      'RotateBitmapGR32(Source, Destination, 30, 50, 50) must not raise');
+    RotateBitmapGR32(Source, Destination, 30, 50, 50);
+
+    { The rotated 50x50 square has a 68x68 bounding box (50 * (cos 30 + sin 30) = 68.3), drawn at (50, 50) }
+    Assert.AreEqual(200, Destination.Width,  'Destination width should be preserved');
+    Assert.AreEqual(200, Destination.Height, 'Destination height should be preserved');
+    AssertColorNear(clRed,  Destination.Canvas.Pixels[84, 84],   'The center of the rotated source is red');
+    AssertColorNear(clBlue, Destination.Canvas.Pixels[10, 10],   'Above-left of (50, 50) the destination stays blue');
+    AssertColorNear(clBlue, Destination.Canvas.Pixels[190, 190], 'Far from the drawn square the destination stays blue');
   FINALLY
     FreeAndNil(Source);
     FreeAndNil(Destination);
@@ -452,6 +475,11 @@ begin
     { Destination should maintain its size }
     Assert.AreEqual(150, Destination.Width, 'Destination width should be preserved');
     Assert.AreEqual(150, Destination.Height, 'Destination height should be preserved');
+
+    { The 40x40 square rotated by 45 degrees is a diamond with a 56x56 bounding box, drawn at (10, 10): center (38, 38) }
+    AssertColorNear(clGreen, Destination.Canvas.Pixels[38, 38],   'The center of the diamond is green');
+    AssertColorNear(clWhite, Destination.Canvas.Pixels[13, 13],   'The corner of the bounding box lies outside the diamond');
+    AssertColorNear(clWhite, Destination.Canvas.Pixels[140, 140], 'Far from the diamond the destination stays white');
   FINALLY
     FreeAndNil(Source);
     FreeAndNil(Destination);
@@ -469,17 +497,19 @@ begin
     Source.Width:= 50;
     Source.Height:= 50;
     Source.PixelFormat:= pf24bit;
+    FillBitmapWithColor(Source, clRed);
 
     Destination.Width:= 200;
     Destination.Height:= 200;
     Destination.PixelFormat:= pf24bit;
+    FillBitmapWithColor(Destination, clBlue);
 
-    Assert.WillNotRaiseAny(
-      procedure
-      begin
-        RotateBitmapGR32(Source, Destination, 0, 0, 0);
-      end,
-      'RotateBitmapGR32(Source, Destination, 0, 0, 0) must not raise');
+    RotateBitmapGR32(Source, Destination, 0, 0, 0);
+
+    { No rotation: the source is copied unrotated into the top-left 50x50 of the destination }
+    AssertColorNear(clRed,  Destination.Canvas.Pixels[25, 25],   'The unrotated source covers (25, 25)');
+    AssertColorNear(clBlue, Destination.Canvas.Pixels[25, 100],  'Below the source the destination stays blue');
+    AssertColorNear(clBlue, Destination.Canvas.Pixels[100, 25],  'Right of the source the destination stays blue');
   FINALLY
     FreeAndNil(Source);
     FreeAndNil(Destination);
@@ -622,66 +652,51 @@ end;
 
 procedure TTestRotateGr32.TestRotateBitmap_NegativeAngle;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      RotateBitmapGR32(FBitmap, -45);
-    end,
-    'RotateBitmapGR32(FBitmap, -45) must not raise');
+  RotateBitmapGR32(FBitmap, -45);
 
-  Assert.IsTrue(FBitmap.Width > 0, 'Bitmap should be valid after negative angle rotation');
+  { Bounding box at 45 degrees: (100 + 80) * 0.7071 = 127.28 -> 127, in both directions }
+  Assert.AreEqual(127, FBitmap.Width,  'Width after -45 degrees');
+  Assert.AreEqual(127, FBitmap.Height, 'Height after -45 degrees');
+  AssertColorNear(clPurple, FBitmap.Canvas.Pixels[0, 0],   'The corner outside the rotated image gets BkColor');
+  AssertColorNear(clWhite,  FBitmap.Canvas.Pixels[63, 63], 'The center keeps the white of the source');
 end;
 
 
 procedure TTestRotateGr32.TestRotateBitmap_LargeAngle;
 begin
-  { Test angle > 360 degrees }
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      RotateBitmapGR32(FBitmap, 405);  { 405 = 360 + 45 }
-    end,
-    'RotateBitmapGR32(FBitmap, 405) must not raise');
+  { Test angle > 360 degrees: 405 = 360 + 45, so the result is that of 45 degrees }
+  RotateBitmapGR32(FBitmap, 405);
 
-  Assert.IsTrue(FBitmap.Width > 0, 'Bitmap should be valid after large angle rotation');
+  Assert.AreEqual(127, FBitmap.Width,  'Width after 405 degrees equals the width after 45');
+  Assert.AreEqual(127, FBitmap.Height, 'Height after 405 degrees equals the height after 45');
+  AssertColorNear(clPurple, FBitmap.Canvas.Pixels[0, 0],   'The corner outside the rotated image gets BkColor');
+  AssertColorNear(clWhite,  FBitmap.Canvas.Pixels[63, 63], 'The center keeps the white of the source');
 end;
 
 
 { Different resampler kernels }
 
 procedure TTestRotateGr32.TestRotateBitmap_DifferentKernels;
+CONST
+  Kernels: array[0..2] of Integer = (BoxKernel, LanczosKernel, HermiteKernel);
+  KernelNames: array[0..2] of string = ('BoxKernel', 'LanczosKernel', 'HermiteKernel');
 begin
-  { Test with different kernel types }
-  Assert.WillNotRaiseAny(
-    procedure
+  { Bounding box at 30 degrees: W = 100*0.866 + 80*0.5 = 126.6 -> 127; H = 100*0.5 + 80*0.866 = 119.3 -> 119 }
+  for VAR i:= Low(Kernels) to High(Kernels) do
     begin
-      RotateBitmapGR32(FBitmap, 30, True, clPurple, False, BoxKernel);
-    end,
-    'RotateBitmapGR32(FBitmap, 30, True, clPurple, False, BoxKern must not raise');
+      { pf24bit again: the rotation returns a pf32bit bitmap, and a GDI FillRect on pf32bit leaves alpha 0,
+        which GR32 then treats as fully transparent (the rotated image came out all BkColor) }
+      FBitmap.PixelFormat:= pf24bit;
+      FBitmap.SetSize(100, 80);
+      FillBitmapWithColor(FBitmap, clWhite);
 
-  { Reset for next test }
-  FBitmap.Width:= 100;
-  FBitmap.Height:= 80;
-  FillBitmapWithColor(FBitmap, clWhite);
+      RotateBitmapGR32(FBitmap, 30, True, clPurple, False, Kernels[i]);
 
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      RotateBitmapGR32(FBitmap, 30, True, clPurple, False, LanczosKernel);
-    end,
-    'RotateBitmapGR32(FBitmap, 30, True, clPurple, False, Lanczos must not raise');
-
-  { Reset for next test }
-  FBitmap.Width:= 100;
-  FBitmap.Height:= 80;
-  FillBitmapWithColor(FBitmap, clWhite);
-
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      RotateBitmapGR32(FBitmap, 30, True, clPurple, False, HermiteKernel);
-    end,
-    'RotateBitmapGR32(FBitmap, 30, True, clPurple, False, Hermite must not raise');
+      Assert.AreEqual(127, FBitmap.Width,  KernelNames[i] + ': width after 30 degrees');
+      Assert.AreEqual(119, FBitmap.Height, KernelNames[i] + ': height after 30 degrees');
+      AssertColorNear(clPurple, FBitmap.Canvas.Pixels[0, 0],   KernelNames[i] + ': the corner gets BkColor');
+      AssertColorNear(clWhite,  FBitmap.Canvas.Pixels[63, 59], KernelNames[i] + ': the center keeps the white of the source');
+    end;
 end;
 
 

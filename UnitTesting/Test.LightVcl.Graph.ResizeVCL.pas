@@ -340,6 +340,11 @@ begin
   { FDestBMP should remain 400x200 (its dimensions are used for the stretch) }
   Assert.AreEqual(400, FDestBMP.Width, 'Width should be 400');
   Assert.AreEqual(200, FDestBMP.Height, 'Height should be 200');
+
+  { The solid red source must be stretched over the whole (black) destination, corners included }
+  Assert.AreEqual(Integer(clRed), Integer(FDestBMP.Canvas.Pixels[0, 0]),     'Top-left must be red');
+  Assert.AreEqual(Integer(clRed), Integer(FDestBMP.Canvas.Pixels[200, 100]), 'Center must be red');
+  Assert.AreEqual(Integer(clRed), Integer(FDestBMP.Canvas.Pixels[399, 199]), 'Bottom-right must be red');
 end;
 
 

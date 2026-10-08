@@ -30,16 +30,10 @@ type
 
     { Creation Tests }
     [Test]
-    procedure TestCreate_Succeeds;
-
-    [Test]
     procedure TestCreate_DefaultVerbosityIsVerbose;
 
     [Test]
-    procedure TestCreate_RichLogIsNil;
-
-    [Test]
-    procedure TestCreate_HasWarningsIsFalse;
+    procedure TestNonWarningLevels_KeepHasWarningsFalse;
 
     [Test]
     procedure TestCreate_CountIsZero;
@@ -127,6 +121,10 @@ uses
   LightVcl.Visual.RichRamLog,
   LightVcl.Visual.RichLogUtils;
 
+type
+  { Reaches the protected field Indent }
+  TRamLogAccess = class(TRamLog);
+
 
 procedure TTestRamLog.Setup;
 begin
@@ -156,17 +154,6 @@ end;
 
 { Creation Tests }
 
-procedure TTestRamLog.TestCreate_Succeeds;
-var
-  RamLog: TRamLog;
-begin
-  RamLog:= TRamLog.Create;
-  FRamLog:= RamLog;
-
-  Assert.IsNotNull(RamLog, 'RamLog creation should succeed');
-end;
-
-
 procedure TTestRamLog.TestCreate_DefaultVerbosityIsVerbose;
 var
   RamLog: TRamLog;
@@ -178,25 +165,26 @@ begin
 end;
 
 
-procedure TTestRamLog.TestCreate_RichLogIsNil;
+{ Only AddWarn and AddError may set HasWarnings. Every other Add* stores a line and must leave it FALSE. }
+procedure TTestRamLog.TestNonWarningLevels_KeepHasWarningsFalse;
 var
   RamLog: TRamLog;
 begin
   RamLog:= TRamLog.Create;
   FRamLog:= RamLog;
 
-  Assert.IsNull(RamLog.RichLog, 'RichLog should be NIL by default');
-end;
+  RamLog.AddVerb('Verbose');
+  RamLog.AddHint('Hint');
+  RamLog.AddInfo('Info');
+  RamLog.AddImpo('Important');
+  RamLog.AddMsg('Message');
+  RamLog.AddBold('Bold');
+  RamLog.AddEmptyRow;
+  Assert.AreEqual(7, RamLog.Count, 'Precondition: all 7 lines are stored');
+  Assert.IsFalse(RamLog.HasWarnings, 'No warning or error was added, so HasWarnings must stay FALSE');
 
-
-procedure TTestRamLog.TestCreate_HasWarningsIsFalse;
-var
-  RamLog: TRamLog;
-begin
-  RamLog:= TRamLog.Create;
-  FRamLog:= RamLog;
-
-  Assert.IsFalse(RamLog.HasWarnings, 'HasWarnings should be FALSE by default');
+  RamLog.AddWarn('Warning');
+  Assert.IsTrue(RamLog.HasWarnings, 'Probe: AddWarn sets HasWarnings');
 end;
 
 
@@ -216,27 +204,26 @@ end;
 procedure TTestRamLog.TestVerbosity_CanSetAllLevels;
 var
   RamLog: TRamLog;
+  Level: TLogVerb;
 begin
   RamLog:= TRamLog.Create;
   FRamLog:= RamLog;
 
-  RamLog.Verbosity:= lvrVerbose;
-  Assert.AreEqual(lvrVerbose, RamLog.Verbosity, 'Should be able to set lvrVerbose');
+  { At each level, one message of every level goes in; only the ones at or above the level may stay }
+  for Level:= Low(TLogVerb) to High(TLogVerb) do
+    begin
+      RamLog.Clear(FALSE);
+      RamLog.Verbosity:= Level;
+      Assert.AreEqual(Level, RamLog.Verbosity, 'Verbosity must be stored');
 
-  RamLog.Verbosity:= lvrHints;
-  Assert.AreEqual(lvrHints, RamLog.Verbosity, 'Should be able to set lvrHints');
-
-  RamLog.Verbosity:= lvrInfos;
-  Assert.AreEqual(lvrInfos, RamLog.Verbosity, 'Should be able to set lvrInfos');
-
-  RamLog.Verbosity:= lvrImportant;
-  Assert.AreEqual(lvrImportant, RamLog.Verbosity, 'Should be able to set lvrImportant');
-
-  RamLog.Verbosity:= lvrWarnings;
-  Assert.AreEqual(lvrWarnings, RamLog.Verbosity, 'Should be able to set lvrWarnings');
-
-  RamLog.Verbosity:= lvrErrors;
-  Assert.AreEqual(lvrErrors, RamLog.Verbosity, 'Should be able to set lvrErrors');
+      RamLog.AddVerb ('v');
+      RamLog.AddHint ('h');
+      RamLog.AddInfo ('i');
+      RamLog.AddImpo ('m');
+      RamLog.AddWarn ('w');
+      RamLog.AddError('e');
+      Assert.AreEqual(Ord(High(TLogVerb)) - Ord(Level) + 1, RamLog.Count, 'Wrong number of messages kept at level ' + IntToStr(Ord(Level)));
+    end;
 end;
 
 
@@ -426,12 +413,17 @@ begin
   RamLog:= TRamLog.Create;
   FRamLog:= RamLog;
 
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      RamLog.Clear(FALSE);
-    end,
-    'RamLog.Clear(FALSE) must not raise');
+  TRamLogAccess(RamLog).Indent:= 4;
+  RamLog.AddInfo('Before');
+  RamLog.AddWarn('Warning');
+  Assert.AreEqual('    Before', Copy(RamLog.Text_, 1, 10), 'Precondition: Indent is applied');
+
+  RamLog.Clear(FALSE);
+  Assert.AreEqual(0, RamLog.Count, 'Clear must remove all lines');
+  Assert.IsFalse(RamLog.HasWarnings, 'Clear must reset HasWarnings');
+
+  RamLog.AddInfo('After');
+  Assert.AreEqual('After', RamLog.Text_, 'Clear must reset Indent to 0');
 end;
 
 

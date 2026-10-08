@@ -6,10 +6,9 @@
 
    Includes TestInsight support: define TESTINSIGHT in project options.
 
-   Note: Some tests require actual GIF files. Tests that require files will be skipped
-   if the test files are not available. Place test GIF files in the AppSysDir folder:
-     - test_static.gif (single frame GIF)
-     - test_animated.gif (multi-frame animated GIF)
+   Setup writes the two GIF files the tests need into a temporary folder that TearDown deletes:
+     - test_static.gif   (1 red frame)
+     - test_animated.gif (3 frames: red, blue, lime; each with a delay of GifDelay hundredths of a second)
 =============================================================================================================}
 
 interface
@@ -30,6 +29,7 @@ type
     /// No test calls this, and an uncalled private method is compiler hint H2219.
     /// Bring both halves back when a test needs to skip because the sample GIF files are absent.
     /// function HasTestFiles: Boolean;
+    procedure WriteGif(const FileName: string; const FrameColors: array of TColor);
   public
     [Setup]
     procedure Setup;
@@ -38,9 +38,6 @@ type
     procedure TearDown;
 
     { TGifLoader - Constructor/Destructor Tests }
-    [Test]
-    procedure TestGifLoader_Create_NotNil;
-
     [Test]
     procedure TestGifLoader_Create_FrameCountIsZero;
 
@@ -105,9 +102,16 @@ type
 implementation
 
 uses
+  System.Types,
+  Vcl.Imaging.GIFImg,
   LightVcl.Graph.Gif,
   LightCore.AppData,
   LightCore.IO;
+
+CONST
+  GifWidth  = 20;
+  GifHeight = 10;
+  GifDelay  = 20;   { Hundredths of a second, as stored in the GIF graphic control extension }
 
 
 procedure TTestGraphGif.Setup;
@@ -116,16 +120,52 @@ begin
   if AppDataCore = NIL then
     AppDataCore:= TAppDataCore.Create('TestApp');
 
-  { Set up test file paths }
-  FTestFolder:= AppDataCore.AppSysDir;
+  { The fixture writes its own GIF files, so no test depends on a file that can go missing }
+  FTestFolder:= IncludeTrailingPathDelimiter(TPath.Combine(TPath.GetTempPath, 'TestGraphGif_' + TGUID.NewGuid.ToString));
+  TDirectory.CreateDirectory(FTestFolder);
   FAnimatedGifPath:= FTestFolder + 'test_animated.gif';
   FStaticGifPath:= FTestFolder + 'test_static.gif';
+  WriteGif(FStaticGifPath,   [clRed]);
+  WriteGif(FAnimatedGifPath, [clRed, clBlue, clLime]);
 end;
 
 
 procedure TTestGraphGif.TearDown;
 begin
-  { No cleanup needed }
+  if TDirectory.Exists(FTestFolder)
+  then TDirectory.Delete(FTestFolder, TRUE);
+end;
+
+
+{ Writes a GIF with one solid-colored GifWidth x GifHeight frame per color }
+procedure TTestGraphGif.WriteGif(const FileName: string; const FrameColors: array of TColor);
+VAR
+  GIF: TGIFImage;
+  BMP: TBitmap;
+  Frame: TGIFFrame;
+  GCE: TGIFGraphicControlExtension;
+begin
+  GIF:= TGIFImage.Create;
+  TRY
+    for VAR Color in FrameColors do
+      begin
+        BMP:= TBitmap.Create;
+        TRY
+          BMP.PixelFormat:= pf24bit;
+          BMP.SetSize(GifWidth, GifHeight);
+          BMP.Canvas.Brush.Color:= Color;
+          BMP.Canvas.FillRect(Rect(0, 0, GifWidth, GifHeight));
+          Frame:= GIF.Add(BMP);
+        FINALLY
+          FreeAndNil(BMP);
+        END;
+        GCE:= TGIFGraphicControlExtension.Create(Frame);   { The constructor adds itself to Frame.Extensions, which owns it }
+        GCE.Delay:= GifDelay;
+      end;
+    GIF.SaveToFile(FileName);
+  FINALLY
+    FreeAndNil(GIF);
+  END;
 end;
 
 
@@ -136,19 +176,6 @@ end;
 
 
 { TGifLoader - Constructor/Destructor Tests }
-
-procedure TTestGraphGif.TestGifLoader_Create_NotNil;
-var
-  Loader: TGifLoader;
-begin
-  Loader:= TGifLoader.Create;
-  TRY
-    Assert.IsNotNull(Loader, 'TGifLoader.Create should return a valid object');
-  FINALLY
-    FreeAndNil(Loader);
-  END;
-end;
-
 
 procedure TTestGraphGif.TestGifLoader_Create_FrameCountIsZero;
 var
@@ -233,7 +260,10 @@ var
 begin
   Loader:= TGifLoader.Create;
   TRY
-    { Even without opening, requesting a very high frame number should not crash }
+    { Open first, so ExtractFrame passes its "Renderer = NIL" check and reaches the frame-number check }
+    Assert.IsTrue(Loader.Open(FAnimatedGifPath), 'Precondition: the 3-frame GIF opens');
+    Frame:= Loader.ExtractFrame(3);   { Frames are 0..2 }
+    Assert.IsNull(Frame, 'ExtractFrame(FrameCount) must return NIL');
     Frame:= Loader.ExtractFrame(999999);
     Assert.IsNull(Frame, 'ExtractFrame should return NIL for invalid frame number');
   FINALLY
@@ -321,17 +351,12 @@ var
   Loader: TGifLoader;
   OpenResult: Boolean;
 begin
-  if NOT FileExists(FStaticGifPath) then
-  begin
-    Assert.Pass('Test skipped: test_static.gif not available');
-    EXIT;
-  end;
-
   Loader:= TGifLoader.Create;
   TRY
     OpenResult:= Loader.Open(FStaticGifPath);
     { Static GIF should fail because it has only 1 frame }
     Assert.IsFalse(OpenResult, 'Open should return False for static (1-frame) GIF');
+    Assert.AreEqual(Cardinal(1), Loader.FrameCount, 'The static GIF was read: it has 1 frame');
   FINALLY
     FreeAndNil(Loader);
   END;
@@ -343,17 +368,11 @@ var
   Loader: TGifLoader;
   OpenResult: Boolean;
 begin
-  if NOT FileExists(FAnimatedGifPath) then
-  begin
-    Assert.Pass('Test skipped: test_animated.gif not available');
-    EXIT;
-  end;
-
   Loader:= TGifLoader.Create;
   TRY
     OpenResult:= Loader.Open(FAnimatedGifPath);
     Assert.IsTrue(OpenResult, 'Open should return True for animated GIF');
-    Assert.IsTrue(Loader.FrameCount > 1, 'Animated GIF should have more than 1 frame');
+    Assert.AreEqual(Cardinal(3), Loader.FrameCount, 'The animated GIF written by Setup has 3 frames');
   FINALLY
     FreeAndNil(Loader);
   END;
@@ -365,12 +384,6 @@ var
   Loader: TGifLoader;
   Frame: TBitmap;
 begin
-  if NOT FileExists(FAnimatedGifPath) then
-  begin
-    Assert.Pass('Test skipped: test_animated.gif not available');
-    EXIT;
-  end;
-
   Loader:= TGifLoader.Create;
   TRY
     if Loader.Open(FAnimatedGifPath) then
@@ -378,8 +391,9 @@ begin
       Frame:= Loader.ExtractFrame(0);
       TRY
         Assert.IsNotNull(Frame, 'ExtractFrame(0) should return valid bitmap');
-        Assert.IsTrue(Frame.Width > 0, 'Extracted frame should have positive width');
-        Assert.IsTrue(Frame.Height > 0, 'Extracted frame should have positive height');
+        Assert.AreEqual(GifWidth,  Frame.Width,  'Extracted frame has the width of the GIF');
+        Assert.AreEqual(GifHeight, Frame.Height, 'Extracted frame has the height of the GIF');
+        Assert.AreEqual(Integer(clRed), Integer(Frame.Canvas.Pixels[GifWidth DIV 2, GifHeight DIV 2]), 'Frame 0 is the red one');
       FINALLY
         FreeAndNil(Frame);
       END;
@@ -396,18 +410,12 @@ procedure TTestGraphGif.TestGifLoader_FrameDelay_AfterOpen;
 var
   Loader: TGifLoader;
 begin
-  if NOT FileExists(FAnimatedGifPath) then
-  begin
-    Assert.Pass('Test skipped: test_animated.gif not available');
-    EXIT;
-  end;
-
   Loader:= TGifLoader.Create;
   TRY
     if Loader.Open(FAnimatedGifPath) then
     begin
-      { Frame delay should be a reasonable value (typically 10-1000 ms) }
-      Assert.IsTrue(Loader.FrameDelay >= 0, 'FrameDelay should be non-negative');
+      { TGIFRenderer.FrameDelay = Delay * GIFDelayExp (12) * 100 / Speed (100)  (c:\Delphi\Delphi 13\source\vcl\Vcl.Imaging.GIFImg.pas, TGIFRenderer, "FFrameDelay := MulDiv(Delay * GIFDelayExp, 100, Speed)") }
+      Assert.AreEqual(GifDelay * 12, Loader.FrameDelay, 'FrameDelay must come from the delay stored in the first frame');
     end
     else
       Assert.Fail('Could not open test animated GIF');
@@ -421,12 +429,6 @@ procedure TTestGraphGif.TestIsAnimated_StaticGif;
 var
   Result: Boolean;
 begin
-  if NOT FileExists(FStaticGifPath) then
-  begin
-    Assert.Pass('Test skipped: test_static.gif not available');
-    EXIT;
-  end;
-
   Result:= IsAnimated(FStaticGifPath);
   Assert.IsFalse(Result, 'IsAnimated should return False for static GIF');
 end;
@@ -436,12 +438,6 @@ procedure TTestGraphGif.TestIsAnimated_AnimatedGif;
 var
   Result: Boolean;
 begin
-  if NOT FileExists(FAnimatedGifPath) then
-  begin
-    Assert.Pass('Test skipped: test_animated.gif not available');
-    EXIT;
-  end;
-
   Result:= IsAnimated(FAnimatedGifPath);
   Assert.IsTrue(Result, 'IsAnimated should return True for animated GIF');
 end;
@@ -452,18 +448,14 @@ var
   Frame: TBitmap;
   FrameCount: Cardinal;
 begin
-  if NOT FileExists(FAnimatedGifPath) then
-  begin
-    Assert.Pass('Test skipped: test_animated.gif not available');
-    EXIT;
-  end;
-
   Frame:= ExtractMiddleFrame(FAnimatedGifPath, FrameCount);
   TRY
     Assert.IsNotNull(Frame, 'ExtractMiddleFrame should return valid bitmap for animated GIF');
-    Assert.IsTrue(FrameCount > 1, 'FrameCount should be greater than 1 for animated GIF');
-    Assert.IsTrue(Frame.Width > 0, 'Extracted frame should have positive width');
-    Assert.IsTrue(Frame.Height > 0, 'Extracted frame should have positive height');
+    Assert.AreEqual(Cardinal(3), FrameCount, 'The animated GIF written by Setup has 3 frames');
+    Assert.AreEqual(GifWidth,  Frame.Width,  'Extracted frame has the width of the GIF');
+    Assert.AreEqual(GifHeight, Frame.Height, 'Extracted frame has the height of the GIF');
+    { Middle frame = 3 DIV 2 = frame 1, the blue one }
+    Assert.AreEqual(Integer(clBlue), Integer(Frame.Canvas.Pixels[GifWidth DIV 2, GifHeight DIV 2]), 'The middle frame is the blue one');
   FINALLY
     FreeAndNil(Frame);
   END;

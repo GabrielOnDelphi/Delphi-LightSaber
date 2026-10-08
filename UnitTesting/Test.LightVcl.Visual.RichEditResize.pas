@@ -40,9 +40,6 @@ type
 
     { Basic Tests }
     [Test]
-    procedure TestCreate;
-
-    [Test]
     procedure TestDefaultMinHeight;
 
     [Test]
@@ -114,13 +111,6 @@ end;
 
 { Basic Tests }
 
-procedure TTestRichEditResize.TestCreate;
-begin
-  Assert.IsNotNull(FRichEdit, 'RichEditResize should be created');
-  Assert.IsTrue(FRichEdit.HandleAllocated, 'RichEditResize should have a valid handle');
-end;
-
-
 procedure TTestRichEditResize.TestDefaultMinHeight;
 begin
   Assert.AreEqual(50, FRichEdit.MinHeight, 'Default MinHeight should be 50');
@@ -129,8 +119,12 @@ end;
 
 procedure TTestRichEditResize.TestScrollBarsDisabled;
 begin
-  { After CreateWnd, ScrollBars should be ssNone }
-  Assert.AreEqual(TScrollStyle.ssNone, FRichEdit.ScrollBars, 'ScrollBars should be ssNone');
+  { ssNone is also the VCL default, so start from ssVertical: TCustomMemo.SetScrollBars recreates the window,
+    and the new CreateWnd must switch the scroll bars off again }
+  FRichEdit.ScrollBars:= TScrollStyle.ssVertical;
+  FRichEdit.HandleNeeded;
+  Assert.IsTrue(FRichEdit.HandleAllocated, 'Precondition: the window was recreated');
+  Assert.AreEqual(TScrollStyle.ssNone, FRichEdit.ScrollBars, 'CreateWnd must set ScrollBars to ssNone');
 end;
 
 
@@ -138,25 +132,30 @@ end;
 
 procedure TTestRichEditResize.TestMinHeight_SetGet;
 begin
+  { One line is far shorter than either minimum, so the control must take exactly MinHeight }
   FRichEdit.MinHeight:= 100;
-  Assert.AreEqual(100, FRichEdit.MinHeight, 'MinHeight should be settable');
+  FRichEdit.Lines.Clear;
+  FRichEdit.Lines.Add('One line');
+  Application.ProcessMessages;
+  Assert.AreEqual(100, FRichEdit.Height, 'Height must equal MinHeight=100');
 
   FRichEdit.MinHeight:= 25;
-  Assert.AreEqual(25, FRichEdit.MinHeight, 'MinHeight should accept lower values');
+  FRichEdit.Lines.Clear;
+  FRichEdit.Lines.Add('One line');      { Change triggers the resize }
+  Application.ProcessMessages;
+  Assert.AreEqual(25, FRichEdit.Height, 'Height must follow a lower MinHeight=25');
 end;
 
 
 procedure TTestRichEditResize.TestMinHeight_RespectsMinimum;
-var
-  InitialHeight: Integer;
 begin
-  FRichEdit.MinHeight:= 80;
+  { 150 is above the default height of the control (89), so only the MinHeight clamp can produce it }
+  FRichEdit.MinHeight:= 150;
+  FRichEdit.Lines.Add('One line');
   FRichEdit.Lines.Clear;
   Application.ProcessMessages;
 
-  { Even with empty/minimal content, height should respect MinHeight }
-  InitialHeight:= FRichEdit.Height;
-  Assert.IsTrue(InitialHeight >= 80, 'Height should respect MinHeight setting');
+  Assert.AreEqual(150, FRichEdit.Height, 'Empty content must take exactly MinHeight=150');
 end;
 
 
@@ -233,23 +232,31 @@ begin
     Heights[i]:= FRichEdit.Height;
   end;
 
-  { Each batch should result in increasing height }
+  { Height = LineHeight * LineCount, so every batch of 5 lines adds the same step }
+  Assert.IsTrue(Heights[2] > Heights[1], 'Height must grow after the second batch');
   for i:= 2 to 5 do
-    Assert.IsTrue(Heights[i] >= Heights[i-1],
-      Format('Height after batch %d should be >= height after batch %d', [i, i-1]));
+    Assert.AreEqual(Heights[2] - Heights[1], Heights[i] - Heights[i-1],
+      'Batch ' + IntToStr(i) + ' must add the same height as batch 2');
 end;
 
 
 { Edge Cases }
 
 procedure TTestRichEditResize.TestResize_EmptyText;
+var
+  i: Integer;
 begin
+  { Grow the control first, then clear it: it must shrink back to the default MinHeight (50), and its parent with it }
+  for i:= 1 to 20 do
+    FRichEdit.Lines.Add('Line ' + IntToStr(i));
+  Application.ProcessMessages;
+  Assert.IsTrue(FRichEdit.Height > 50, 'Precondition: 20 lines are higher than MinHeight');
+
   FRichEdit.Lines.Clear;
   Application.ProcessMessages;
 
-  { Empty RichEdit should still have at least MinHeight }
-  Assert.IsTrue(FRichEdit.Height >= FRichEdit.MinHeight,
-    'Empty RichEdit should respect MinHeight');
+  Assert.AreEqual(50, FRichEdit.Height, 'Empty RichEdit must shrink to MinHeight=50');
+  Assert.AreEqual(FRichEdit.Top + 50 + 5, FPanel.Height, 'Parent = Top + MinHeight + 5 pixels padding');
 end;
 
 

@@ -229,7 +229,7 @@ end;
 procedure TTestDownloadIndy.TestTSendThread_CreateDestroy;
 begin
   // Test that create/destroy cycle works without memory leaks
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     var
       Thread: TSendThread;
@@ -239,7 +239,6 @@ begin
       Thread.DestFile:= 'C:\test.txt';
       FreeAndNil(Thread);
     end,
-    Exception,
     'Create/Destroy cycle should work without errors');
 end;
 

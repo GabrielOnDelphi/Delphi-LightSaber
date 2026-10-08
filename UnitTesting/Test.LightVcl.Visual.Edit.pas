@@ -351,16 +351,16 @@ end;
 { UpdateBkgColor Tests }
 
 procedure TTesTLightEdit.TestUpdateBkgColor_BothDisabled_NoColorChange;
-VAR
-  OriginalColor: TColor;
 begin
-  OriginalColor:= FEdit.Color;
+  { A missing path and a color that neither branch sets: any check that runs would paint clRedFade }
   FEdit.CheckFileExistence:= FALSE;
   FEdit.CheckDirExistence:= FALSE;
+  FEdit.Text:= 'C:\NonExistent\Folder\File.txt';
+  FEdit.Color:= clYellow;
 
   FEdit.UpdateBkgColor;
 
-  Assert.AreEqual(Integer(OriginalColor), Integer(FEdit.Color), 'Color should not change when both checks are disabled');
+  Assert.AreEqual(Integer(clYellow), Integer(FEdit.Color), 'Color should not change when both checks are disabled');
 end;
 
 

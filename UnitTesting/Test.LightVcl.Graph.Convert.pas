@@ -223,10 +223,25 @@ end;
 procedure TTestGraphConvert.TestBmp2Jpg_ReturnsJpeg;
 var
   Jpg: TJpegImage;
+  Decoded: TBitmap;
+  C: Integer;
 begin
   Jpg:= Bmp2Jpg(FBitmap);
   TRY
-    Assert.IsTrue(Jpg is TJpegImage, 'Should return TJpegImage');
+    Assert.AreEqual(100, Jpg.Width,  'The JPEG must keep the width of the source');
+    Assert.AreEqual(80,  Jpg.Height, 'The JPEG must keep the height of the source');
+
+    { Decode the JPEG again: the source is solid red, so the center pixel must still be red (JPEG is lossy, hence the tolerance) }
+    Decoded:= TBitmap.Create;
+    TRY
+      Decoded.Assign(Jpg);
+      C:= ColorToRGB(Decoded.Canvas.Pixels[50, 40]);
+      Assert.IsTrue((C and $FF) > 200,           'Red channel must stay high, got pixel ' + IntToHex(C, 8));
+      Assert.IsTrue(((C shr 8) and $FF) < 50,    'Green channel must stay low, got pixel ' + IntToHex(C, 8));
+      Assert.IsTrue(((C shr 16) and $FF) < 50,   'Blue channel must stay low, got pixel ' + IntToHex(C, 8));
+    FINALLY
+      FreeAndNil(Decoded);
+    END;
   FINALLY
     FreeAndNil(Jpg);
   END;
@@ -370,12 +385,20 @@ procedure TTestGraphConvert.TestJpeg2Bmp_ReturnsBitmap;
 var
   Jpg: TJpegImage;
   Bmp: TBitmap;
+  C: Integer;
 begin
   Jpg:= CreateTestJpeg;
   TRY
     Bmp:= Jpeg2Bmp(Jpg);
     TRY
-      Assert.IsTrue(Bmp is TBitmap, 'Should return TBitmap');
+      Assert.AreEqual(100, Bmp.Width,  'The bitmap must keep the width of the JPEG');
+      Assert.AreEqual(80,  Bmp.Height, 'The bitmap must keep the height of the JPEG');
+
+      { The JPEG was made from a solid red bitmap: the center pixel must be red (JPEG is lossy, hence the tolerance) }
+      C:= ColorToRGB(Bmp.Canvas.Pixels[50, 40]);
+      Assert.IsTrue((C and $FF) > 200,           'Red channel must stay high, got pixel ' + IntToHex(C, 8));
+      Assert.IsTrue(((C shr 8) and $FF) < 50,    'Green channel must stay low, got pixel ' + IntToHex(C, 8));
+      Assert.IsTrue(((C shr 16) and $FF) < 50,   'Blue channel must stay low, got pixel ' + IntToHex(C, 8));
     FINALLY
       FreeAndNil(Bmp);
     END;

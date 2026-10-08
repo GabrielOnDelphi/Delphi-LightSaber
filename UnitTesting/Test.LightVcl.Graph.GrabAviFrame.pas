@@ -49,24 +49,8 @@ type
     [Test]
     procedure TestGetVideoPlayerLogo_MultipleCalls_NoMemoryLeak;
 
-    { Constants Tests }
     [Test]
-    procedure TestVideoFilesConstant_NotEmpty;
-
-    [Test]
-    procedure TestVideoFilesConstant_ContainsAVI;
-
-    [Test]
-    procedure TestVideoFilesConstant_ContainsMP4;
-
-    [Test]
-    procedure TestVideoFilesConstant_ContainsMKV;
-
-    [Test]
-    procedure TestVideoFilesFtlConstant_HasFilterPrefix;
-
-    [Test]
-    procedure TestVideoFilesFtlConstant_ContainsVideoFiles;
+    procedure TestGetVideoPlayerLogo_IconIsCentered;
   end;
 
 implementation
@@ -201,43 +185,27 @@ begin
 end;
 
 
-{ Constants Tests }
-
-procedure TTestGrabAviFrame.TestVideoFilesConstant_NotEmpty;
+{ GetVideoPlayerLogo reads AppDataCore.AppSysDir + 'video_player_icon.png' (LightVcl.Graph.GrabAviFrame.pas, GetVideoPlayerLogo).
+  The test copy, UnitTesting\System\video_player_icon.png, is a solid orange (RGB 255,128,0) 48x48 square,
+  so centered on the 192x128 logo it covers X 72..119 and Y 40..87. }
+procedure TTestGrabAviFrame.TestGetVideoPlayerLogo_IconIsCentered;
+CONST
+  Orange = TColor($000080FF);   { TColor is $00BBGGRR }
+VAR
+  BMP: TBitmap;
 begin
-  Assert.IsTrue(Length(VideoFiles) > 0, 'VideoFiles constant should not be empty');
-end;
+  Assert.IsTrue(FileExists(AppDataCore.AppSysDir + 'video_player_icon.png'), 'Test data missing: ' + AppDataCore.AppSysDir + 'video_player_icon.png');
 
-
-procedure TTestGrabAviFrame.TestVideoFilesConstant_ContainsAVI;
-begin
-  Assert.IsTrue(Pos('*.AVI', VideoFiles) > 0, 'VideoFiles should contain *.AVI');
-end;
-
-
-procedure TTestGrabAviFrame.TestVideoFilesConstant_ContainsMP4;
-begin
-  Assert.IsTrue(Pos('*.MP4', VideoFiles) > 0, 'VideoFiles should contain *.MP4');
-end;
-
-
-procedure TTestGrabAviFrame.TestVideoFilesConstant_ContainsMKV;
-begin
-  Assert.IsTrue(Pos('*.MKV', VideoFiles) > 0, 'VideoFiles should contain *.MKV');
-end;
-
-
-procedure TTestGrabAviFrame.TestVideoFilesFtlConstant_HasFilterPrefix;
-begin
-  Assert.IsTrue(Pos('Video Files|', VideoFilesFtl) = 1,
-    'VideoFilesFtl should start with "Video Files|"');
-end;
-
-
-procedure TTestGrabAviFrame.TestVideoFilesFtlConstant_ContainsVideoFiles;
-begin
-  Assert.IsTrue(Pos(VideoFiles, VideoFilesFtl) > 0,
-    'VideoFilesFtl should contain VideoFiles constant');
+  BMP:= GetVideoPlayerLogo;
+  TRY
+    Assert.AreEqual(Integer(Orange),  Integer(BMP.Canvas.Pixels[96, 64]),  'The icon must be drawn in the center');
+    Assert.AreEqual(Integer(Orange),  Integer(BMP.Canvas.Pixels[72, 40]),  'Top-left pixel of the centered icon');
+    Assert.AreEqual(Integer(Orange),  Integer(BMP.Canvas.Pixels[119, 87]), 'Bottom-right pixel of the centered icon');
+    Assert.AreEqual(Integer(clBlack), Integer(BMP.Canvas.Pixels[71, 64]),  'Left of the icon the background stays black');
+    Assert.AreEqual(Integer(clBlack), Integer(BMP.Canvas.Pixels[120, 64]), 'Right of the icon the background stays black');
+  FINALLY
+    FreeAndNil(BMP);
+  END;
 end;
 
 

@@ -442,12 +442,11 @@ end;
 
 procedure TTestGraphBitmap.TestClearBitmap_BasicCall;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      ClearBitmap(FBitmap);
-    end,
-    'ClearBitmap(FBitmap) must not raise');
+  Assert.IsFalse(FBitmap.Empty, 'Precondition: the 100x80 bitmap is not empty');
+  ClearBitmap(FBitmap);
+  Assert.IsTrue(FBitmap.Empty, 'ClearBitmap must leave an empty bitmap');
+  Assert.AreEqual(0, FBitmap.Width,  'ClearBitmap must set Width to 0');
+  Assert.AreEqual(0, FBitmap.Height, 'ClearBitmap must set Height to 0');
 end;
 
 
@@ -649,12 +648,12 @@ end;
 
 procedure TTestGraphBitmap.TestIsPanoramic_WithBitmap_BasicCall;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      IsPanoramic(FBitmap);
-    end,
-    'IsPanoramic(FBitmap) must not raise');
+  { The product rule: Width > 6000 AND Width/Height > 4 }
+  Assert.IsFalse(IsPanoramic(FBitmap), '100x80 is not panoramic');
+  FBitmap.SetSize(7000, 1000);
+  Assert.IsTrue(IsPanoramic(FBitmap), '7000x1000 (ratio 7) is panoramic');
+  FBitmap.SetSize(7000, 2000);
+  Assert.IsFalse(IsPanoramic(FBitmap), '7000x2000 (ratio 3.5) is not panoramic');
 end;
 
 
@@ -674,12 +673,9 @@ end;
 
 procedure TTestGraphBitmap.TestAspectIsSmaller_WithBitmap_BasicCall;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      AspectIsSmaller(FBitmap, 1920, 1080);
-    end,
-    'AspectIsSmaller(FBitmap, 1920, 1080) must not raise');
+  { FBitmap is 100x80: ratio 1.25 }
+  Assert.IsTrue (AspectIsSmaller(FBitmap, 1920, 1080), '1.25 is smaller than 1920/1080 = 1.78');
+  Assert.IsFalse(AspectIsSmaller(FBitmap, 100, 200),   '1.25 is not smaller than 100/200 = 0.5');
 end;
 
 

@@ -39,9 +39,6 @@ type
 
     { Basic Tests }
     [Test]
-    procedure TestCreate;
-
-    [Test]
     procedure TestAdd_SimpleText;
 
     [Test]
@@ -123,13 +120,6 @@ end;
 
 
 { Basic Tests }
-
-procedure TTestCubicRichEdit.TestCreate;
-begin
-  Assert.IsNotNull(FRichEdit, 'RichEdit should be created');
-  Assert.IsTrue(FRichEdit.HandleAllocated, 'RichEdit should have a valid handle');
-end;
-
 
 procedure TTestCubicRichEdit.TestAdd_SimpleText;
 begin
@@ -246,6 +236,12 @@ begin
   for i:= 1 to 100 do
     FRichEdit.Add('Line ' + IntToStr(i));
 
+  { Lines.Add leaves the caret at the end and the view follows the caret, so move both to the top first }
+  FRichEdit.SelStart:= 0;
+  FRichEdit.Perform(WM_VSCROLL, SB_TOP, 0);
+  Application.ProcessMessages;
+  Assert.AreEqual(0, FRichEdit.GetFirstVisibleLine, 'Precondition: the view is at the top');
+
   FRichEdit.ScrollToBottom;
   Application.ProcessMessages;
 
@@ -262,14 +258,16 @@ begin
   for i:= 1 to 100 do
     FRichEdit.Add('Line ' + IntToStr(i));
 
-  { Set caret to first line and scroll to line 50 }
+  { Set caret to first line and scroll to line 50. 100 lines in a 300 pixel form: line 50 can become the top line }
   FRichEdit.SelStart:= 0;
   FRichEdit.ScrollTo(50);
   Application.ProcessMessages;
+  Assert.AreEqual(50, FRichEdit.GetFirstVisibleLine, 'Line 50 must be the top visible line');
 
-  { The caret line should have moved toward line 50 }
-  { Note: The exact behavior depends on the EM_LINESCROLL implementation }
-  Assert.IsTrue(FRichEdit.GetCurrentLine >= 0, 'Current line should be valid');
+  { EM_LINESCROLL is relative to the current top line, so a second call must not add up }
+  FRichEdit.ScrollTo(20);
+  Application.ProcessMessages;
+  Assert.AreEqual(20, FRichEdit.GetFirstVisibleLine, 'Line 20 must be the top visible line');
 end;
 
 

@@ -136,7 +136,7 @@ begin
     nunitLogger:= TDUnitXXMLNUnitFileLogger.Create(TDUnitX.Options.XMLOutputFile);
     runner.AddLogger(nunitLogger);
 
-    runner.FailsOnNoAsserts:= FALSE;
+    runner.FailsOnNoAsserts:= TRUE;
 
     // Run tests
     results:= runner.Execute;

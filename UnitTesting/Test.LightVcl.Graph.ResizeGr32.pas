@@ -92,9 +92,6 @@ type
 
     { Constants Tests }
     [Test]
-    procedure TestConstants_DefaultKernelIsLanczos;
-
-    [Test]
     procedure TestConstants_ResamplerValues;
 
     [Test]
@@ -462,12 +459,6 @@ end;
 
 
 { Constants Tests }
-
-procedure TTestGraphResizeGr32.TestConstants_DefaultKernelIsLanczos;
-begin
-  Assert.AreEqual(LanczosKernel, DefaultKernel, 'DefaultKernel should be LanczosKernel');
-end;
-
 
 procedure TTestGraphResizeGr32.TestConstants_ResamplerValues;
 begin

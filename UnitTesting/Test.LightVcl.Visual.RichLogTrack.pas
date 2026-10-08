@@ -28,6 +28,8 @@ type
     FRichLog: TObject;
     procedure Cleanup;
     procedure OnVerbChangedHandler(Sender: TObject);
+  private
+    FVerbChangedCount: Integer;
   public
     [Setup]
     procedure Setup;
@@ -36,9 +38,6 @@ type
     procedure TearDown;
 
     { Creation Tests }
-    [Test]
-    procedure TestCreate_Succeeds;
-
     [Test]
     procedure TestCreate_HasTrackBar;
 
@@ -95,6 +94,7 @@ begin
   Assert.IsNotNull(AppData, 'AppData must be initialized before running tests');
   FTrackbar:= NIL;
   FRichLog:= NIL;
+  FVerbChangedCount:= 0;
   FTestForm:= TForm.Create(NIL);
 end;
 
@@ -129,24 +129,11 @@ end;
 
 procedure TTestRichLogTrack.OnVerbChangedHandler(Sender: TObject);
 begin
-  { Handler for OnVerbChanged event testing }
+  Inc(FVerbChangedCount);
 end;
 
 
 { Creation Tests }
-
-procedure TTestRichLogTrack.TestCreate_Succeeds;
-var
-  Trackbar: TRichLogTrckbr;
-begin
-  Trackbar:= TRichLogTrckbr.Create(FTestForm);
-  Trackbar.Parent:= FTestForm;
-  FTrackbar:= Trackbar;
-  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
-
-  Assert.IsNotNull(Trackbar, 'TRichLogTrckbr creation should succeed');
-end;
-
 
 procedure TTestRichLogTrack.TestCreate_HasTrackBar;
 var
@@ -193,8 +180,9 @@ begin
   FTrackbar:= Trackbar;
   Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
-  Assert.IsTrue(Trackbar.Width > 0, 'Width should be positive');
-  Assert.IsTrue(Trackbar.Height > 0, 'Height should be positive');
+  { CreateWnd sets the size on the first handle creation }
+  Assert.AreEqual(260, Trackbar.Width,  'Default Width set by CreateWnd');
+  Assert.AreEqual(27,  Trackbar.Height, 'Default Height set by CreateWnd');
 end;
 
 
@@ -299,18 +287,25 @@ end;
 procedure TTestRichLogTrack.TestLog_CanAssignNil;
 var
   Trackbar: TRichLogTrckbr;
+  RichLog: TRichLog;
 begin
   Trackbar:= TRichLogTrckbr.Create(FTestForm);
   Trackbar.Parent:= FTestForm;
   FTrackbar:= Trackbar;
   Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      Trackbar.Log:= NIL;
-    end,
-    'Trackbar.Log:= NIL must not raise');
+  RichLog:= TRichLog.Create(FTestForm);
+  RichLog.Parent:= FTestForm;
+  FRichLog:= RichLog;
+
+  { Attach, then detach: the detached log must no longer follow the trackbar }
+  Trackbar.Log:= RichLog;
+  Trackbar.Log:= NIL;
+  Assert.IsNull(Trackbar.Log, 'Log must be NIL after assigning NIL');
+
+  Trackbar.Verbosity:= lvrErrors;
+  Assert.AreEqual(lvrErrors, Trackbar.Verbosity, 'The trackbar must still work without a log');
+  Assert.AreEqual(DefaultVerbosity, RichLog.Verbosity, 'A detached log must keep its verbosity');
 end;
 
 
@@ -347,8 +342,9 @@ begin
   Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
   Trackbar.OnVerbChanged:= OnVerbChangedHandler;
+  Trackbar.Verbosity:= lvrErrors;   { Default is lvrInfos, so the position really changes }
 
-  Assert.IsTrue(Assigned(Trackbar.OnVerbChanged), 'OnVerbChanged should be assignable');
+  Assert.AreEqual(1, FVerbChangedCount, 'Changing the verbosity must fire OnVerbChanged once');
 end;
 
 

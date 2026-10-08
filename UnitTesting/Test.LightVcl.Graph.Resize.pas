@@ -356,8 +356,10 @@ begin
 
   SmartStretch(FBitmap, 200, 200);
 
-  { Image should be larger }
-  Assert.IsTrue(FBitmap.Width >= 50, 'Width should have increased');
+  { Square into a 4x bigger square box: RResizeParams.Reset sets MaxZoomUse = TRUE, MaxZoomVal = 50
+    (LightCore.Graph.ResizeParams.pas), so auto-detect enlarges at most 1.5x: 50 -> 75 }
+  Assert.AreEqual(75, FBitmap.Width,  'Width should have grown to 75 (the 150% zoom limit)');
+  Assert.AreEqual(75, FBitmap.Height, 'Height should have grown to 75 (the 150% zoom limit)');
 end;
 
 
@@ -393,9 +395,9 @@ begin
 
   SmartStretch(FBitmap, 100, 100, roFill);
 
-  { At least one dimension should fill the target }
-  Assert.IsTrue((FBitmap.Width >= 100) OR (FBitmap.Height >= 100),
-    'At least one dimension should fill');
+  { 3:2 filling a 100x100 box: the height fills it, the width overflows to 150 (roFit would give 100x67) }
+  Assert.AreEqual(150, FBitmap.Width,  'Width must overflow the box to 150');
+  Assert.AreEqual(100, FBitmap.Height, 'Height must fill the box exactly');
 end;
 
 
@@ -636,6 +638,9 @@ begin
 
   NewRatio:= FBitmap.Width / FBitmap.Height;
 
+  { Wider than the box: the width is the limit, the height follows: 150 x 100 }
+  Assert.AreEqual(150, FBitmap.Width,  'Width must be the limit (150)');
+  Assert.AreEqual(100, FBitmap.Height, 'Height must follow the ratio (100)');
   Assert.AreEqual(OrigRatio, NewRatio, 0.01, 'Aspect ratio should be preserved');
 end;
 

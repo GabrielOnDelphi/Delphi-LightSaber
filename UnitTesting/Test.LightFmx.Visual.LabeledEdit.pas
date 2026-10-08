@@ -24,6 +24,9 @@ type
   TTestLabeledEdit = class
   private
     FLabeledEdit: TLabeledEdit;
+    class var RegisteredPage: string;
+    class var RegisteredClasses: string;
+    class procedure CaptureRegistration(const Page: string; const ComponentClasses: array of TComponentClass); static;
   public
     [Setup]
     procedure Setup;
@@ -66,7 +69,7 @@ type
 
     { Component Registration }
     [Test]
-    procedure TestRegister_NoException;
+    procedure TestRegister_RegistersComponent;
   end;
 
 implementation
@@ -180,16 +183,36 @@ end;
 
 { Component Registration }
 
-procedure TTestLabeledEdit.TestRegister_NoException;
+{ Stands in for the IDE: outside the IDE RegisterComponentsProc is NIL, and System.Classes.RegisterComponents raises EComponentError. }
+class procedure TTestLabeledEdit.CaptureRegistration(const Page: string; const ComponentClasses: array of TComponentClass);
+var
+  CompClass: TComponentClass;
 begin
-  // Simply verify Register doesn't raise an exception
-  Assert.WillNotRaise(
-    procedure
+  RegisteredPage:= Page;
+  for CompClass in ComponentClasses do
     begin
-      Register;
-    end,
-    Exception,
-    'Register should not raise an exception');
+      if RegisteredClasses <> '' then RegisteredClasses:= RegisteredClasses + ',';
+      RegisteredClasses:= RegisteredClasses + CompClass.ClassName;
+    end;
+end;
+
+
+procedure TTestLabeledEdit.TestRegister_RegistersComponent;
+var
+  OldProc: procedure(const Page: string; const ComponentClasses: array of TComponentClass);
+begin
+  RegisteredPage:= '';
+  RegisteredClasses:= '';
+  OldProc:= RegisterComponentsProc;
+  RegisterComponentsProc:= TTestLabeledEdit.CaptureRegistration;
+  TRY
+    Register;
+  FINALLY
+    RegisterComponentsProc:= OldProc;
+  END;
+
+  Assert.AreEqual('LightSaber FMX', RegisteredPage, 'Register must use the LightSaber FMX palette page');
+  Assert.AreEqual('TLabeledEdit', RegisteredClasses, 'Register must register exactly TLabeledEdit');
 end;
 
 

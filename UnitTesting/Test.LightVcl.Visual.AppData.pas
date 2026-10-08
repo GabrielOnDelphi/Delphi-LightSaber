@@ -1,7 +1,7 @@
 unit Test.LightVcl.Visual.AppData;
 
 {=============================================================================================================
-   2026.01.31
+   2026.10.07
    Unit tests for LightVcl.Visual.AppData.pas
    Tests TAppData - VCL-specific application data management, form creation, version info, etc.
 
@@ -23,6 +23,12 @@ uses
   LightVcl.Visual.AppData;
 
 type
+  { A form whose window class carries AppData.SingleInstClassName, as a single-instance main form does }
+  TSingleInstForm = class(TForm)
+  protected
+    procedure CreateParams(VAR Params: TCreateParams); override;
+  end;
+
   [TestFixture]
   TTestAppDataVcl = class
   public
@@ -31,13 +37,6 @@ type
 
     [TearDown]
     procedure TearDown;
-
-    { Basic Tests }
-    [Test]
-    procedure TestAppDataExists;
-
-    [Test]
-    procedure TestAppDataIsVclType;
 
     { Version Info Tests }
     [Test]
@@ -70,7 +69,7 @@ type
 
     { Font Tests }
     [Test]
-    procedure TestFontInitiallyNil;
+    procedure TestFont_AppliesToExistingForms;
 
     { Hint Tests }
     [Test]
@@ -126,6 +125,10 @@ type
 
 implementation
 
+uses
+  System.Win.Registry,
+  Vcl.Graphics;
+
 
 procedure TTestAppDataVcl.Setup;
 begin
@@ -140,20 +143,57 @@ begin
 end;
 
 
-{ Basic Tests }
-
-procedure TTestAppDataVcl.TestAppDataExists;
+procedure TSingleInstForm.CreateParams(VAR Params: TCreateParams);
 begin
-  Assert.IsNotNull(AppData, 'AppData should be created');
-end;
-
-procedure TTestAppDataVcl.TestAppDataIsVclType;
-begin
-  Assert.IsTrue(AppData is TAppData, 'AppData should be TAppData (VCL version)');
+  inherited CreateParams(Params);
+  AppData.SetSingleInstanceName(Params);
 end;
 
 
-{ Version Info Tests }
+{ Version Info Tests
+  This unit is linked by more than one test EXE, so the expected version is read from the running EXE itself,
+  straight through GetFileVersionInfo/VerQueryValue - not through LightCore.ExeVersion, which the routines under test use.
+  Tests_LightVcl.Visual.dproj gives its EXE the version 1.2.3.4 (four different numbers, so a routine that returns
+  the wrong field fails), linked by the $R *.res line in Tests_LightVcl.Visual.dpr. That EXE must always take the real leg. }
+CONST
+  VersionedTestExe = 'Tests_LightVcl.Visual.exe';
+
+{ Reads the four fields of VS_FIXEDFILEINFO of the running EXE. Returns FALSE when the EXE has no version resource. }
+function ReadExeVersion(OUT Major, Minor, Release, Build: Word): Boolean;
+VAR
+  Size, Dummy, InfoLen: DWORD;
+  Buffer: TBytes;
+  Info: PVSFixedFileInfo;
+begin
+  Major:= 0; Minor:= 0; Release:= 0; Build:= 0;
+  Size:= GetFileVersionInfoSize(PChar(ParamStr(0)), Dummy);
+  if Size = 0
+  then EXIT(FALSE);
+
+  SetLength(Buffer, Size);
+  if NOT GetFileVersionInfo(PChar(ParamStr(0)), 0, Size, Buffer)
+  then EXIT(FALSE);
+  if NOT VerQueryValue(Buffer, '\', Pointer(Info), InfoLen) OR (InfoLen < SizeOf(TVSFixedFileInfo))
+  then EXIT(FALSE);
+
+  Major  := HiWord(Info.dwFileVersionMS);
+  Minor  := LoWord(Info.dwFileVersionMS);
+  Release:= HiWord(Info.dwFileVersionLS);
+  Build  := LoWord(Info.dwFileVersionLS);
+  Result:= TRUE;
+end;
+
+{ Reads the version of the running EXE, or skips the test when the EXE has no version resource.
+  The skip is refused in Tests_LightVcl.Visual.exe, which has one. }
+procedure RequireExeVersion(OUT Major, Minor, Release, Build: Word);
+begin
+  if ReadExeVersion(Major, Minor, Release, Build)
+  then EXIT;
+
+  if SameText(ExtractFileName(ParamStr(0)), VersionedTestExe)
+  then Assert.Fail(VersionedTestExe + ' must carry a version resource ($R *.res in its .dpr, VerInfo_* in its .dproj)')
+  else Assert.Pass('No version resource in ' + ExtractFileName(ParamStr(0)));
+end;
 
 procedure TTestAppDataVcl.TestGetVersionInfo;
 var
@@ -164,43 +204,17 @@ begin
 end;
 
 procedure TTestAppDataVcl.TestGetVersionInfo_NoBuildNo;
-var
-  Version: string;
-  DotCount: Integer;
-  i: Integer;
+VAR Major, Minor, Release, Build: Word;
 begin
-  Version:= TAppData.GetVersionInfo(False);
-  Assert.IsNotEmpty(Version, 'Version should never be an empty string');
-
-  // Without build number, should have format X.Y.Z (2 dots).
-  // N/A is the expected fallback when the running exe has no version resource.
-  DotCount:= 0;
-  for i:= 1 to Length(Version) do
-    if Version[i] = '.'
-    then Inc(DotCount);
-
-  if Version = 'N/A'
-  then Assert.AreEqual('N/A', Version, 'Fallback when no version resource is present')
-  else Assert.AreEqual(2, DotCount, 'Version without build should have 2 dots (X.Y.Z)');
+  RequireExeVersion(Major, Minor, Release, Build);
+  Assert.AreEqual(IntToStr(Major)+ '.'+ IntToStr(Minor)+ '.'+ IntToStr(Release), TAppData.GetVersionInfo(False), 'Version without build number');
 end;
 
 procedure TTestAppDataVcl.TestGetVersionInfo_WithBuildNo;
-var
-  Version: string;
-  DotCount: Integer;
-  i: Integer;
+VAR Major, Minor, Release, Build: Word;
 begin
-  Version:= TAppData.GetVersionInfo(True);
-  Assert.IsNotEmpty(Version, 'Version should never be an empty string');
-
-  DotCount:= 0;
-  for i:= 1 to Length(Version) do
-    if Version[i] = '.'
-    then Inc(DotCount);
-
-  if Version = 'N/A'
-  then Assert.AreEqual('N/A', Version, 'Fallback when no version resource is present')
-  else Assert.AreEqual(3, DotCount, 'Version with build should have 3 dots (X.Y.Z.B)');
+  RequireExeVersion(Major, Minor, Release, Build);
+  Assert.AreEqual(IntToStr(Major)+ '.'+ IntToStr(Minor)+ '.'+ IntToStr(Release)+ '.'+ IntToStr(Build), TAppData.GetVersionInfo(True), 'Version with build number');
 end;
 
 procedure TTestAppDataVcl.TestGetVersionInfoV;
@@ -220,21 +234,17 @@ begin
 end;
 
 procedure TTestAppDataVcl.TestGetVersionInfoMajor;
-var
-  Major: Word;
+VAR Major, Minor, Release, Build: Word;
 begin
-  Major:= AppData.GetVersionInfoMajor;
-  // Word is always >= 0, just verify it returns without exception
-  Assert.Pass('GetVersionInfoMajor returned: ' + IntToStr(Major));
+  RequireExeVersion(Major, Minor, Release, Build);
+  Assert.AreEqual(Integer(Major), Integer(AppData.GetVersionInfoMajor), 'Major version');
 end;
 
 procedure TTestAppDataVcl.TestGetVersionInfoMinor;
-var
-  Minor: Word;
+VAR Major, Minor, Release, Build: Word;
 begin
-  Minor:= AppData.GetVersionInfoMinor;
-  // Word is always >= 0, just verify it returns without exception
-  Assert.Pass('GetVersionInfoMinor returned: ' + IntToStr(Minor));
+  RequireExeVersion(Major, Minor, Release, Build);
+  Assert.AreEqual(Integer(Minor), Integer(AppData.GetVersionInfoMinor), 'Minor version');
 end;
 
 
@@ -257,12 +267,27 @@ end;
 
 { Font Tests }
 
-procedure TTestAppDataVcl.TestFontInitiallyNil;
+{ setFont stores the first font; from the second assignment on it also copies the font to every existing form.
+  The main form's font is used, because setGuiProperties gives AppData exactly that font in a real program, and it lives until the runner ends. }
+procedure TTestAppDataVcl.TestFont_AppliesToExistingForms;
+var
+  Form: TForm;
+  MainFont: TFont;
 begin
-  // Font is nil until main form is created and sets it
-  // This test verifies the property accessor works
-  // (Font may or may not be nil depending on test order)
-  Assert.IsTrue((AppData.Font = NIL) OR (AppData.Font <> NIL));
+  Assert.IsNotNull(Application.MainForm, 'The test runner must create a main form');
+  MainFont:= Application.MainForm.Font;
+
+  AppData.Font:= MainFont;   { First assignment (or a repeat, if another test ran first) }
+  Assert.AreSame(TObject(MainFont), TObject(AppData.Font),'AppData.Font must hold the font it was given');
+
+  Form:= TForm.CreateNew(NIL);
+  try
+    Form.Font.Size:= MainFont.Size + 7;
+    AppData.Font:= MainFont;   { Second assignment: must reach the existing form }
+    Assert.AreEqual(MainFont.Size, Form.Font.Size, 'An existing form must get the AppData font');
+  finally
+    FreeAndNil(Form);
+  end;
 end;
 
 
@@ -311,14 +336,22 @@ end;
 
 { Single Instance Tests }
 
+{ The runner's main form is a plain TForm, so no window carries SingleInstClassName until the test creates one }
 procedure TTestAppDataVcl.TestInstanceRunning;
 var
-  IsRunning: Boolean;
+  Form: TSingleInstForm;
 begin
-  IsRunning:= AppData.InstanceRunning;
-  // Result depends on whether main form exists with our class name
-  // Just verify it doesn't raise an exception
-  Assert.IsTrue(IsRunning OR (NOT IsRunning));
+  Assert.IsFalse(AppData.InstanceRunning, 'No window with the single-instance class name exists yet');
+
+  Form:= TSingleInstForm.CreateNew(NIL);
+  try
+    Form.HandleNeeded;
+    Assert.IsTrue(AppData.InstanceRunning, 'A window with the single-instance class name exists now');
+  finally
+    FreeAndNil(Form);
+  end;
+
+  Assert.IsFalse(AppData.InstanceRunning, 'The window was destroyed');
 end;
 
 procedure TTestAppDataVcl.TestSingleInstClassName_NotEmpty;
@@ -362,14 +395,22 @@ end;
 
 { Startup Tests }
 
+{ Disabling is safe: it only deletes the value of this EXE under HKCU\...\Run, which the test runner never writes }
 procedure TTestAppDataVcl.TestRunSelfAtStartUp_Disable;
 var
-  Success: Boolean;
+  Reg: TRegistry;
 begin
-  // Disable startup registration (safe operation)
-  Success:= AppData.RunSelfAtStartUp(False);
-  // May fail due to registry permissions, which is acceptable
-  Assert.IsTrue(Success OR (NOT Success));
+  Assert.IsTrue(AppData.RunSelfAtStartUp(False), 'HKCU\Software\Microsoft\Windows\CurrentVersion\Run must open');
+
+  Reg:= TRegistry.Create(KEY_READ);
+  try
+    Reg.RootKey:= HKEY_CURRENT_USER;
+    Assert.IsTrue(Reg.OpenKeyReadOnly('\Software\Microsoft\Windows\CurrentVersion\Run'), 'The Run key must exist');
+    Assert.IsFalse(Reg.ValueExists(TPath.GetFileNameWithoutExtension(ParamStr(0))), 'No autostart value may remain for this EXE');
+    Reg.CloseKey;
+  finally
+    FreeAndNil(Reg);
+  end;
 end;
 
 

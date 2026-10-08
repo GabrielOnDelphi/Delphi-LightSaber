@@ -193,7 +193,9 @@ var
 begin
   Loader:= TBkgImgLoader.Create(FTestForm.Handle);
   TRY
-    Assert.IsNotNull(Loader, 'Loader should be created');
+    { The caller must assign FileList before Start, so the thread must not run yet }
+    Assert.IsFalse(Loader.Started, 'The loader must be created suspended');
+    Assert.AreEqual(Ord(tpLower), Ord(Loader.Priority), 'The loader must run at priority tpLower');
   FINALLY
     { FreeAndNil alone, and nothing before it. TBkgImgLoader is created SUSPENDED
       (LightVcl.Graph.Loader.Thread.pas:107, "inherited Create(TRUE)"), and TThread.WaitFor waits on
@@ -451,11 +453,15 @@ end;
 { Thread Behavior Tests }
 
 procedure TTestBkgImgLoader.TestTerminateWhileRunning;
+CONST
+  FileCount = 20;
 var
   Loader: TBkgImgLoader;
   FileList: TStringList;
+  BMP: TBitmap;
+  Produced: Integer;
 begin
-  CreateTestBmpFiles(20);  { Create many files to ensure thread is running }
+  CreateTestBmpFiles(FileCount);  { Create many files to ensure thread is running }
 
   FileList:= TStringList.Create;
   FileList.AddStrings(FTestBmpFiles);
@@ -465,12 +471,31 @@ begin
     Loader.FileList:= FileList;
     Loader.Start;
 
-    { Immediately terminate }
+    { Wait for the first thumbnail, so Execute is surely inside its loop, then terminate at once.
+      (A Terminate before the thread starts makes TThread skip Execute altogether, which tests the RTL, not the loop.) }
+    VAR Deadline:= GetTickCount64 + 10000;
+    BMP:= Loader.PopPicture;
+    while (BMP = NIL) AND (GetTickCount64 < Deadline) do
+      begin
+        TThread.Yield;
+        BMP:= Loader.PopPicture;
+      end;
     Loader.Terminate;
+    Assert.IsNotNull(BMP, 'Precondition: the worker produced its first thumbnail within 10 seconds');
+    FreeAndNil(BMP);
     Loader.WaitFor;
 
-    { Thread should have stopped without error }
-    Assert.Pass('Thread terminated successfully');
+    { A worker that ignored Terminated would load, resize and queue all FileCount files }
+    Produced:= 1;   { The first thumbnail, popped above }
+    BMP:= Loader.PopPicture;
+    while BMP <> NIL do
+      begin
+        Inc(Produced);
+        FreeAndNil(BMP);
+        BMP:= Loader.PopPicture;
+      end;
+    Assert.IsTrue(Produced < FileCount, 'After Terminate the worker must stop early, but it queued ' + IntToStr(Produced) + ' of ' + IntToStr(FileCount) + ' thumbnails');
+    Assert.IsNull(Loader.FileList, 'Execute must free FileList also when it is terminated');
   FINALLY
     FreeAndNil(Loader);
   END;
@@ -504,8 +529,11 @@ begin
     Loader.Start;
     Loader.WaitFor;
 
-    { Thread should complete without raising exception }
-    Assert.Pass('Thread handled invalid file silently');
+    { Every LightSaber loader logs a broken file and returns NIL (LightVcl.Graph.Loader.pas, loadGraphWic and LoadBMP),
+      so ProcessFile's SilentErrors branch is not reached from a file. What the thread must do with such a file:
+      queue no thumbnail and still finish and free FileList. }
+    Assert.IsNull(Loader.PopPicture, 'An invalid image file must produce no thumbnail');
+    Assert.IsNull(Loader.FileList,   'The thread must free FileList when it is done');
   FINALLY
     { FreeAndNil alone, and nothing before it. TBkgImgLoader is created SUSPENDED
       (LightVcl.Graph.Loader.Thread.pas:107, "inherited Create(TRUE)"), and TThread.WaitFor waits on
@@ -534,9 +562,15 @@ begin
     Loader.Start;
     Loader.WaitFor;
 
-    { FileList should have been freed by the thread }
-    { We can't directly test this, but ensure thread completes without error }
-    Assert.Pass('Thread completed and freed FileList');
+    { The thread owns FileList: Execute frees it and sets the field to NIL }
+    Assert.IsNull(Loader.FileList, 'The thread must free FileList when it is done');
+
+    VAR BMP:= Loader.PopPicture;
+    TRY
+      Assert.IsNotNull(BMP, 'The one valid file must produce one thumbnail');
+    FINALLY
+      FreeAndNil(BMP);
+    END;
   FINALLY
     { FreeAndNil alone, and nothing before it. TBkgImgLoader is created SUSPENDED
       (LightVcl.Graph.Loader.Thread.pas:107, "inherited Create(TRUE)"), and TThread.WaitFor waits on

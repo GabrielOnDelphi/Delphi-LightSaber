@@ -419,12 +419,11 @@ end;
 
 procedure TTestVclUtils.TestSetFocus_NilNoException;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       LightVcl.Common.VclUtils.SetFocus(NIL);
     end,
-    Exception,
     'SetFocus(nil) should not raise exception');
 end;
 

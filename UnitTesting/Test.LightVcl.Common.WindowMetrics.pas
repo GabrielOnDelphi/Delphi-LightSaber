@@ -15,6 +15,7 @@ interface
 uses
   DUnitX.TestFramework,
   System.SysUtils,
+  System.UITypes,
   Winapi.Windows,
   Vcl.Forms,
   Vcl.StdCtrls,
@@ -79,10 +80,10 @@ type
 
     { Scrollbar Visibility Tests }
     [Test]
-    procedure Test_HorizScrollBarVisible_DesktopWindow;
+    procedure Test_HorizScrollBarVisible_MemoWithHorizBar;
 
     [Test]
-    procedure Test_VertScrollBarVisible_DesktopWindow;
+    procedure Test_VertScrollBarVisible_MemoWithVertBar;
 
     { SetScrollbarWidth Validation Tests }
     [Test]
@@ -184,49 +185,41 @@ begin
 end;
 
 
+{ The five tests below pin WHICH system metric each routine returns. The expected value comes from
+  the RTL's DPI-aware Vcl.Controls.GetSystemMetricsForWindow called with the documented SM_ index. }
+
 procedure TTestWindowMetrics.Test_GetFrameSize_WithDesktopHandle;
-VAR
-  Size: Integer;
 begin
-  Size:= GetFrameSize(GetTestHandle);
-  { Frame size can be 0 on some systems/themes, but should not be negative }
-  Assert.IsTrue(Size >= 0, 'Frame size should be non-negative');
+  Assert.AreEqual(Vcl.Controls.GetSystemMetricsForWindow(SM_CYSIZEFRAME, GetTestHandle), GetFrameSize(GetTestHandle),
+    'GetFrameSize must return SM_CYSIZEFRAME');
 end;
 
 
 procedure TTestWindowMetrics.Test_GetWinBorderWidth_ReturnsPositive;
-VAR
-  Width: Integer;
 begin
-  Width:= GetWinBorderWidth(GetTestHandle);
-  Assert.IsTrue(Width >= 0, 'Border width should be non-negative');
+  Assert.AreEqual(Vcl.Controls.GetSystemMetricsForWindow(SM_CXBORDER, GetTestHandle), GetWinBorderWidth(GetTestHandle),
+    'GetWinBorderWidth must return SM_CXBORDER');
 end;
 
 
 procedure TTestWindowMetrics.Test_GetWinBorderHeight_ReturnsPositive;
-VAR
-  Height: Integer;
 begin
-  Height:= GetWinBorderHeight(GetTestHandle);
-  Assert.IsTrue(Height >= 0, 'Border height should be non-negative');
+  Assert.AreEqual(Vcl.Controls.GetSystemMetricsForWindow(SM_CYBORDER, GetTestHandle), GetWinBorderHeight(GetTestHandle),
+    'GetWinBorderHeight must return SM_CYBORDER');
 end;
 
 
 procedure TTestWindowMetrics.Test_GetWin3DBorderWidth_ReturnsPositive;
-VAR
-  Width: Integer;
 begin
-  Width:= GetWin3DBorderWidth(GetTestHandle);
-  Assert.IsTrue(Width >= 0, '3D border width should be non-negative');
+  Assert.AreEqual(Vcl.Controls.GetSystemMetricsForWindow(SM_CXEDGE, GetTestHandle), GetWin3DBorderWidth(GetTestHandle),
+    'GetWin3DBorderWidth must return SM_CXEDGE');
 end;
 
 
 procedure TTestWindowMetrics.Test_GetWin3DBorderHeight_ReturnsPositive;
-VAR
-  Height: Integer;
 begin
-  Height:= GetWin3DBorderHeight(GetTestHandle);
-  Assert.IsTrue(Height >= 0, '3D border height should be non-negative');
+  Assert.AreEqual(Vcl.Controls.GetSystemMetricsForWindow(SM_CYEDGE, GetTestHandle), GetWin3DBorderHeight(GetTestHandle),
+    'GetWin3DBorderHeight must return SM_CYEDGE');
 end;
 
 
@@ -275,25 +268,34 @@ end;
 
 { Scrollbar Visibility Tests }
 
-procedure TTestWindowMetrics.Test_HorizScrollBarVisible_DesktopWindow;
-VAR
-  Visible: Boolean;
+{ A memo on the hidden test form; TMemo turns ScrollBars into the WS_HSCROLL / WS_VSCROLL window styles }
+function CreateMemo(Form: TForm; ScrollBars: System.UITypes.TScrollStyle): TMemo;
 begin
-  { Desktop window typically has no scrollbars }
-  Visible:= HorizScrollBarVisible(GetDesktopWindow);
-  { Just verify it returns a valid boolean without crashing }
-  Assert.Pass('HorizScrollBarVisible executed without error, returned: ' + BoolToStr(Visible, True));
+  Result:= TMemo.Create(Form);
+  Result.Parent:= Form;
+  Result.WordWrap:= FALSE;
+  Result.ScrollBars:= ScrollBars;
+  Result.HandleNeeded;
 end;
 
 
-procedure TTestWindowMetrics.Test_VertScrollBarVisible_DesktopWindow;
+procedure TTestWindowMetrics.Test_HorizScrollBarVisible_MemoWithHorizBar;
 VAR
-  Visible: Boolean;
+  Memo: TMemo;
 begin
-  { Desktop window typically has no scrollbars }
-  Visible:= VertScrollBarVisible(GetDesktopWindow);
-  { Just verify it returns a valid boolean without crashing }
-  Assert.Pass('VertScrollBarVisible executed without error, returned: ' + BoolToStr(Visible, True));
+  Memo:= CreateMemo(FTestForm, ssHorizontal);
+  Assert.IsTrue (HorizScrollBarVisible(Memo.Handle), 'A memo with ssHorizontal has a horizontal scroll bar');
+  Assert.IsFalse(VertScrollBarVisible (Memo.Handle), 'A memo with ssHorizontal has no vertical scroll bar');
+end;
+
+
+procedure TTestWindowMetrics.Test_VertScrollBarVisible_MemoWithVertBar;
+VAR
+  Memo: TMemo;
+begin
+  Memo:= CreateMemo(FTestForm, ssVertical);
+  Assert.IsTrue (VertScrollBarVisible (Memo.Handle), 'A memo with ssVertical has a vertical scroll bar');
+  Assert.IsFalse(HorizScrollBarVisible(Memo.Handle), 'A memo with ssVertical has no horizontal scroll bar');
 end;
 
 

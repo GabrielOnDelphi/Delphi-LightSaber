@@ -23,6 +23,9 @@ TYPE
   TTestSvgButton = class
   strict private
     FButton: TSvgButton;
+    class var RegisteredPage: string;
+    class var RegisteredClasses: string;
+    class procedure CaptureRegistration(const Page: string; const ComponentClasses: array of TComponentClass); static;
   public
     [Setup]
     procedure Setup;
@@ -81,7 +84,7 @@ TYPE
 
     { Misc }
     [Test] procedure TestApplyThemeColors_DoesNotRaise;
-    [Test] procedure TestRegister_NoException;
+    [Test] procedure TestRegister_RegistersComponent;
   end;
 
 
@@ -455,25 +458,45 @@ end;
 { Misc }
 procedure TTestSvgButton.TestApplyThemeColors_DoesNotRaise;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       FButton.ApplyThemeColors;
     end,
-    Exception,
     'ApplyThemeColors should be safe to call without an active style');
 end;
 
 
-procedure TTestSvgButton.TestRegister_NoException;
+{ Stands in for the IDE: outside the IDE RegisterComponentsProc is NIL, and System.Classes.RegisterComponents raises EComponentError. }
+class procedure TTestSvgButton.CaptureRegistration(const Page: string; const ComponentClasses: array of TComponentClass);
+var
+  CompClass: TComponentClass;
 begin
-  Assert.WillNotRaise(
-    procedure
+  RegisteredPage:= Page;
+  for CompClass in ComponentClasses do
     begin
-      Register;
-    end,
-    Exception,
-    'Register should not raise');
+      if RegisteredClasses <> '' then RegisteredClasses:= RegisteredClasses + ',';
+      RegisteredClasses:= RegisteredClasses + CompClass.ClassName;
+    end;
+end;
+
+
+procedure TTestSvgButton.TestRegister_RegistersComponent;
+var
+  OldProc: procedure(const Page: string; const ComponentClasses: array of TComponentClass);
+begin
+  RegisteredPage:= '';
+  RegisteredClasses:= '';
+  OldProc:= RegisterComponentsProc;
+  RegisterComponentsProc:= TTestSvgButton.CaptureRegistration;
+  TRY
+    Register;
+  FINALLY
+    RegisterComponentsProc:= OldProc;
+  END;
+
+  Assert.AreEqual('LightSaber FMX', RegisteredPage, 'Register must use the LightSaber FMX palette page');
+  Assert.AreEqual('TSvgButton', RegisteredClasses, 'Register must register exactly TSvgButton');
 end;
 
 

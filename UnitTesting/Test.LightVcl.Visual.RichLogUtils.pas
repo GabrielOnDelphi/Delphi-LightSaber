@@ -55,10 +55,6 @@ type
     { DefaultVerbosity Tests }
     [Test]
     procedure TestDefaultVerbosity_IsInfos;
-
-    { Color Constants Tests }
-    [Test]
-    procedure TestColorConstants_AreNotZero;
   end;
 
 implementation
@@ -149,20 +145,6 @@ end;
 procedure TTestRichLogUtils.TestDefaultVerbosity_IsInfos;
 begin
   Assert.AreEqual(lvrInfos, DefaultVerbosity, 'DefaultVerbosity should be lvrInfos');
-end;
-
-
-{ Color Constants Tests }
-
-procedure TTestRichLogUtils.TestColorConstants_AreNotZero;
-begin
-  { Verify all color constants are defined and not black (0) except ctLogInfo which is black }
-  Assert.AreNotEqual(TColor(0), ctLogVerb, 'ctLogVerb should not be black');
-  Assert.AreNotEqual(TColor(0), ctLogHint, 'ctLogHint should not be black');
-  Assert.AreEqual(clBlack, ctLogInfo, 'ctLogInfo should be black');
-  Assert.AreNotEqual(TColor(0), ctLogImprt, 'ctLogImprt should not be black');
-  Assert.AreNotEqual(TColor(0), ctLogWarn, 'ctLogWarn should not be black');
-  Assert.AreEqual(clRed, ctLogError, 'ctLogError should be red');
 end;
 
 

@@ -253,6 +253,7 @@ type
 implementation
 
 uses
+  Vcl.Themes,
   LightVcl.Graph.Util;
 
 
@@ -491,8 +492,9 @@ end;
 
 procedure TTestGraphUtil.TestSimilarColor_SystemColors;
 begin
-  { clWindow is a system color - test that it gets converted properly }
-  Assert.IsTrue(SimilarColor(clWindow, clWindow, 0), 'System colors should compare correctly');
+  { clWindow is a system color ($80000005): it matches its own RGB value only if SimilarColor converts it with ColorToRGB }
+  Assert.IsTrue(SimilarColor(clWindow, ColorToRGB(clWindow), 0), 'A system color must equal its RGB value');
+  Assert.IsTrue(SimilarColor(ColorToRGB(clBtnFace), clBtnFace, 0), 'A system color must equal its RGB value (second argument)');
 end;
 
 
@@ -1003,62 +1005,37 @@ end;
 
 { Theme Functions Tests }
 
+{ The test EXE loads no VCL style, so the active style is the plain Windows one (TUxThemeStyle): not custom,
+  and its GetSystemColor returns ColorToRGB of the colour asked for (c:\Delphi\Delphi 13\source\vcl\Vcl.Themes.pas, TUxThemeStyle.DoGetSystemColor). }
 procedure TTestGraphUtil.TestWindowsThemesEnabled_NoCrash;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      WindowsThemesEnabled;
-    end, 'Should not raise any exception');
+  { Measured 2026-10-08: FALSE in this console test EXE (TUxThemeStyle.GetEnabled needs comctl32 v6 and active themes).
+    The routine promises the value of TStyleManager.Enabled, so that is what it is compared with. }
+  Assert.AreEqual(TStyleManager.Enabled, WindowsThemesEnabled, 'WindowsThemesEnabled must return TStyleManager.Enabled');
 end;
 
 
 procedure TTestGraphUtil.TestVclStylesEnabled_NoCrash;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      VclStylesEnabled;
-    end, 'Should not raise any exception');
+  Assert.IsFalse(VclStylesEnabled, 'The test EXE loads no custom VCL style');
 end;
 
 
 procedure TTestGraphUtil.TestThemeColorBkg_NoCrash;
-VAR C: TColor;
 begin
-  C:= clNone;
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      C:= ThemeColorBkg;
-    end, 'ThemeColorBkg should not raise');
-  Assert.AreNotEqual(clNone, C, 'ThemeColorBkg should return a real colour, not clNone');
+  Assert.AreEqual(Integer(ColorToRGB(clBackground)), Integer(ThemeColorBkg), 'Windows style: ThemeColorBkg must be the RGB of clBackground');
 end;
 
 
 procedure TTestGraphUtil.TestThemeColorHilight_NoCrash;
-VAR C: TColor;
 begin
-  C:= clNone;
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      C:= ThemeColorHilight;
-    end, 'ThemeColorHilight should not raise');
-  Assert.AreNotEqual(clNone, C, 'ThemeColorHilight should return a real colour, not clNone');
+  Assert.AreEqual(Integer(ColorToRGB(clHighlight)), Integer(ThemeColorHilight), 'Windows style: ThemeColorHilight must be the RGB of clHighlight');
 end;
 
 
 procedure TTestGraphUtil.TestThemeColorButtonFace_NoCrash;
-VAR C: TColor;
 begin
-  C:= clNone;
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      C:= ThemeColorButtonFace;
-    end, 'ThemeColorButtonFace should not raise');
-  Assert.AreNotEqual(clNone, C, 'ThemeColorButtonFace should return a real colour, not clNone');
+  Assert.AreEqual(Integer(ColorToRGB(clBtnFace)), Integer(ThemeColorButtonFace), 'Windows style: ThemeColorButtonFace must be the RGB of clBtnFace');
 end;
 
 
