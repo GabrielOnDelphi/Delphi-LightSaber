@@ -36,21 +36,23 @@ const
   AnsiCRLF: AnsiString = #13#10;
 
 { Parses a multi-line AnsiString and adds each line to the list.
-  Handles CR, LF, and CRLF line endings. }
+  Handles CR, LF, and CRLF line endings.
+  The scan stops at the length of Value, not at the first #0: a #0 stays inside its line, as in the RTL TStrings.SetTextStr (System.Classes.pas). }
 procedure TAnsiTSL.SetTextStr(const Value: AnsiString);
 var
-  P, Start: PAnsiChar;
+  P, PEnd, Start: PAnsiChar;
   S: AnsiString;
 begin
   Clear;
   P:= Pointer(Value);
   if P = nil then EXIT;
+  PEnd:= P + Length(Value);
 
   { Fast path: scan for CR/LF characters directly }
-  while P^ <> #0 do
+  while P < PEnd do
   begin
     Start:= P;
-    while NOT (P^ in [#0, #10, #13]) do
+    while (P < PEnd) AND NOT (P^ in [#10, #13]) do
       Inc(P);
     SetString(S, Start, P - Start);
     Add(S);
