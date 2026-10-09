@@ -11,7 +11,7 @@ UNIT LightCore.RttiSetToString;
 
    Limitations:
      - Sets are limited to 32 elements (Integer size)
-     - Element names must match exactly (case-sensitive)
+     - Element names are matched IGNORING case ('ALLEFT' gives alLeft): GetEnumValue compares them through UTF8IdentStringCompare (c:\Delphi\Delphi 13\source\rtl\sys\System.pas)
 
    Example:
      procedure Test;
