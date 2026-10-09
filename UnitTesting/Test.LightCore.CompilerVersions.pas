@@ -46,9 +46,6 @@ type
 
     { RTLVersion Tests }
     [Test]
-    procedure TestCurrentRTLVersionMinimum;
-
-    [Test]
     procedure TestRTLVersionIsKnown;
 
     { Edge Cases }
@@ -146,20 +143,23 @@ end;
 
 { RTLVersion Tests }
 
-procedure TTestCompiler.TestCurrentRTLVersionMinimum;
-begin
-  { RTLVersion should be at least Delphi Rio (minimum supported per CLAUDE.md) }
-  Assert.IsTrue(RTLVersion >= Delphi10_Rio,
-    Format('RTLVersion %.1f should be >= Delphi Rio (%.1f)', [RTLVersion, Delphi10_Rio]));
-end;
-
-
+{ The constant named for the compiler that builds this suite must equal that compiler's own System.RTLVersion
+  (RTLVersion = 37.00 in c:\Delphi\Delphi 13\source\rtl\sys\System.pas). A compiler not listed here fails: its constant is missing. }
 procedure TTestCompiler.TestRTLVersionIsKnown;
 begin
-  { Current RTLVersion should match one of our defined constants }
-  Assert.IsTrue(
-    (RTLVersion >= Delphi_7) AND (RTLVersion <= Delphi13_Florence + 1),
-    Format('RTLVersion %.1f should be within known range', [RTLVersion]));
+  {$IF Defined(VER370)}
+  Assert.AreEqual(RTLVersion, Delphi13_Florence, 0.001, 'Delphi13_Florence must equal the RTLVersion of Delphi 13');
+  {$ELSEIF Defined(VER360)}
+  Assert.AreEqual(RTLVersion, Delphi12_Athens, 0.001, 'Delphi12_Athens must equal the RTLVersion of Delphi 12');
+  {$ELSEIF Defined(VER350)}
+  Assert.AreEqual(RTLVersion, Delphi11_Alex, 0.001, 'Delphi11_Alex must equal the RTLVersion of Delphi 11');
+  {$ELSEIF Defined(VER340)}
+  Assert.AreEqual(RTLVersion, Delphi10_Sydney, 0.001, 'Delphi10_Sydney must equal the RTLVersion of Delphi 10.4');
+  {$ELSEIF Defined(VER330)}
+  Assert.AreEqual(RTLVersion, Delphi10_Rio, 0.001, 'Delphi10_Rio must equal the RTLVersion of Delphi 10.3');
+  {$ELSE}
+  Assert.Fail('No constant in LightCore.CompilerVersions for RTLVersion ' + FloatToStr(RTLVersion));
+  {$ENDIF}
 end;
 
 

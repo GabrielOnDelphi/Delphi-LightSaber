@@ -306,8 +306,12 @@ begin
     Bmp:= Loader.PopPicture;
     TRY
       Assert.IsNotNull(Bmp, 'Should have loaded one thumbnail');
-      Assert.IsTrue(Bmp.Width  <= 100, 'Thumbnail width should be <= 100 but is '  + IntToStr(Bmp.Width));
-      Assert.IsTrue(Bmp.Height <= 100, 'Thumbnail height should be <= 100 but is ' + IntToStr(Bmp.Height));
+      { roFit puts the 200x150 source into the 100x100 box: width 100, height 150 / 2 = 75 }
+      Assert.AreEqual(100, Bmp.Width,  'Thumbnail width');
+      Assert.AreEqual(75,  Bmp.Height, 'Thumbnail height');
+      { CreateTestBmpFiles paints file 1 with RGB(30, 50, 70) }
+      Assert.AreEqual(IntToHex(Integer(RGB(30, 50, 70)), 6), IntToHex(ColorToRGB(Bmp.Canvas.Pixels[50, 37]) and $FFFFFF, 6), 'The thumbnail must show the source colour');
+      Assert.AreEqual(1, FReceivedThumbs, 'The loader must post one WM_THUMBNAIL_NOTIFY to the window it was given');
     FINALLY
       FreeAndNil(Bmp);
     END;
@@ -384,6 +388,8 @@ begin
   TRY
     Bmp.PixelFormat:= pf1bit;     { Keeps the file under 1 MB }
     Bmp.SetSize(7000, 1000);
+    Bmp.Canvas.Brush.Color:= clWhite;
+    Bmp.Canvas.FillRect(Rect(0, 0, 7000, 1000));
     Bmp.SaveToFile(FileName);
   FINALLY
     FreeAndNil(Bmp);
@@ -407,7 +413,9 @@ begin
     TRY
       Assert.IsNotNull(Bmp, 'Should have loaded the panorama');
       Assert.AreEqual(100, Bmp.Width, 'Panorama thumbnail must be fitted to the box width');
-      Assert.IsTrue(Bmp.Height <= 100, 'Panorama thumbnail height should be <= 100 but is ' + IntToStr(Bmp.Height));
+      { roFit: height 1000 / (7000 / 100) = 14.29, rounded to 14 }
+      Assert.AreEqual(14, Bmp.Height, 'Panorama thumbnail height');
+      Assert.AreEqual(IntToHex(Integer(clWhite), 6), IntToHex(ColorToRGB(Bmp.Canvas.Pixels[50, 7]) and $FFFFFF, 6), 'The panorama thumbnail must show the white source');
     FINALLY
       FreeAndNil(Bmp);
     END;

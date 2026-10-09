@@ -240,11 +240,16 @@ begin
   try
     LogViewer.Parent:= FTestForm;
 
+    LogViewer.RamLog.AddDebug('Debug 1');
     LogViewer.RamLog.AddInfo('Message 1');
     LogViewer.RamLog.AddInfo('Message 2');
     LogViewer.RamLog.AddError('Error 1');
 
-    Assert.IsTrue(LogViewer.Count > 0, 'Count should be greater than 0 after adding entries');
+    { Count is the number of lines at or above Verbosity (lvVerbose by default), so the debug line is not counted }
+    Assert.AreEqual(3, LogViewer.Count, 'Two infos and one error are at or above lvVerbose; the debug line is not');
+
+    LogViewer.Verbosity:= lvErrors;
+    Assert.AreEqual(1, LogViewer.Count, 'Only the error line is at or above lvErrors');
   finally
     FreeAndNil(LogViewer);
   end;

@@ -31,6 +31,7 @@ type
     procedure SetClipboardText(const Text: string);
     function  GetClipboardText: string;
     procedure ClearClipboard;
+    procedure SetClipboardBitmap;
     { TClipboardMonitor helpers }
     procedure MonitorChanged(Sender: TObject);
     procedure MonitorChangedThatWrites(Sender: TObject);
@@ -135,6 +136,9 @@ type
 
 implementation
 
+uses
+  Vcl.Graphics;
+
 
 { Helper functions with retry logic to avoid 'Access is denied' errors }
 
@@ -187,6 +191,31 @@ begin
         then raise
         else Sleep(50);
     END;
+end;
+
+
+{ Puts a 4x4 bitmap on the clipboard: content of a non-text format only }
+procedure TTestClipboard.SetClipboardBitmap;
+var
+  Retries: Integer;
+  Bitmap: Vcl.Graphics.TBitmap;
+begin
+  Bitmap:= Vcl.Graphics.TBitmap.Create;
+  TRY
+    Bitmap.SetSize(4, 4);
+    for Retries:= 1 to 10 do
+      TRY
+        Clipboard.Assign(Bitmap);
+        EXIT;
+      except
+        on E: Exception do
+          if Retries = 10
+          then raise
+          else Sleep(50);
+      END;
+  FINALLY
+    FreeAndNil(Bitmap);
+  END;
 end;
 
 
@@ -249,9 +278,14 @@ procedure TTestClipboard.TestStringToClipboard_EmptyString;
 var
   Success: Boolean;
 begin
+  { A text on the clipboard first, so that '' afterwards can only come from the write }
+  SetClipboardText('Text before the empty write');
+
   Success:= StringToClipboard('');
 
   Assert.IsTrue(Success, 'Should succeed with empty string');
+  { TClipboard.SetAsText writes an empty string as a CF_UNICODETEXT that holds only the #0 (c:\Delphi\Delphi 13\source\vcl\Vcl.Clipbrd.pas:379) }
+  Assert.IsTrue(Clipboard.HasFormat(CF_UNICODETEXT), 'An empty text is still a text on the clipboard');
   Assert.AreEqual('', GetClipboardText, 'Clipboard should be empty');
 end;
 
@@ -291,6 +325,9 @@ begin
   Success:= StringToClipboard(SpecialStr);
 
   Assert.IsTrue(Success, 'Should handle special characters');
+  { The control characters come back unchanged. TClipboard.GetAsText reads the text as a PChar
+    (c:\Delphi\Delphi 13\source\vcl\Vcl.Clipbrd.pas:358), so the #0 ends it }
+  Assert.AreEqual('Tab:'#9' CR:'#13' LF:'#10' Null:', GetClipboardText, 'Tab, CR and LF must survive; the text ends at the #0');
 end;
 
 
@@ -298,9 +335,13 @@ procedure TTestClipboard.TestStringToClipboard_ReturnsTrue;
 var
   Result: Boolean;
 begin
-  Result:= StringToClipboard('Test');
+  ClearClipboard;
+
+  { One attempt is enough when nobody else holds the clipboard }
+  Result:= StringToClipboard('Test', 1);
 
   Assert.IsTrue(Result, 'Should return True when clipboard write succeeds');
+  Assert.AreEqual('Test', GetClipboardText, 'TRUE must mean the text is on the clipboard');
 end;
 
 
@@ -356,15 +397,19 @@ begin
 end;
 
 
+{ Unlike TestStringFromClipboard_EmptyClipboard, the clipboard is not empty here: it holds a bitmap and no text }
 procedure TTestClipboard.TestStringFromClipboard_ReturnsEmptyWhenNoText;
 var
   ReadText: string;
 begin
-  ClearClipboard;
+  SetClipboardBitmap;
+  Assert.IsTrue(Clipboard.HasFormat(CF_BITMAP), 'Precondition: a bitmap is on the clipboard');
+  Assert.IsFalse(Clipboard.HasFormat(CF_UNICODETEXT), 'Precondition: no text is on the clipboard');
 
   ReadText:= StringFromClipboard;
 
   Assert.AreEqual('', ReadText, 'Should return empty string when no text format available');
+  Assert.IsTrue(Clipboard.HasFormat(CF_BITMAP), 'Reading must leave the bitmap on the clipboard');
 end;
 
 
@@ -447,19 +492,27 @@ begin
 end;
 
 
+{ "Caller must free" means every call hands over a NEW list that nothing else holds. A leak shows in the FastMM log. }
 procedure TTestClipboard.TestStringFromClipboardTSL_CallerMustFree;
 var
-  TSL: TStringList;
+  TSL1, TSL2: TStringList;
 begin
-  { This test verifies the documented behavior that caller must free result }
   SetClipboardText('Test');
 
-  TSL:= StringFromClipboardTSL;
-  Assert.IsNotNull(TSL, 'Should allocate TStringList');
+  TSL1:= StringFromClipboardTSL;
+  TSL2:= StringFromClipboardTSL;
+  TRY
+    Assert.IsNotNull(TSL1, 'Should allocate TStringList');
+    Assert.IsNotNull(TSL2, 'Should allocate TStringList');
+    Assert.AreNotSame(TSL1, TSL2, 'Each call must create its own list');
 
-  { Caller's responsibility to free - demonstrate proper usage }
-  FreeAndNil(TSL);
-  Assert.IsNull(TSL, 'Should be NIL after FreeAndNil');
+    TSL1.Add('changed by the caller');
+    Assert.AreEqual(1, TSL2.Count, 'A change to one list must not reach the other');
+    Assert.AreEqual('Test', TSL2[0], 'Content of the second list');
+  FINALLY
+    FreeAndNil(TSL1);
+    FreeAndNil(TSL2);
+  END;
 end;
 
 

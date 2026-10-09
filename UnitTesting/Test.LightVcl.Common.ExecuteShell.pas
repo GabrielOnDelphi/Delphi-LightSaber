@@ -76,6 +76,9 @@ type
 
 implementation
 
+uses
+  LightCore.AppData, LightCore.LogTypes;
+
 
 procedure TTestExecuteFile.Setup;
 begin
@@ -134,16 +137,19 @@ begin
 end;
 
 
+{ ExecuteFile reports a failure only through AppDataCore's error log. A launch that works must add no error line there. }
 procedure TTestExecuteFile.Test_ExecuteFile_NoErrorMsg;
+VAR
+  ErrorsBefore: Integer;
+  Success: Boolean;
 begin
-  { Same as Test_ExecuteFile_InvalidPath, but with an explicit WindowState: the FileExists guard
-    raises before ShellExecute is reached, whatever the window state asks for. }
-  Assert.WillRaise(
-    procedure
-    begin
-      ExecuteFile('C:\Invalid\Path.exe', '', SW_HIDE);
-    end,
-    Exception);
+  Assert.IsNotNull(AppDataCore, 'The test runner creates AppData');
+  ErrorsBefore:= AppDataCore.RamLog.Count(TRUE, lvErrors);
+
+  Success:= ExecuteFile(CmdExePath, '/c exit', SW_HIDE);
+
+  Assert.IsTrue(Success, 'Should successfully execute cmd.exe');
+  Assert.AreEqual(ErrorsBefore, AppDataCore.RamLog.Count(TRUE, lvErrors), 'A successful launch must log no error');
 end;
 
 
@@ -182,13 +188,24 @@ begin
 end;
 
 
+{ The command needs about 1 second (ping -n 2 waits 1 s between its two echoes, on the loopback address only),
+  then writes a file. When ExecuteFileAndWait returns, the file must exist: the routine really waited for the end. }
 procedure TTestExecuteFile.Test_ExecuteFileAndWait_SimpleCommand;
 VAR
   Success: Boolean;
+  DoneFile: string;
+  StartTick, ElapsedMs: UInt64;
 begin
-  { Execute cmd.exe with immediate exit and wait }
-  Success:= ExecuteFileAndWait(CmdExePath, '/c exit', TRUE, 5000);
+  DoneFile:= TPath.Combine(FTestDir, 'done.txt');
+
+  StartTick:= GetTickCount64;
+  Success:= ExecuteFileAndWait(CmdExePath, '/c ping -n 2 127.0.0.1 >nul & echo done>"' + DoneFile + '"', TRUE, 10000);
+  ElapsedMs:= GetTickCount64 - StartTick;
+
   Assert.IsTrue(Success, 'Should successfully execute and wait for cmd.exe');
+  Assert.IsTrue(FileExists(DoneFile), 'The command writes its file at its very end, so the file must exist when the wait is over');
+  Assert.IsTrue(ElapsedMs >= 800, 'The command runs about 1 s, so the wait must take that long. Elapsed: ' + IntToStr(ElapsedMs) + ' ms');
+  Assert.IsTrue(ElapsedMs < 10000, 'The wait must end with the process, before WaitTime. Elapsed: ' + IntToStr(ElapsedMs) + ' ms');
 end;
 
 

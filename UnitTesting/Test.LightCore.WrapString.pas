@@ -185,7 +185,8 @@ var
 begin
   Input:= 'ABCDEFGHIJ';
   Output:= WrapStringForcedA(Input, 5);
-  Assert.IsTrue(Pos(AnsiString(#13#10), Output) > 0, 'Should contain line break');
+  { A CRLF after every 5th character, the last one included (as TestWrapStringForced_ExactLength shows) }
+  Assert.AreEqual(AnsiString('ABCDE'#13#10'FGHIJ'#13#10), Output, 'The break must come after every 5 characters');
 end;
 
 
@@ -196,8 +197,10 @@ var
   Input, Output: string;
 begin
   Input:= 'Hello World Test';
-  Output:= TruncateToWord(Input, 11);
-  Assert.IsTrue(Length(Output) <= 11, 'Should not exceed MaxChars');
+  Output:= TruncateToWord(Input, 13);
+  { The cut falls inside 'Test', so the result ends after the last whole word. The RTL WrapText keeps the space at the end
+    of the line it breaks (c:\Delphi\Delphi 13\source\rtl\sys\System.SysUtils.pas:26939). A hard cut would give 'Hello World T'. }
+  Assert.AreEqual('Hello World ', Output, 'Truncation must stop at a word boundary');
 end;
 
 
@@ -208,6 +211,12 @@ begin
   Input:= 'Hello World';
   Output:= TruncateToWord(Input, 100);
   Assert.AreEqual('Hello World', Output, 'Should return full string when under limit');
+
+  { MaxChars = Length: the whole text fits }
+  Assert.AreEqual('Hello World', TruncateToWord(Input, 11), 'A text exactly MaxChars long must stay whole');
+
+  { MaxChars = Length - 1: the last word no longer fits and is dropped whole (a hard cut would give 'Hello Worl') }
+  Assert.AreEqual('Hello ', TruncateToWord(Input, 10), 'One character too long must drop the last word');
 end;
 
 
@@ -217,7 +226,7 @@ var
 begin
   Input:= 'ABCDEFGHIJKLMNOP';
   Output:= TruncateToWord(Input, 10);
-  Assert.AreEqual(10, Length(Output), 'Should hard truncate when no word boundary');
+  Assert.AreEqual('ABCDEFGHIJ', Output, 'Should hard truncate the first 10 characters when no word boundary');
 end;
 
 
@@ -278,8 +287,8 @@ var
 begin
   Input:= 'Line1' + CRLF + 'Line2';
   Output:= UnwrapText(Input, '.', False, False);
-  { Without separators at line end, lines should be joined }
-  Assert.IsFalse(Pos(CRLF, Output) > 0, 'Lines should be joined');
+  { Without separators at line end, lines should be joined, every character kept (the last one included) }
+  Assert.AreEqual('Line1Line2', Output, 'Lines should be joined');
 end;
 
 

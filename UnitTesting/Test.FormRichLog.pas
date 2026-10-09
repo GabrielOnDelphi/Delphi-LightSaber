@@ -97,6 +97,7 @@ type
 
     { LogError Event Tests }
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestLogError_ShowsFormWhenAutoOpenEnabled;
 
     [Test]

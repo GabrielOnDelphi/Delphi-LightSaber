@@ -15,7 +15,9 @@ uses
   System.Classes,
   System.IOUtils,
   Vcl.Controls,
-  Vcl.Forms;
+  Vcl.ExtCtrls,
+  Vcl.Forms,
+  LightVcl.Visual.PathEdit;
 
 type
   [TestFixture]
@@ -25,6 +27,7 @@ type
     FTestFolder: string;
     FTestFile: string;
     function ChildControl(Owner: TComponent; CONST aName: string): TControl;
+    function EditBox(PathEdit: TlightPathEdit): TButtonedEdit;
   public
     [Setup]
     procedure Setup;
@@ -136,7 +139,7 @@ type
 implementation
 
 uses
-  LightVcl.Visual.PathEdit,
+  LightCore.Colors,
   LightCore.IO;
 
 
@@ -174,6 +177,12 @@ function TTesTlightPathEdit.ChildControl(Owner: TComponent; CONST aName: string)
 begin
   Result:= Owner.FindComponent(aName) as TControl;
   Assert.IsNotNull(Result, 'Child control not found: ' + aName);
+end;
+
+
+function TTesTlightPathEdit.EditBox(PathEdit: TlightPathEdit): TButtonedEdit;
+begin
+  Result:= ChildControl(PathEdit, 'PathEdit') as TButtonedEdit;
 end;
 
 
@@ -288,8 +297,12 @@ begin
   PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
+    PathEdit.Path:= FTestFolder;
+    Assert.AreEqual(FTestFolder + '\', PathEdit.Path, 'Precondition: the folder path must be set first');
+
     PathEdit.Path:= '';
-    Assert.AreEqual('', PathEdit.Path, 'Empty path should remain empty');
+    Assert.AreEqual('', PathEdit.Path, 'Setting an empty path must clear the path');
+    Assert.AreEqual('', EditBox(PathEdit).Text, 'Setting an empty path must clear the edit box');
   finally
     FreeAndNil(PathEdit);
   end;
@@ -362,7 +375,7 @@ begin
   try
     PathEdit.Path:= '';
     ErrMsg:= PathEdit.PathHasValidChars;
-    Assert.IsTrue(ErrMsg <> '', 'Empty path should return error message');
+    Assert.AreEqual('The path is empty!', ErrMsg, 'Empty path must return the empty-path message');
   finally
     FreeAndNil(PathEdit);
   end;
@@ -451,7 +464,7 @@ begin
   try
     PathEdit.Path:= '';
     ErrMsg:= PathEdit.PathIsValid;
-    Assert.IsTrue(ErrMsg <> '', 'Empty path should return error');
+    Assert.AreEqual('The path is empty!', ErrMsg, 'Empty path must return the empty-path message, not a "does not exist" one');
   finally
     FreeAndNil(PathEdit);
   end;
@@ -467,8 +480,18 @@ begin
   PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
+    PathEdit.Caption:= 'Folder';
+    PathEdit.Path:= FTestFolder;
+    Assert.AreEqual(clGreenWashed, EditBox(PathEdit).Color, 'Precondition: an existing folder must be green in folder mode');
+
     PathEdit.InputType:= itFile;
     Assert.AreEqual(Ord(itFile), Ord(PathEdit.InputType), 'InputType should be itFile');
+
+    { The switch must re-check the path: a folder path is not an existing file }
+    Assert.AreEqual(clRedFade, EditBox(PathEdit).Color, 'A folder path must turn red in file mode');
+    Assert.AreEqual('Browse for a file', EditBox(PathEdit).RightButton.Hint, 'Browse button hint');
+    Assert.AreEqual('Locate this file in Windows Explorer', ChildControl(PathEdit, 'ButtonExplore').Hint, 'Explore button hint');
+    Assert.AreEqual('File', PathEdit.Caption, 'The default caption must follow the input type');
   finally
     FreeAndNil(PathEdit);
   end;
@@ -482,9 +505,20 @@ begin
   PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
+    PathEdit.Caption:= 'File';
     PathEdit.InputType:= itFile;
+    PathEdit.Path:= FTestFile;
+    Assert.AreEqual(clGreenWashed, EditBox(PathEdit).Color, 'Precondition: an existing file must be green in file mode');
+    Assert.AreEqual('Browse for a file', EditBox(PathEdit).RightButton.Hint, 'Precondition: file-mode hint');
+
     PathEdit.InputType:= itFolder;
     Assert.AreEqual(Ord(itFolder), Ord(PathEdit.InputType), 'InputType should be itFolder');
+
+    { The switch must re-check the path: a file path is not an existing folder }
+    Assert.AreEqual(clRedFade, EditBox(PathEdit).Color, 'A file path must turn red in folder mode');
+    Assert.AreEqual('Browse for a folder', EditBox(PathEdit).RightButton.Hint, 'Browse button hint');
+    Assert.AreEqual('Locate this folder in Windows Explorer', ChildControl(PathEdit, 'ButtonExplore').Hint, 'Explore button hint');
+    Assert.AreEqual('Folder', PathEdit.Caption, 'The default caption must follow the input type');
   finally
     FreeAndNil(PathEdit);
   end;
@@ -501,6 +535,7 @@ begin
   PathEdit.Parent:= FForm;
   try
     PathEdit.ShowCreateBtn:= FALSE;   { Default is TRUE, so go through FALSE first }
+    Assert.IsFalse(ChildControl(PathEdit, 'ButtonCreate').Visible, 'Precondition: the Create button must be hidden');
     PathEdit.ShowCreateBtn:= TRUE;
     Assert.IsTrue(PathEdit.ShowCreateBtn, 'ShowCreateBtn should be TRUE');
     Assert.IsTrue(ChildControl(PathEdit, 'ButtonCreate').Visible, 'The Create button must be visible');
@@ -517,8 +552,11 @@ begin
   PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
+    PathEdit.ShowCreateBtn:= TRUE;
+    Assert.IsTrue(ChildControl(PathEdit, 'ButtonCreate').Visible, 'Precondition: the Create button must be visible');
     PathEdit.ShowCreateBtn:= FALSE;
     Assert.IsFalse(PathEdit.ShowCreateBtn, 'ShowCreateBtn should be FALSE');
+    Assert.IsFalse(ChildControl(PathEdit, 'ButtonCreate').Visible, 'The Create button must be hidden');
   finally
     FreeAndNil(PathEdit);
   end;
@@ -533,6 +571,7 @@ begin
   PathEdit.Parent:= FForm;
   try
     PathEdit.ShowOpenSrc:= FALSE;     { Default is TRUE, so go through FALSE first }
+    Assert.IsFalse(ChildControl(PathEdit, 'ButtonExplore').Visible, 'Precondition: the Explore button must be hidden');
     PathEdit.ShowOpenSrc:= TRUE;
     Assert.IsTrue(PathEdit.ShowOpenSrc, 'ShowOpenSrc should be TRUE');
     Assert.IsTrue(ChildControl(PathEdit, 'ButtonExplore').Visible, 'The Explore button must be visible');
@@ -549,8 +588,11 @@ begin
   PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
+    PathEdit.ShowOpenSrc:= TRUE;
+    Assert.IsTrue(ChildControl(PathEdit, 'ButtonExplore').Visible, 'Precondition: the Explore button must be visible');
     PathEdit.ShowOpenSrc:= FALSE;
     Assert.IsFalse(PathEdit.ShowOpenSrc, 'ShowOpenSrc should be FALSE');
+    Assert.IsFalse(ChildControl(PathEdit, 'ButtonExplore').Visible, 'The Explore button must be hidden');
   finally
     FreeAndNil(PathEdit);
   end;
@@ -564,8 +606,11 @@ begin
   PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
+    PathEdit.ShowApplyBtn:= FALSE;
+    Assert.IsFalse(ChildControl(PathEdit, 'ButtonApply').Visible, 'Precondition: the Apply button must be hidden');
     PathEdit.ShowApplyBtn:= TRUE;
     Assert.IsTrue(PathEdit.ShowApplyBtn, 'ShowApplyBtn should be TRUE');
+    Assert.IsTrue(ChildControl(PathEdit, 'ButtonApply').Visible, 'The Apply button must be visible');
   finally
     FreeAndNil(PathEdit);
   end;
@@ -580,6 +625,7 @@ begin
   PathEdit.Parent:= FForm;
   try
     PathEdit.ShowApplyBtn:= TRUE;     { Default is FALSE, so go through TRUE first }
+    Assert.IsTrue(ChildControl(PathEdit, 'ButtonApply').Visible, 'Precondition: the Apply button must be visible');
     PathEdit.ShowApplyBtn:= FALSE;
     Assert.IsFalse(PathEdit.ShowApplyBtn, 'ShowApplyBtn should be FALSE');
     Assert.IsFalse(ChildControl(PathEdit, 'ButtonApply').Visible, 'The Apply button must be hidden');
@@ -613,8 +659,11 @@ begin
   PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
+    PathEdit.IsReadOnly:= TRUE;
+    Assert.IsTrue(EditBox(PathEdit).ReadOnly, 'Precondition: the edit box must be read-only');
     PathEdit.IsReadOnly:= FALSE;
     Assert.IsFalse(PathEdit.IsReadOnly, 'IsReadOnly should be FALSE');
+    Assert.IsFalse(EditBox(PathEdit).ReadOnly, 'The edit box must no longer be read-only');
   finally
     FreeAndNil(PathEdit);
   end;

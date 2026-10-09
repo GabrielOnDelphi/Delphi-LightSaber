@@ -144,13 +144,19 @@ begin
 end;
 
 
-{ Window Metrics Tests }
+{ Window Metrics Tests
+
+  The tests with a desktop handle take the expected value from the RTL's DPI-aware
+  Vcl.Controls.GetSystemMetricsForWindow called with the documented SM_ index.
+  The tests with handle 0 take it from the plain Windows API GetSystemMetrics: for handle 0
+  GetSystemMetricsForWindow takes that branch (c:\Delphi\Delphi 13\source\vcl\Vcl.Controls.pas:3527 and :3537). }
 
 procedure TTestWindowMetrics.Test_GetCaptionHeight_WithDesktopHandle;
 VAR
   Height: Integer;
 begin
   Height:= GetCaptionHeight(GetTestHandle);
+  Assert.AreEqual(Vcl.Controls.GetSystemMetricsForWindow(SM_CYCAPTION, GetTestHandle), Height, 'GetCaptionHeight must return SM_CYCAPTION');
   Assert.IsTrue(Height > 0, 'Caption height should be positive');
   Assert.IsTrue(Height < 200, 'Caption height should be reasonable (< 200 pixels)');
 end;
@@ -162,6 +168,7 @@ VAR
 begin
   { Handle 0 should return metrics for primary monitor }
   Height:= GetCaptionHeight(0);
+  Assert.AreEqual(GetSystemMetrics(SM_CYCAPTION), Height, 'GetCaptionHeight(0) must return SM_CYCAPTION');
   Assert.IsTrue(Height > 0, 'Caption height with handle 0 should be positive');
 end;
 
@@ -171,6 +178,7 @@ VAR
   Height: Integer;
 begin
   Height:= GetMainMenuHeight(GetTestHandle);
+  Assert.AreEqual(Vcl.Controls.GetSystemMetricsForWindow(SM_CYMENU, GetTestHandle), Height, 'GetMainMenuHeight must return SM_CYMENU');
   Assert.IsTrue(Height > 0, 'Menu height should be positive');
   Assert.IsTrue(Height < 100, 'Menu height should be reasonable (< 100 pixels)');
 end;
@@ -181,6 +189,7 @@ VAR
   Height: Integer;
 begin
   Height:= GetMainMenuHeight(0);
+  Assert.AreEqual(GetSystemMetrics(SM_CYMENU), Height, 'GetMainMenuHeight(0) must return SM_CYMENU');
   Assert.IsTrue(Height > 0, 'Menu height with handle 0 should be positive');
 end;
 
@@ -230,6 +239,7 @@ VAR
   Width: Integer;
 begin
   Width:= GetScrollBarWidth(GetTestHandle);
+  Assert.AreEqual(Vcl.Controls.GetSystemMetricsForWindow(SM_CXVSCROLL, GetTestHandle), Width, 'GetScrollBarWidth must return SM_CXVSCROLL');
   Assert.IsTrue(Width > 0, 'Scrollbar width should be positive');
   Assert.IsTrue(Width < 100, 'Scrollbar width should be reasonable (< 100 pixels)');
 end;
@@ -240,6 +250,7 @@ VAR
   Width: Integer;
 begin
   Width:= GetScrollBarWidth(0);
+  Assert.AreEqual(GetSystemMetrics(SM_CXVSCROLL), Width, 'GetScrollBarWidth(0) must return SM_CXVSCROLL');
   Assert.IsTrue(Width > 0, 'Scrollbar width with handle 0 should be positive');
 end;
 
@@ -247,8 +258,14 @@ end;
 procedure TTestWindowMetrics.Test_GetNumScrollLines_ReturnsPositive;
 VAR
   Lines: Integer;
+  Expected: UINT;
 begin
+  { The reference reads the documented SPI_GETWHEELSCROLLLINES straight from Windows }
+  Expected:= 0;
+  Assert.IsTrue(SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, @Expected, 0), 'SystemParametersInfo(SPI_GETWHEELSCROLLLINES) failed');
+
   Lines:= GetNumScrollLines;
+  Assert.AreEqual(Integer(Expected), Lines, 'GetNumScrollLines must return SPI_GETWHEELSCROLLLINES');
   { Standard Windows default is 3, but user can configure it }
   Assert.IsTrue(Lines >= 1, 'Scroll lines should be at least 1');
   Assert.IsTrue(Lines <= 100, 'Scroll lines should be reasonable (<= 100)');
@@ -263,6 +280,9 @@ begin
   Size:= GetScrollbarSize;
   {$WARN SYMBOL_DEPRECATED ON}
   Assert.IsTrue(Size > 0, 'Deprecated GetScrollbarSize should still return positive value');
+
+  { The routine reads NONCLIENTMETRICS.iScrollWidth; the independent reference is the width of a vertical scroll bar from GetSystemMetrics }
+  Assert.AreEqual(GetSystemMetrics(SM_CXVSCROLL), Size, 'GetScrollbarSize must return the vertical scroll bar width');
 end;
 
 
@@ -342,23 +362,39 @@ begin
 end;
 
 
+{ PageSize = (OwnerClientHeight - 2 arrow buttons) div (Max - Min + 1), at least the default thumb size.
+  Range 0..99 (100 positions) and a track of 3999 pixels give 39. With one arrow button too few the track
+  is 3999 + SM_CYVSCROLL pixels, which gives 40 or more. }
 procedure TTestWindowMetrics.Test_SetProportionalThumbV_ValidScrollbar_NoException;
+VAR
+  OwnerHeight: Integer;
 begin
+  Assert.IsTrue(GetSystemMetrics(SM_CYVTHUMB) < 39, 'Precondition: the default thumb is smaller than 39, so it does not override the result');
+  FScrollBar.Max:= 99;
+  OwnerHeight:= 3999 + 2 * GetSystemMetrics(SM_CYVSCROLL);
+
   Assert.WillNotRaiseAny(
     procedure
     begin
-      SetProportionalThumbV(FScrollBar, 300);
+      SetProportionalThumbV(FScrollBar, OwnerHeight);
     end,
     'SetProportionalThumbV should not raise exception for valid scrollbar'
   );
+  Assert.AreEqual(39, FScrollBar.PageSize, 'PageSize = 3999 div 100');
 end;
 
 
+{ Min = Max is a range of 1 position, not 0: TScrollBar refuses Max < Min (EInvalidOperation,
+  c:\Delphi\Delphi 13\source\vcl\Vcl.StdCtrls.pas:8613), so the "range <= 0" guard cannot be reached through a TScrollBar.
+  Track / 1 is far above Max = 50, and the PageSize setter ignores a value above Max (Vcl.StdCtrls.pas:8659),
+  so the default thumb size (SM_CYVTHUMB) is what remains. }
 procedure TTestWindowMetrics.Test_SetProportionalThumbV_ZeroRange_NoException;
 begin
-  { Set Min = Max to create zero range }
+  { Set Min = Max: the smallest range a TScrollBar accepts }
   FScrollBar.Min:= 50;
   FScrollBar.Max:= 50;
+  Assert.AreEqual(0, FScrollBar.PageSize, 'Precondition: PageSize starts at 0');
+  Assert.IsTrue(GetSystemMetrics(SM_CYVTHUMB) <= 50, 'Precondition: the default thumb fits under Max = 50');
 
   Assert.WillNotRaiseAny(
     procedure
@@ -367,6 +403,7 @@ begin
     end,
     'SetProportionalThumbV should handle zero range without exception'
   );
+  Assert.AreEqual(GetSystemMetrics(SM_CYVTHUMB), FScrollBar.PageSize, 'A range of 1 leaves the default thumb size');
 end;
 
 
@@ -385,32 +422,46 @@ begin
 end;
 
 
+{ The horizontal routine divides the other way round: PageSize = (Max - Min + 1) div (OwnerClientWidth - 2 arrow buttons),
+  at least the default thumb size. Range 0..9999 (10000 positions) and a track of 250 pixels give 40.
+  With one arrow button too few the track is 250 + SM_CXHSCROLL pixels, which gives less than 40. }
 procedure TTestWindowMetrics.Test_SetProportionalThumbH_ValidScrollbar_NoException;
+VAR
+  OwnerWidth: Integer;
 begin
   FScrollBar.Kind:= sbHorizontal;
+  Assert.IsTrue(GetSystemMetrics(SM_CXHTHUMB) < 40, 'Precondition: the default thumb is smaller than 40, so it does not override the result');
+  FScrollBar.Max:= 9999;
+  OwnerWidth:= 250 + 2 * GetSystemMetrics(SM_CXHSCROLL);
 
   Assert.WillNotRaiseAny(
     procedure
     begin
-      SetProportionalThumbH(FScrollBar, 400);
+      SetProportionalThumbH(FScrollBar, OwnerWidth);
     end,
     'SetProportionalThumbH should not raise exception for valid scrollbar'
   );
+  Assert.AreEqual(40, FScrollBar.PageSize, 'PageSize = 10000 div 250');
 end;
 
 
 procedure TTestWindowMetrics.Test_SetProportionalThumbH_ZeroTrackWidth_NoException;
+VAR
+  OwnerWidth: Integer;
 begin
   FScrollBar.Kind:= sbHorizontal;
+  FScrollBar.PageSize:= 5;
 
-  { Pass very small width that will result in zero/negative track width }
+  { A client exactly as wide as the two arrow buttons leaves a track of 0 pixels: without the guard this is a division by zero }
+  OwnerWidth:= 2 * GetSystemMetrics(SM_CXHSCROLL);
   Assert.WillNotRaiseAny(
     procedure
     begin
-      SetProportionalThumbH(FScrollBar, 10);
+      SetProportionalThumbH(FScrollBar, OwnerWidth);
     end,
     'SetProportionalThumbH should handle zero track width without exception'
   );
+  Assert.AreEqual(5, FScrollBar.PageSize, 'The guard exits before PageSize is touched');
 end;
 
 

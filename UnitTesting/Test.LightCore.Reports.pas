@@ -78,7 +78,37 @@ type
 implementation
 
 uses
-  LightCore, LightCore.Platform;
+  System.IOUtils, LightCore, LightCore.Platform;
+
+
+{ The text after LabelText on the report line that starts with LabelText (leading spaces and the tabs around the value removed).
+  Returns '<label not found>' when no line starts with LabelText. }
+function ReportValue(CONST Report, LabelText: string): string;
+VAR
+  Line: string;
+begin
+  for Line in Report.Split([#13#10]) do
+    if TrimLeft(Line).StartsWith(LabelText)
+    then EXIT(Trim(Copy(TrimLeft(Line), Length(LabelText) + 1, MaxInt)));
+  Result:= '<label not found>';
+end;
+
+
+{ The folder of the test EXE, from the RTL. TAppDataCore.AppFolder must give the same on a desktop OS. }
+function ExpectedAppFolder: string;
+begin
+  Result:= ExtractFilePath(ParamStr(0));
+end;
+
+
+{ The per-user data folder: %AppData%\<AppName>\ from the RTL (TPath.GetHomePath, c:\Delphi\Delphi 13\source\rtl\common\System.IOUtils.pas:5087),
+  or the EXE folder when a 'portable.marker' file sits next to the EXE (portable mode). }
+function ExpectedAppDataFolder: string;
+begin
+  if FileExists(ExpectedAppFolder + 'portable.marker')
+  then Result:= ExpectedAppFolder
+  else Result:= IncludeTrailingPathDelimiter(TPath.Combine(TPath.GetHomePath, TAppDataCore.AppName));
+end;
 
 
 procedure TTestLightCoreReports.Setup;
@@ -117,10 +147,14 @@ end;
 
 procedure TTestLightCoreReports.TestGenerateAppRep_ContainsAppName;
 var
-  Report: string;
+  Report, Value: string;
 begin
   Report:= GenerateAppRep;
-  Assert.IsTrue(Pos('AppName:', Report) > 0, 'Should contain AppName field');
+  Value:= ReportValue(Report, 'AppName:');
+
+  { No source outside TAppDataCore knows the name the runner gave it, so the value is compared with the class property }
+  Assert.IsNotEmpty(Value, 'The AppName value must not be empty. Report: ' + Report);
+  Assert.AreEqual(TAppDataCore.AppName, Value, 'The AppName line must hold the application name. Report: ' + Report);
 end;
 
 
@@ -129,7 +163,7 @@ var
   Report: string;
 begin
   Report:= GenerateAppRep;
-  Assert.IsTrue(Pos('AppFolder:', Report) > 0, 'Should contain AppFolder field');
+  Assert.AreEqual(ExpectedAppFolder, ReportValue(Report, 'AppFolder:'), 'The AppFolder line must hold the folder of the EXE. Report: ' + Report);
 end;
 
 
@@ -138,7 +172,7 @@ var
   Report: string;
 begin
   Report:= GenerateAppRep;
-  Assert.IsTrue(Pos('AppDataFolder:', Report) > 0, 'Should contain AppDataFolder field');
+  Assert.AreEqual(ExpectedAppDataFolder, ReportValue(Report, 'AppDataFolder:'), 'The AppDataFolder line must hold %AppData%\<AppName>\. Report: ' + Report);
 end;
 
 
@@ -147,16 +181,22 @@ var
   Report: string;
 begin
   Report:= GenerateAppRep;
-  Assert.IsTrue(Pos('IniFile:', Report) > 0, 'Should contain IniFile field');
+  Assert.AreEqual(ExpectedAppDataFolder + TAppDataCore.AppName + '.ini', ReportValue(Report, 'IniFile:'), 'The IniFile line must hold <AppDataFolder>\<AppName>.ini. Report: ' + Report);
 end;
 
 
 procedure TTestLightCoreReports.TestGenerateAppRep_ContainsLastUsedFolder;
 var
-  Report: string;
+  Report, Value: string;
 begin
+  Assert.IsNotNull(AppDataCore, 'Setup must have an AppDataCore');
   Report:= GenerateAppRep;
-  Assert.IsTrue(Pos('LastUsedFolder:', Report) > 0, 'Should contain LastUsedFolder field');
+  Value:= ReportValue(Report, 'LastUsedFolder:');
+
+  { AppDataCore exists, so the report must take the branch that prints its LastUsedFolder, an existing folder }
+  Assert.AreNotEqual('(AppDataCore not initialized)', Value, 'The report took the branch for a NIL AppDataCore');
+  Assert.AreEqual(AppDataCore.LastUsedFolder, Value, 'The LastUsedFolder line must hold AppDataCore.LastUsedFolder. Report: ' + Report);
+  Assert.IsTrue(DirectoryExists(Value), 'LastUsedFolder must name an existing folder. Got: ' + Value);
 end;
 
 
@@ -215,7 +255,11 @@ var
 begin
   Report:= GenerateCoreReport;
   LineCount:= Report.CountChar(#10);
-  Assert.IsTrue(LineCount > 10, 'Core report should have multiple lines (found ' + IntToStr(LineCount) + ')');
+
+  { 20 line breaks, counted in the source: 8 in GenerateAppRep (LightCore.Reports.pas), 2 after it, 3 in GeneratePlatformRep (LightCore.Platform.pas),
+    2 after it, 5 in GenerateCompilerReport (LightCore.Debugger.pas). No value in these reports holds a line break. }
+  Assert.AreEqual(20, LineCount, 'Line breaks in the core report');
+  Assert.AreEqual(20, Report.CountChar(#13), 'Every line break of the core report must be CRLF');
 end;
 
 
@@ -224,9 +268,18 @@ end;
 procedure TTestLightCoreReports.TestReportFormat_UsesTabsForAlignment;
 var
   Report: string;
+  Lines: TArray<string>;
 begin
   Report:= GenerateAppRep;
-  Assert.IsTrue(Pos(#9, Report) > 0, 'Report should use tabs for alignment');
+  Lines:= Report.Split([#13#10]);
+
+  { A header line and 8 value lines; every value line separates its label from the value with ': ' and a tab }
+  Assert.AreEqual(9, Length(Lines), 'Lines of the app report');
+  for var i:= 1 to High(Lines) do
+    Assert.IsTrue(Pos(': ' + #9, Lines[i]) > 0, 'No tab after the label in line: ' + Lines[i]);
+
+  { 12 tabs, counted in GenerateAppRep (LightCore.Reports.pas): 2 each for AppName, AppFolder, AppSysDir, IniFile; 1 each for the other 4 lines }
+  Assert.AreEqual(12, Report.CountChar(#9), 'Tabs in the app report');
 end;
 
 
@@ -235,11 +288,11 @@ var
   Report: string;
 begin
   Report:= GenerateAppRep;
-  { Check for CRLF (Windows) or at least LF (Unix) }
-  Assert.IsTrue(
-    (Pos(CRLF, Report) > 0) OR (Pos(#10, Report) > 0),
-    'Report should use line breaks'
-  );
+
+  { 8 line breaks, counted in GenerateAppRep (LightCore.Reports.pas); no value in the report holds a line break }
+  Assert.AreEqual(8, Report.CountChar(#10), 'Line breaks in the app report');
+  Assert.AreEqual(0, Pos(#10, StringReplace(Report, CRLF, '', [rfReplaceAll])), 'A line break of the app report is a bare LF, not CRLF');
+  Assert.AreEqual(0, Pos(#13, StringReplace(Report, CRLF, '', [rfReplaceAll])), 'A line break of the app report is a bare CR, not CRLF');
 end;
 
 

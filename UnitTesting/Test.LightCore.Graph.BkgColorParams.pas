@@ -216,6 +216,10 @@ end;
 
 
 procedure TTestBkgColorParams.TestWriteToStream_BasicWrite;
+CONST
+  { Version, Color: 2 Integers; FillType, EffectShape, EffectColor, EdgeSmear: 4 Bytes; NeighborDist, Tolerance, FadeSpeed, NeighborWeight: 4 Integers.
+    4+4 + 4*1 + 4*4 = 28 bytes, plus the 64-byte validation padding (TLightStream.FrozenPaddingSize) }
+  RecordSize = 92;
 VAR Stream: TLightStream;
 begin
   CreateTempFile;
@@ -233,8 +237,30 @@ begin
     FreeAndNil(Stream);
   END;
 
-  { Verify file was created and has content }
-  Assert.IsTrue(TFile.Exists(FTempFile), 'Temp file should exist');
+  { Read the file field by field with the plain stream readers, not with ReadFromStream }
+  Stream:= TLightStream.CreateRead(FTempFile);
+  TRY
+    Assert.AreEqual(Int64(RecordSize), Stream.Size, 'Size of the saved record');
+    Assert.AreEqual(1, Stream.ReadInteger, 'Version');
+    Assert.AreEqual($218F42, Stream.ReadInteger, 'Color');
+    Assert.AreEqual(Byte(0), Stream.ReadByte, 'FillType = ftSolid');
+    Assert.AreEqual(Byte(2), Stream.ReadByte, 'EffectShape = esOneColor');
+    Assert.AreEqual(Byte(1), Stream.ReadByte, 'EffectColor = ecImageAverage');
+    Assert.AreEqual(Byte(0), Stream.ReadByte, 'EdgeSmear');
+    Assert.AreEqual(2, Stream.ReadInteger, 'NeighborDist');
+    Assert.AreEqual(8, Stream.ReadInteger, 'Tolerance');
+    Assert.AreEqual(200, Stream.ReadInteger, 'FadeSpeed');
+    Assert.AreEqual(100, Stream.ReadInteger, 'NeighborWeight');
+    Assert.WillNotRaiseAny(
+      procedure
+      begin
+        Stream.ReadPaddingValidation;
+      end,
+      'The record must end with the validation padding');
+    Assert.AreEqual(Stream.Size, Stream.Position, 'Nothing may follow the padding');
+  FINALLY
+    FreeAndNil(Stream);
+  END;
 end;
 
 

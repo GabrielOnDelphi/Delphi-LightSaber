@@ -21,6 +21,8 @@ type
   private
     FBitmap: TBitmap;
     procedure CreateTestBitmap(Width, Height: Integer);
+    procedure AssertPixel(BMP: TBitmap; X, Y: Integer; Expected: TColor; const Msg: string);
+    procedure AssertRedLeftBlueRight(BMP: TBitmap);
   public
     [Setup]
     procedure Setup;
@@ -209,12 +211,7 @@ uses
 
 procedure TTestGraphResize.Setup;
 begin
-  FBitmap:= TBitmap.Create;
-  FBitmap.PixelFormat:= pf24bit;
-  FBitmap.Width:= 200;
-  FBitmap.Height:= 100;
-  FBitmap.Canvas.Brush.Color:= clWhite;
-  FBitmap.Canvas.FillRect(Rect(0, 0, FBitmap.Width, FBitmap.Height));
+  CreateTestBitmap(200, 100);
 end;
 
 
@@ -224,6 +221,7 @@ begin
 end;
 
 
+{ Left half red, right half blue: a pixel test then catches a blank, mirrored or wrongly cropped result }
 procedure TTestGraphResize.CreateTestBitmap(Width, Height: Integer);
 begin
   FreeAndNil(FBitmap);
@@ -231,8 +229,29 @@ begin
   FBitmap.PixelFormat:= pf24bit;
   FBitmap.Width:= Width;
   FBitmap.Height:= Height;
-  FBitmap.Canvas.Brush.Color:= clWhite;
-  FBitmap.Canvas.FillRect(Rect(0, 0, Width, Height));
+  FBitmap.Canvas.Brush.Color:= clRed;
+  FBitmap.Canvas.FillRect(Rect(0, 0, Width DIV 2, Height));
+  FBitmap.Canvas.Brush.Color:= clBlue;
+  FBitmap.Canvas.FillRect(Rect(Width DIV 2, 0, Width, Height));
+end;
+
+
+procedure TTestGraphResize.AssertPixel(BMP: TBitmap; X, Y: Integer; Expected: TColor; const Msg: string);
+var
+  Actual: Integer;
+begin
+  Actual:= ColorToRGB(BMP.Canvas.Pixels[X, Y]);
+  Assert.AreEqual(Expected AND $FF,          Actual AND $FF,          Msg + ' (red channel)');
+  Assert.AreEqual((Expected SHR 8) AND $FF,  (Actual SHR 8) AND $FF,  Msg + ' (green channel)');
+  Assert.AreEqual((Expected SHR 16) AND $FF, (Actual SHR 16) AND $FF, Msg + ' (blue channel)');
+end;
+
+
+{ Samples one eighth in from each side, far from the red/blue seam that the resampler blends }
+procedure TTestGraphResize.AssertRedLeftBlueRight(BMP: TBitmap);
+begin
+  AssertPixel(BMP, BMP.Width DIV 8,                    BMP.Height DIV 2, clRed,  'The left side must stay red');
+  AssertPixel(BMP, BMP.Width - 1 - BMP.Width DIV 8,    BMP.Height DIV 2, clBlue, 'The right side must stay blue');
 end;
 
 
@@ -262,11 +281,12 @@ begin
   Params.MaxWidth:= 100;
   Params.MaxHeight:= 50;
 
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      SmartStretch(FBitmap, Params);
-    end, 'Should not raise any exception');
+  SmartStretch(FBitmap, Params);
+
+  { 200x100 into a 100x50 box of the same 2:1 ratio: auto-detect Fill gives exactly 100x50, no overshoot (RResizeParams.ComputeFill) }
+  Assert.AreEqual(100, FBitmap.Width,  'Width must shrink to 100');
+  Assert.AreEqual(50,  FBitmap.Height, 'Height must shrink to 50');
+  AssertRedLeftBlueRight(FBitmap);
 end;
 
 
@@ -308,45 +328,33 @@ begin
 end;
 
 
+{ 200x100 into a 100x100 box, auto-detect (RResizeParams.computeAutodetect): Fill would give 200x100, 200% of the box area, more than
+  the 105% allowed, so it falls back to Fit (100x50) and then adds FitTolerance (10%): 110x55 }
 procedure TTestGraphResize.TestSmartStretch_WithDimensions_BasicCall;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      SmartStretch(FBitmap, 100, 100);
-    end, 'Should not raise any exception');
+  SmartStretch(FBitmap, 100, 100);
+
+  Assert.AreEqual(110, FBitmap.Width,  'Fit (100) plus the 10% tolerance');
+  Assert.AreEqual(55,  FBitmap.Height, 'Fit (50) plus the 10% tolerance');
+  AssertRedLeftBlueRight(FBitmap);
 end;
 
 
 { The 3-argument SmartStretch uses AUTO-DETECT, which is allowed to overshoot the box by
   FitTolerance percent (10 by default) - see the warning on the routine in LightVcl.Graph.Resize.pas.
-  So <= 200 is the wrong expectation here; it fails on a real, deliberate 220x165 result.
-  What auto-detect DOES promise, and what this test now checks:
-    - the image really shrank (it was 400x300),
-    - neither side exceeds the box plus the 10% tolerance,
-    - the aspect ratio survives.
+  400x300 into 200x200: Fill (267x200) covers 133% of the box, so auto-detect falls back to Fit (200x150)
+  and adds 10%: 220x165, the value that warning gives as measured.
   The strict "must fit inside the box" case is covered by TestSmartStretch_WithResizeOp_Fit, which
   passes roFit explicitly. }
 procedure TTestGraphResize.TestSmartStretch_WithDimensions_ResizesDown;
-CONST
-  Box       = 200;
-  MaxAllowed= 220;   { Box + FitTolerance (10%) }
-VAR
-  AspectIn, AspectOut: Double;
 begin
   CreateTestBitmap(400, 300);
-  AspectIn:= 400 / 300;
 
-  SmartStretch(FBitmap, Box, Box);
+  SmartStretch(FBitmap, 200, 200);
 
-  Assert.IsTrue(FBitmap.Width  < 400, 'Width should have shrunk below 400, is '  + IntToStr(FBitmap.Width));
-  Assert.IsTrue(FBitmap.Height < 300, 'Height should have shrunk below 300, is ' + IntToStr(FBitmap.Height));
-
-  Assert.IsTrue(FBitmap.Width  <= MaxAllowed, 'Width must not exceed the box plus the 10% tolerance (220), is '  + IntToStr(FBitmap.Width));
-  Assert.IsTrue(FBitmap.Height <= MaxAllowed, 'Height must not exceed the box plus the 10% tolerance (220), is ' + IntToStr(FBitmap.Height));
-
-  AspectOut:= FBitmap.Width / FBitmap.Height;
-  Assert.IsTrue(Abs(AspectOut - AspectIn) < 0.02, 'Aspect ratio should be preserved. In: ' + FloatToStr(AspectIn) + ' Out: ' + FloatToStr(AspectOut));
+  Assert.AreEqual(220, FBitmap.Width,  'Fit (200) plus the 10% tolerance');
+  Assert.AreEqual(165, FBitmap.Height, 'Fit (150) plus the 10% tolerance');
+  AssertRedLeftBlueRight(FBitmap);
 end;
 
 
@@ -383,9 +391,10 @@ begin
 
   SmartStretch(FBitmap, 100, 100, roFit);
 
-  { Should fit within 100x100 }
-  Assert.IsTrue(FBitmap.Width <= 100, 'Width should fit');
-  Assert.IsTrue(FBitmap.Height <= 100, 'Height should fit');
+  { 3:2 fitted into 100x100: the width is the limit, the height is 200/3 = 66.7, rounded to 67 (RResizeParams.ComputeFit) }
+  Assert.AreEqual(100, FBitmap.Width,  'Width must be the limit (100)');
+  Assert.AreEqual(67,  FBitmap.Height, 'Height must follow the 3:2 ratio (67)');
+  AssertRedLeftBlueRight(FBitmap);
 end;
 
 
@@ -439,13 +448,14 @@ begin
 end;
 
 
+{ 200x100 into 100x100 falls back to Fit (100x50), as in TestSmartStretch_WithDimensions_BasicCall. A tolerance of 20 (not the default 10) then gives 120x60, which proves the parameter is used }
 procedure TTestGraphResize.TestSmartStretch_WithTolerance_BasicCall;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      SmartStretch(FBitmap, 100, 100, 10);
-    end, 'Should not raise any exception');
+  SmartStretch(FBitmap, 100, 100, 20);
+
+  Assert.AreEqual(120, FBitmap.Width,  'Fit (100) plus the 20% tolerance');
+  Assert.AreEqual(60,  FBitmap.Height, 'Fit (50) plus the 20% tolerance');
+  AssertRedLeftBlueRight(FBitmap);
 end;
 
 
@@ -487,13 +497,18 @@ begin
 end;
 
 
+{ 200x100 filling 100x80: Fill gives 160x80, then the centred crop cuts 30 px from each side (CropBitmap in LightVcl.Graph.FX.pas).
+  The red/blue seam was at x=80 of 160, so it lands at x=50 of the 100 px result }
 procedure TTestGraphResize.TestSmartStretchCrop_BasicCall;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      SmartStretchCrop(FBitmap, 100, 80);
-    end, 'Should not raise any exception');
+  SmartStretchCrop(FBitmap, 100, 80);
+
+  Assert.AreEqual(100, FBitmap.Width,  'Width must be cropped to 100');
+  Assert.AreEqual(80,  FBitmap.Height, 'Height must be 80');
+  AssertPixel(FBitmap, 40, 40, clRed,  'Left of the centred seam must be red');
+  AssertPixel(FBitmap, 60, 40, clBlue, 'Right of the centred seam must be blue');
+  AssertPixel(FBitmap, 2,  40, clRed,  'Left edge must be red');
+  AssertPixel(FBitmap, 97, 40, clBlue, 'Right edge must be blue');
 end;
 
 
@@ -607,11 +622,13 @@ procedure TTestGraphResize.TestStretchProport_WithDimensions_PortraitImage;
 begin
   CreateTestBitmap(100, 200);  { 1:2 portrait }
 
-  StretchProport(FBitmap, 200, 200);
+  { A box larger than the image, so a routine that does nothing cannot pass }
+  StretchProport(FBitmap, 300, 300);
 
-  { Height should be constrained to 200, width proportionally smaller }
-  Assert.AreEqual(100, FBitmap.Width, 'Width should be 100 (maintaining 1:2)');
-  Assert.AreEqual(200, FBitmap.Height, 'Height should be 200');
+  { Height is constrained to 300, width follows the 1:2 ratio }
+  Assert.AreEqual(150, FBitmap.Width, 'Width should be 150 (maintaining 1:2)');
+  Assert.AreEqual(300, FBitmap.Height, 'Height should be 300');
+  AssertRedLeftBlueRight(FBitmap);
 end;
 
 
@@ -673,11 +690,12 @@ end;
 
 procedure TTestGraphResize.TestStretchProport_WithWidth_BasicCall;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      StretchProport(FBitmap, 100);
-    end, 'Should not raise any exception');
+  StretchProport(FBitmap, 100);
+
+  { 200x100 to width 100: height = 100 * 100 / 200 = 50 }
+  Assert.AreEqual(100, FBitmap.Width,  'Width must be the one asked for');
+  Assert.AreEqual(50,  FBitmap.Height, 'Height must follow the 2:1 ratio');
+  AssertRedLeftBlueRight(FBitmap);
 end;
 
 
@@ -813,26 +831,22 @@ end;
 
 
 procedure TTestGraphResize.TestStretchPercent_PositivePercent_Enlarges;
-var
-  OrigWidth: Integer;
 begin
-  OrigWidth:= FBitmap.Width;
-
   StretchPercent(FBitmap, 100); { +100% = double size }
 
-  Assert.IsTrue(FBitmap.Width > OrigWidth, 'Width should increase');
+  Assert.AreEqual(400, FBitmap.Width,  'The 200 px width must double to 400');
+  Assert.AreEqual(200, FBitmap.Height, 'The 100 px height must double to 200');
+  AssertRedLeftBlueRight(FBitmap);
 end;
 
 
 procedure TTestGraphResize.TestStretchPercent_NegativePercent_Shrinks;
-var
-  OrigWidth: Integer;
 begin
-  OrigWidth:= FBitmap.Width;
-
   StretchPercent(FBitmap, -50); { -50% = half size }
 
-  Assert.IsTrue(FBitmap.Width < OrigWidth, 'Width should decrease');
+  Assert.AreEqual(100, FBitmap.Width,  'The 200 px width must halve to 100');
+  Assert.AreEqual(50,  FBitmap.Height, 'The 100 px height must halve to 50');
+  AssertRedLeftBlueRight(FBitmap);
 end;
 
 

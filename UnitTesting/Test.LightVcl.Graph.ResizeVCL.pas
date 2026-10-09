@@ -236,10 +236,18 @@ end;
 
 procedure TTestResizeVCL.TestScaleImage_ScaleUp;
 begin
+  { Setup sizes FDestBMP 200x100 already, so give it another size: only ScaleImage can produce 200x100 }
+  FDestBMP.SetSize(7, 3);
+  { Left half red (Setup), right half blue: a scaled image keeps both halves, a crop or a flip does not }
+  FSourceBMP.Canvas.Brush.Color:= clBlue;
+  FSourceBMP.Canvas.FillRect(Rect(50, 0, 100, 50));
+
   ScaleImage(FSourceBMP, FDestBMP, 2.0);
 
   Assert.AreEqual(200, FDestBMP.Width, 'Width should be doubled');
   Assert.AreEqual(100, FDestBMP.Height, 'Height should be doubled');
+  Assert.AreEqual(IntToHex(Integer(clRed),  6), IntToHex(ColorToRGB(FDestBMP.Canvas.Pixels[50, 50])  and $FFFFFF, 6), 'The left half must stay red');
+  Assert.AreEqual(IntToHex(Integer(clBlue), 6), IntToHex(ColorToRGB(FDestBMP.Canvas.Pixels[150, 50]) and $FFFFFF, 6), 'The right half must stay blue');
 end;
 
 

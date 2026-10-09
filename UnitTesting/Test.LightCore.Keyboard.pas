@@ -7,7 +7,7 @@ unit Test.LightCore.Keyboard;
 
    Key state: the tests write the keyboard state table of the test thread with SetKeyboardState, then read it back through the routine under test. That table belongs to the calling thread only, so nothing outside the test EXE sees the change (https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setkeyboardstate). The original table is restored after each test.
 
-   Keystroke simulation: TKeyCatcher installs a low-level keyboard hook that counts the injected events of one key and swallows them, so the key never reaches the system or the window that has the focus (https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelkeyboardproc).
+   Keystroke simulation: TKeyCatcher installs a low-level keyboard hook that counts the injected events of one key (or of every key) and swallows them, so the key never reaches the system or the window that has the focus (https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelkeyboardproc).
 
    The whole fixture is compiled only when MSWINDOWS is defined. LightCore.Keyboard declares its 4 key-state functions only on Windows, and every test here names an identifier from Winapi.Windows.
 =============================================================================================================}
@@ -84,9 +84,10 @@ TYPE
 CONST
   LLKHF_INJECTED = $00000010;
   LLKHF_UP       = KF_UP shr 8;
+  ANY_KEY        = 0;     { No key has the virtual-key code 0, so TKeyCatcher.Start(ANY_KEY) watches every key }
 
 TYPE
-  { Counts the injected key-down and key-up events of one virtual key, and swallows them.
+  { Counts the injected key-down and key-up events of one virtual key (or of every key, for ANY_KEY), and swallows them.
     A hook procedure receives no user data, so the counters are class vars. }
   TKeyCatcher = class
   strict private
@@ -109,7 +110,7 @@ begin
   if nCode = HC_ACTION then
     begin
       Info:= PKbdLLHookStruct(lParam);
-      if (Info.vkCode = WatchedKey) AND ((Info.flags AND LLKHF_INJECTED) <> 0) then
+      if ((WatchedKey = ANY_KEY) OR (Info.vkCode = WatchedKey)) AND ((Info.flags AND LLKHF_INJECTED) <> 0) then
         begin
           if (Info.flags AND LLKHF_UP) <> 0
           then Inc(Ups)
@@ -276,25 +277,55 @@ begin
 end;
 
 
+{ An empty string presses no key. The only keys SendKeys may press for it are the two Caps Lock toggles around the text,
+  and only when Caps Lock is on. The hook watches EVERY injected key and swallows it, so a stray key never reaches the window that has the focus. }
 procedure TTestKeyboard.Test_SendKeys_EmptyString;
+VAR
+  CapsToggles: Integer;
 begin
-  { Empty string should not raise exception }
-  Assert.WillNotRaise(
-    procedure
-    begin
-      SendKeys('');
-    end);
+  if (GetKeyState(VK_CAPITAL) AND 1) <> 0
+  then CapsToggles:= 2
+  else CapsToggles:= 0;
+
+  TKeyCatcher.Start(ANY_KEY);
+  try
+    Assert.WillNotRaiseAny(
+      procedure
+      begin
+        SendKeys('');
+      end, 'SendKeys('''') must not raise');
+    TKeyCatcher.WaitForEvents(2 * CapsToggles);
+  finally
+    TKeyCatcher.Stop;
+  end;
+
+  Assert.AreEqual(CapsToggles, TKeyCatcher.Downs, 'SendKeys('''') must inject no key-down except the Caps Lock toggles');
+  Assert.AreEqual(CapsToggles, TKeyCatcher.Ups,   'SendKeys('''') must inject no key-up except the Caps Lock toggles');
 end;
 
 
 procedure TTestKeyboard.Test_SendText_EmptyString;
+VAR
+  CapsToggles: Integer;
 begin
-  { Empty string should not raise exception }
-  Assert.WillNotRaise(
-    procedure
-    begin
-      SendText('');
-    end);
+  if (GetKeyState(VK_CAPITAL) AND 1) <> 0
+  then CapsToggles:= 2
+  else CapsToggles:= 0;
+
+  TKeyCatcher.Start(ANY_KEY);
+  try
+    Assert.WillNotRaiseAny(
+      procedure
+      begin
+        SendText('');
+      end, 'SendText('''') must not raise');
+    TKeyCatcher.WaitForEvents(2 * CapsToggles);
+  finally
+    TKeyCatcher.Stop;
+  end;
+
+  Assert.AreEqual(CapsToggles, TKeyCatcher.Downs, 'SendText('''') must inject no key-down except the Caps Lock toggles');
+  Assert.AreEqual(CapsToggles, TKeyCatcher.Ups,   'SendText('''') must inject no key-up except the Caps Lock toggles');
 end;
 
 

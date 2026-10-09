@@ -26,8 +26,10 @@ type
     FForm: TForm;
     FOnChangeCount: Integer;
     FOnPressEnterCount: Integer;
+    FKeyPressed: Char;
     procedure OnChangeHandler(Sender: TObject);
     procedure OnPressEnterHandler(Sender: TObject);
+    procedure OnKeyPressHandler(Sender: TObject; var Key: Char);
   public
     [Setup]
     procedure Setup;
@@ -106,6 +108,9 @@ uses
   Winapi.Windows,      { VK_RETURN }
   Winapi.Messages;     { WM_CHAR }
 
+type
+  TLightEditAccess = class(TLightEdit);   { Opens the protected KeyPress }
+
 
 procedure TTesTLightEdit.Setup;
 begin
@@ -140,6 +145,12 @@ end;
 procedure TTesTLightEdit.OnPressEnterHandler(Sender: TObject);
 begin
   Inc(FOnPressEnterCount);
+end;
+
+
+procedure TTesTLightEdit.OnKeyPressHandler(Sender: TObject; var Key: Char);
+begin
+  FKeyPressed:= Key;
 end;
 
 
@@ -192,16 +203,27 @@ end;
 
 procedure TTesTLightEdit.TestCheckFileExistence_ExistingFile_WindowColor;
 VAR
-  ExistingFile: string;
+  NewFile: string;
+  Stream: TFileStream;
 begin
-  // Use a file that always exists on Windows
-  ExistingFile:= ParamStr(0);  // The test executable itself
-  Assert.IsTrue(FileExists(ExistingFile), 'Test prerequisite: file must exist');
+  { A file that does not exist yet: the control must turn red first, so a do-nothing UpdateBkgColor cannot pass }
+  NewFile:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('TEMP')) + 'LightEdit_' + IntToStr(GetCurrentProcessId) + '_' + IntToStr(GetTickCount) + '.tmp';
+  Assert.IsFalse(FileExists(NewFile), 'Test prerequisite: the file must not exist yet: ' + NewFile);
 
   FEdit.CheckFileExistence:= TRUE;
-  FEdit.Text:= ExistingFile;
+  FEdit.Text:= NewFile;
+  Assert.AreEqual(Integer(clRedFade), Integer(FEdit.Color), 'Precondition: a missing file paints the control red');
 
-  Assert.AreEqual(Integer(clWindow), Integer(FEdit.Color), 'Color should be clWindow for existing file');
+  { Now the same text names an existing file }
+  Stream:= TFileStream.Create(NewFile, fmCreate);
+  FreeAndNil(Stream);
+  try
+    Assert.IsTrue(FileExists(NewFile), 'Test prerequisite: the file must exist now');
+    FEdit.UpdateBkgColor;
+    Assert.AreEqual(Integer(clWindow), Integer(FEdit.Color), 'Color must go back to clWindow once the file exists');
+  finally
+    System.SysUtils.DeleteFile(NewFile);
+  end;
 end;
 
 
@@ -241,14 +263,18 @@ procedure TTesTLightEdit.TestCheckDirExistence_ExistingDir_WindowColor;
 VAR
   ExistingDir: string;
 begin
-  // Use a directory that always exists on Windows
-  ExistingDir:= 'C:\Windows';
-  Assert.IsTrue(DirectoryExists(ExistingDir), 'Test prerequisite: directory must exist');
+  { The Windows folder, wherever this PC has it }
+  ExistingDir:= GetEnvironmentVariable('WINDIR');
+  Assert.IsTrue((ExistingDir <> '') AND DirectoryExists(ExistingDir), 'Test prerequisite: the WINDIR folder must exist: ' + ExistingDir);
 
+  { A missing folder first: the control must turn red, so a do-nothing UpdateBkgColor cannot pass }
   FEdit.CheckDirExistence:= TRUE;
+  FEdit.Text:= 'C:\This\Directory\Does\Not\Exist\12345';
+  Assert.AreEqual(Integer(clRedFade), Integer(FEdit.Color), 'Precondition: a missing folder paints the control red');
+
   FEdit.Text:= ExistingDir;
 
-  Assert.AreEqual(Integer(clWindow), Integer(FEdit.Color), 'Color should be clWindow for existing directory');
+  Assert.AreEqual(Integer(clWindow), Integer(FEdit.Color), 'Color must go back to clWindow for an existing directory');
 end;
 
 
@@ -317,12 +343,27 @@ VAR
   Key: Char;
 begin
   FEdit.OnPressEnter:= NIL;
+  FEdit.OnKeyPress:= OnKeyPressHandler;   { Records the key; it must not clear it, or the NIL test in KeyPress would never be reached }
+  FKeyPressed:= #0;
 
-  // This should not raise an exception
+  { KeyPress is called directly, so the key never reaches the Windows edit control }
   Key:= Char(VK_RETURN);
-  FEdit.Perform(WM_CHAR, Ord(Key), 0);
+  Assert.WillNotRaiseAny(
+    procedure
+    begin
+      TLightEditAccess(FEdit).KeyPress(Key);
+    end,
+    'Enter must not raise when OnPressEnter is not assigned');
 
-  Assert.Pass('No exception should be raised when OnPressEnter is not assigned');
+  Assert.AreEqual(Ord(Char(VK_RETURN)), Ord(FKeyPressed), 'KeyPress must still pass Enter to the inherited OnKeyPress');
+  Assert.AreEqual(Ord(Char(VK_RETURN)), Ord(Key), 'KeyPress must leave the key unchanged');
+  Assert.AreEqual(0, FOnPressEnterCount, 'No OnPressEnter handler may run');
+
+  { The same control still fires a handler assigned afterwards }
+  FEdit.OnPressEnter:= OnPressEnterHandler;
+  Key:= Char(VK_RETURN);
+  TLightEditAccess(FEdit).KeyPress(Key);
+  Assert.AreEqual(1, FOnPressEnterCount, 'OnPressEnter must fire once a handler is assigned');
 end;
 
 

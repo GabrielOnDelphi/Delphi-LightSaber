@@ -1,7 +1,7 @@
 ﻿unit Test.LightVcl.Visual.ListBox;
 
 {=============================================================================================================
-   2026.10.07
+   2026.10.08
    Unit tests for LightVcl.Visual.ListBox.pas
    Tests TCubicListBox enhanced listbox functionality.
 
@@ -649,8 +649,12 @@ begin
 
   var Removed:= FListBox.RemoveDuplicates;
 
+  { The first occurrence stays, in its place; the later copy is the one removed }
   Assert.AreEqual(2, Removed);
   Assert.AreEqual(3, FListBox.Items.Count);
+  Assert.AreEqual('Apple',  FListBox.Items[0]);
+  Assert.AreEqual('Banana', FListBox.Items[1]);
+  Assert.AreEqual('Cherry', FListBox.Items[2]);
 end;
 
 
@@ -662,8 +666,10 @@ begin
 
   var Removed:= FListBox.RemoveDuplicates;
 
+  { The first occurrence survives with its own spelling }
   Assert.AreEqual(2, Removed);
   Assert.AreEqual(1, FListBox.Items.Count);
+  Assert.AreEqual('Test', FListBox.Items[0], 'The first spelling must survive');
 end;
 
 
@@ -692,6 +698,9 @@ begin
 
   Assert.AreEqual(2, Removed);
   Assert.AreEqual(3, FListBox.Items.Count);
+  Assert.AreEqual('First',  FListBox.Items[0]);
+  Assert.AreEqual('Second', FListBox.Items[1]);
+  Assert.AreEqual('Third',  FListBox.Items[2]);
 end;
 
 
@@ -932,15 +941,25 @@ end;
 { AddLimit Tests }
 
 procedure TTestCubicListBox.TestAddLimit_LimitsItems;
+var
+  Rows, FirstKept: Integer;
 begin
-  // With ItemHeight=20 and Height=200, VisibleItems should be around 9
-  // AddLimit should keep items within visible range
-
   for var i:= 1 to 20 do
     FListBox.AddLimit('Item ' + IntToStr(i));
 
-  // Should have limited items based on visible count
-  Assert.IsTrue(FListBox.Items.Count <= FListBox.VisibleItems + 1);
+  { The number of whole rows the client area holds, read from the VCL and not from VisibleItems.
+    For a lbStandard list with a handle, ItemHeight is the height Windows gives a row, not the 20 set in Setup
+    (c:\Delphi\Delphi 13\source\vcl\Vcl.StdCtrls.pas:7594-7604). }
+  Assert.IsTrue(FListBox.ItemHeight > 0, 'Test prerequisite: the rows must have a height');
+  Rows:= FListBox.ClientHeight div FListBox.ItemHeight;
+  Assert.IsTrue((Rows > 1) AND (Rows < 20), 'Test prerequisite: 20 lines must not fit, so AddLimit must drop some. Rows=' + IntToStr(Rows));
+
+  { After each AddLimit the list holds at most the rows the client area shows, so after 20 lines it is full and ends with the newest line }
+  Assert.AreEqual(Rows, FListBox.Items.Count, 'AddLimit must keep exactly as many lines as the client area shows');
+  FirstKept:= 20 - Rows + 1;
+  for var i:= 0 to FListBox.Items.Count - 1 do
+    Assert.AreEqual('Item ' + IntToStr(FirstKept + i), FListBox.Items[i], 'The oldest lines are dropped, the newest are kept in order');
+  Assert.AreEqual('Item 20', FListBox.Items[FListBox.Items.Count - 1], 'The newest line must be the last one');
 end;
 
 

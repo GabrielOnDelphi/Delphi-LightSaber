@@ -219,14 +219,21 @@ begin
 end;
 
 
+{ Rotating the 100x80 FBitmap by 45 degrees gives a 127x127 bitmap: (100 + 80) * 0.7071 = 127.28 -> 127.
+  Clockwise by 45 degrees, the red block center (20, 20), at offset (-30, -20) from the source center (50, 40), moves to
+  offset (-30 * 0.7071 + 20 * 0.7071, -30 * 0.7071 - 20 * 0.7071) = (-7.1, -35.4) from the new center (63.5, 63.5): (56, 28).
+  Counter-clockwise it would land at offset (-35.4, 7.1): (28, 70). }
 procedure TTestRotateGr32.TestRotateBitmap_BasicCall;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      RotateBitmapGR32(FBitmap, 45);
-    end,
-    'RotateBitmapGR32(FBitmap, 45) must not raise');
+  PaintRedBlock(FBitmap);
+
+  RotateBitmapGR32(FBitmap, 45);
+
+  Assert.AreEqual(127, FBitmap.Width,  'Width after 45 degrees');
+  Assert.AreEqual(127, FBitmap.Height, 'Height after 45 degrees');
+  AssertColorNear(clRed,    FBitmap.Canvas.Pixels[56, 28], 'Clockwise: the red block lands at (56, 28)');
+  AssertColorNear(clWhite,  FBitmap.Canvas.Pixels[28, 70], 'The counter-clockwise position (28, 70) stays white');
+  AssertColorNear(clPurple, FBitmap.Canvas.Pixels[0, 0],   'The corner outside the rotated image gets BkColor (default clPurple)');
 end;
 
 
@@ -234,6 +241,7 @@ procedure TTestRotateGr32.TestRotateBitmap_ZeroAngle;
 var
   OrigWidth, OrigHeight: Integer;
 begin
+  PaintRedBlock(FBitmap);
   OrigWidth:= FBitmap.Width;
   OrigHeight:= FBitmap.Height;
 
@@ -242,6 +250,13 @@ begin
   { Zero rotation should preserve dimensions (with AdjustSize=True default) }
   Assert.AreEqual(OrigWidth, FBitmap.Width, 'Width should be preserved with 0 angle');
   Assert.AreEqual(OrigHeight, FBitmap.Height, 'Height should be preserved with 0 angle');
+  { The block X 10..29, Y 10..29 stays where it is. A left-right mirror would move it to X 70..89, a top-bottom
+    mirror to Y 50..69, a 90-degree turn to (59, 20). }
+  AssertColorNear(clRed,   FBitmap.Canvas.Pixels[20, 20], 'The red block stays at (20, 20)');
+  AssertColorNear(clWhite, FBitmap.Canvas.Pixels[79, 20], 'Not mirrored left-right');
+  AssertColorNear(clWhite, FBitmap.Canvas.Pixels[20, 59], 'Not mirrored top-bottom');
+  AssertColorNear(clWhite, FBitmap.Canvas.Pixels[59, 20], 'Not turned by 90 degrees');
+  AssertColorNear(clWhite, FBitmap.Canvas.Pixels[50, 40], 'The center stays white');
 end;
 
 
@@ -263,6 +278,7 @@ procedure TTestRotateGr32.TestRotateBitmap_180Degrees;
 var
   OrigWidth, OrigHeight: Integer;
 begin
+  PaintRedBlock(FBitmap);
   OrigWidth:= FBitmap.Width;
   OrigHeight:= FBitmap.Height;
 
@@ -271,6 +287,11 @@ begin
   { 180 degree rotation should preserve dimensions }
   Assert.AreEqual(OrigWidth, FBitmap.Width, 'Width should be preserved with 180 angle');
   Assert.AreEqual(OrigHeight, FBitmap.Height, 'Height should be preserved with 180 angle');
+  { 180 degrees maps (X, Y) to (100 - X, 80 - Y): the block X 10..29, Y 10..29 moves to X 70..89, Y 50..69 }
+  AssertColorNear(clRed,   FBitmap.Canvas.Pixels[79, 59], '180 degrees: the red block lands at (79, 59)');
+  AssertColorNear(clWhite, FBitmap.Canvas.Pixels[20, 20], 'The red block must leave (20, 20)');
+  AssertColorNear(clWhite, FBitmap.Canvas.Pixels[79, 20], 'A left-right mirror would put the block at (79, 20)');
+  AssertColorNear(clWhite, FBitmap.Canvas.Pixels[20, 59], 'A top-bottom mirror would put the block at (20, 59)');
 end;
 
 
@@ -345,22 +366,34 @@ end;
 
 procedure TTestRotateGr32.TestRotateBitmap_TransparentFalse;
 begin
-  RotateBitmapGR32(FBitmap, 45, True, clPurple, False);
+  { Start from a transparent bitmap, so the routine must really clear the flag. When GR32 copies a transparent TBitmap,
+    it makes the pixels of TransparentColor fully transparent (GR32.ImageFormats.TBitmap.pas,
+    TImageFormatAdapterTBitmap.AssignFrom), so TransparentColor is a color the white bitmap does not hold. }
+  FBitmap.TransparentColor:= clFuchsia;
+  FBitmap.Transparent:= TRUE;
+
+  RotateBitmapGR32(FBitmap, 45, True, clYellow, False);
 
   Assert.IsFalse(FBitmap.Transparent, 'Bitmap should not be transparent when Transparent=False');
+  AssertColorNear(clYellow, FBitmap.Canvas.Pixels[0, 0],   'The corner outside the rotated image gets BkColor');
+  AssertColorNear(clWhite,  FBitmap.Canvas.Pixels[63, 63], 'The center keeps the white of the source');
 end;
 
 
 { TBitmap32 overload - Basic functionality }
 
+{ Same geometry as TestRotateBitmap_BasicCall: 127x127, the red block lands at (56, 28) }
 procedure TTestRotateGr32.TestRotateBitmap32_BasicCall;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      RotateBitmapGR32(FBitmap32, 45);
-    end,
-    'RotateBitmapGR32(FBitmap32, 45) must not raise');
+  FBitmap32.FillRectS(10, 10, 30, 30, clRed32);   { Same block as PaintRedBlock }
+
+  RotateBitmapGR32(FBitmap32, 45);
+
+  Assert.AreEqual(127, FBitmap32.Width,  'Width after 45 degrees');
+  Assert.AreEqual(127, FBitmap32.Height, 'Height after 45 degrees');
+  AssertColorNear(clRed,    WinColor(FBitmap32.Pixel[56, 28]), 'Clockwise: the red block lands at (56, 28)');
+  AssertColorNear(clWhite,  WinColor(FBitmap32.Pixel[28, 70]), 'The counter-clockwise position (28, 70) stays white');
+  AssertColorNear(clPurple, WinColor(FBitmap32.Pixel[0, 0]),   'The corner outside the rotated image gets BkColor (default clPurple)');
 end;
 
 
@@ -368,6 +401,7 @@ procedure TTestRotateGr32.TestRotateBitmap32_ZeroAngle;
 var
   OrigWidth, OrigHeight: Integer;
 begin
+  FBitmap32.FillRectS(10, 10, 30, 30, clRed32);   { Same block as PaintRedBlock }
   OrigWidth:= FBitmap32.Width;
   OrigHeight:= FBitmap32.Height;
 
@@ -375,6 +409,10 @@ begin
 
   Assert.AreEqual(OrigWidth, FBitmap32.Width, 'Width should be preserved with 0 angle');
   Assert.AreEqual(OrigHeight, FBitmap32.Height, 'Height should be preserved with 0 angle');
+  AssertColorNear(clRed,   WinColor(FBitmap32.Pixel[20, 20]), 'The red block stays at (20, 20)');
+  AssertColorNear(clWhite, WinColor(FBitmap32.Pixel[79, 20]), 'Not mirrored left-right');
+  AssertColorNear(clWhite, WinColor(FBitmap32.Pixel[20, 59]), 'Not mirrored top-bottom');
+  AssertColorNear(clWhite, WinColor(FBitmap32.Pixel[59, 20]), 'Not turned by 90 degrees');
 end;
 
 
@@ -611,16 +649,15 @@ begin
     SmallBmp.Width:= 5;
     SmallBmp.Height:= 5;
     SmallBmp.PixelFormat:= pf24bit;
+    FillBitmapWithColor(SmallBmp, clWhite);
 
-    Assert.WillNotRaiseAny(
-      procedure
-      begin
-        RotateBitmapGR32(SmallBmp, 45);
-      end,
-      'RotateBitmapGR32(SmallBmp, 45) must not raise');
+    RotateBitmapGR32(SmallBmp, 45);
 
-    Assert.IsTrue(SmallBmp.Width > 0, 'Small bitmap should remain valid');
-    Assert.IsTrue(SmallBmp.Height > 0, 'Small bitmap should remain valid');
+    { Bounding box at 45 degrees: (5 + 5) * 0.7071 = 7.07 -> 7 }
+    Assert.AreEqual(7, SmallBmp.Width,  'Width of a 5x5 bitmap after 45 degrees');
+    Assert.AreEqual(7, SmallBmp.Height, 'Height of a 5x5 bitmap after 45 degrees');
+    AssertColorNear(clPurple, SmallBmp.Canvas.Pixels[0, 0], 'The corner of the bounding box lies outside the rotated square: BkColor');
+    AssertColorNear(clWhite,  SmallBmp.Canvas.Pixels[3, 3], 'The center keeps the white of the source');
   FINALLY
     FreeAndNil(SmallBmp);
   END;
@@ -638,12 +675,19 @@ begin
     SquareBmp.Width:= OrigSize;
     SquareBmp.Height:= OrigSize;
     SquareBmp.PixelFormat:= pf24bit;
+    FillBitmapWithColor(SquareBmp, clWhite);
+    PaintRedBlock(SquareBmp);
 
     { 90 degree rotation of square should preserve dimensions with AdjustSize=True }
     RotateBitmapGR32(SquareBmp, 90, True);
 
     Assert.AreEqual(OrigSize, SquareBmp.Width, 'Square width should be preserved at 90 degrees');
     Assert.AreEqual(OrigSize, SquareBmp.Height, 'Square height should be preserved at 90 degrees');
+    { Clockwise by 90 degrees maps (X, Y) to (100 - Y, X): the block X 10..29, Y 10..29 moves to X 70..89, Y 10..29.
+      Counter-clockwise would move it to X 10..29, Y 70..89. }
+    AssertColorNear(clRed,   SquareBmp.Canvas.Pixels[79, 20], 'Clockwise: the red block lands at (79, 20)');
+    AssertColorNear(clWhite, SquareBmp.Canvas.Pixels[20, 20], 'The red block must leave (20, 20)');
+    AssertColorNear(clWhite, SquareBmp.Canvas.Pixels[20, 79], 'The counter-clockwise position (20, 79) stays white');
   FINALLY
     FreeAndNil(SquareBmp);
   END;

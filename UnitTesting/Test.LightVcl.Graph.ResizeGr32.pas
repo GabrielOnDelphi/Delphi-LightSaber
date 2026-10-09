@@ -22,6 +22,7 @@ type
   private
     FBitmap: TBitmap;
     procedure CreateTestBitmap(Width, Height: Integer);
+    procedure PaintHalves;
   public
     [Setup]
     procedure Setup;
@@ -101,7 +102,25 @@ type
 implementation
 
 uses
+  GR32, GR32_Resamplers,
   LightVcl.Graph.ResizeGr32;
+
+
+type
+  { Opens the protected Src bitmap, so a test can see which resampler the constructor installed }
+  TGr32StretchAccess = class(TGr32Stretch);
+
+
+function ColorHex(Color: TColor): string;
+begin
+  Result:= IntToHex(ColorToRGB(Color) and $FFFFFF, 6);
+end;
+
+
+function PixelHex(BMP: TBitmap; X, Y: Integer): string;
+begin
+  Result:= ColorHex(BMP.Canvas.Pixels[X, Y]);
+end;
 
 
 procedure TTestGraphResizeGr32.Setup;
@@ -133,6 +152,17 @@ begin
 end;
 
 
+{ Left half lime, right half blue: a scaled image keeps both halves, a crop or a flip does not.
+  No red: StretchImage clears its target with clRed32 before the transform, so red marks a pixel that was never drawn. }
+procedure TTestGraphResizeGr32.PaintHalves;
+begin
+  FBitmap.Canvas.Brush.Color:= clLime;
+  FBitmap.Canvas.FillRect(Rect(0, 0, FBitmap.Width DIV 2, FBitmap.Height));
+  FBitmap.Canvas.Brush.Color:= clBlue;
+  FBitmap.Canvas.FillRect(Rect(FBitmap.Width DIV 2, 0, FBitmap.Width, FBitmap.Height));
+end;
+
+
 { TGr32Stretch Constructor Tests }
 
 procedure TTestGraphResizeGr32.TestCreate_DefaultValues;
@@ -149,31 +179,38 @@ begin
 end;
 
 
+{ The expected classes are the ones GR32 registers at these indexes: initialization section of GR32_Resamplers.pas }
 procedure TTestGraphResizeGr32.TestCreate_WithKernelResampler;
 var
   Gr32: TGr32Stretch;
+  Resampler: TCustomResampler;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      Gr32:= TGr32Stretch.Create(KernelResampler, LanczosKernel);
-      FreeAndNil(Gr32);
-    end,
-    'Gr32:= TGr32Stretch.Create(KernelResampler, LanczosKernel) must not raise');
+  Gr32:= TGr32Stretch.Create(KernelResampler, LanczosKernel);
+  TRY
+    Resampler:= TGr32StretchAccess(Gr32).Src.Resampler;
+    Assert.IsNotNull(Resampler, 'The constructor must install a resampler on the source bitmap');
+    Assert.AreEqual(TKernelResampler.ClassName, Resampler.ClassName, 'KernelResampler must install a TKernelResampler');
+    Assert.AreEqual(TLanczosKernel.ClassName, TKernelResampler(Resampler).Kernel.ClassName, 'LanczosKernel must install a TLanczosKernel');
+  FINALLY
+    FreeAndNil(Gr32);
+  END;
 end;
 
 
 procedure TTestGraphResizeGr32.TestCreate_WithLinearResampler;
 var
   Gr32: TGr32Stretch;
+  Resampler: TCustomResampler;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      Gr32:= TGr32Stretch.Create(LinearResampler, BoxKernel);
-      FreeAndNil(Gr32);
-    end,
-    'Gr32:= TGr32Stretch.Create(LinearResampler, BoxKernel) must not raise');
+  Gr32:= TGr32Stretch.Create(LinearResampler, BoxKernel);
+  TRY
+    Resampler:= TGr32StretchAccess(Gr32).Src.Resampler;
+    Assert.IsNotNull(Resampler, 'The constructor must install a resampler on the source bitmap');
+    { ClassName, not "is": TDraftResampler descends from TLinearResampler }
+    Assert.AreEqual(TLinearResampler.ClassName, Resampler.ClassName, 'LinearResampler must install a TLinearResampler');
+  FINALLY
+    FreeAndNil(Gr32);
+  END;
 end;
 
 
@@ -382,12 +419,14 @@ end;
 
 procedure TTestGraphResizeGr32.TestStretchGr32_BasicCall;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      StretchGr32(FBitmap, 1.0, 1.0);
-    end,
-    'StretchGr32(FBitmap, 1.0, 1.0) must not raise');
+  PaintHalves;   { The Setup bitmap is 200x100 }
+
+  StretchGr32(FBitmap, 1.0, 1.0);
+
+  Assert.AreEqual(200, FBitmap.Width,  'Width must not change at scale 1');
+  Assert.AreEqual(100, FBitmap.Height, 'Height must not change at scale 1');
+  Assert.AreEqual(ColorHex(clLime), PixelHex(FBitmap, 50, 50),  'The left half must stay lime');
+  Assert.AreEqual(ColorHex(clBlue), PixelHex(FBitmap, 150, 50), 'The right half must stay blue');
 end;
 
 
@@ -416,45 +455,45 @@ end;
 procedure TTestGraphResizeGr32.TestStretchGr32_WithNearestResampler;
 begin
   CreateTestBitmap(100, 100);
+  PaintHalves;   { Lime in source columns 0..49, blue in 50..99 }
 
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      StretchGr32(FBitmap, 2.0, 2.0, NearestResampler, BoxKernel);
-    end,
-    'StretchGr32(FBitmap, 2.0, 2.0, NearestResampler, BoxKernel) must not raise');
+  StretchGr32(FBitmap, 2.0, 2.0, NearestResampler, BoxKernel);
 
-  Assert.AreEqual(200, FBitmap.Width, 'Width should double');
+  Assert.AreEqual(200, FBitmap.Width,  'Width should double');
+  Assert.AreEqual(200, FBitmap.Height, 'Height should double');
+  Assert.AreEqual(ColorHex(clLime), PixelHex(FBitmap, 50, 100),  'The left half must stay lime');
+  Assert.AreEqual(ColorHex(clBlue), PixelHex(FBitmap, 150, 100), 'The right half must stay blue');
+  { Nearest neighbour copies source pixels, so the border between the halves stays sharp; a filtering resampler blends these two columns }
+  Assert.AreEqual(ColorHex(clLime), PixelHex(FBitmap, 99, 100),  'Column 99 must be pure lime (no blending)');
+  Assert.AreEqual(ColorHex(clBlue), PixelHex(FBitmap, 100, 100), 'Column 100 must be pure blue (no blending)');
 end;
 
 
 procedure TTestGraphResizeGr32.TestStretchGr32_WithLanczosKernel;
 begin
   CreateTestBitmap(100, 100);
+  PaintHalves;
 
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      StretchGr32(FBitmap, 1.5, 1.5, KernelResampler, LanczosKernel);
-    end,
-    'StretchGr32(FBitmap, 1.5, 1.5, KernelResampler, LanczosKerne must not raise');
+  StretchGr32(FBitmap, 1.5, 1.5, KernelResampler, LanczosKernel);
 
-  Assert.AreEqual(150, FBitmap.Width, 'Width should be 150');
+  Assert.AreEqual(150, FBitmap.Width,  'Width should be 150');
+  Assert.AreEqual(150, FBitmap.Height, 'Height should be 150');
+  Assert.AreEqual(ColorHex(clLime), PixelHex(FBitmap, 37, 75),  'The left half must stay lime');
+  Assert.AreEqual(ColorHex(clBlue), PixelHex(FBitmap, 112, 75), 'The right half must stay blue');
 end;
 
 
 procedure TTestGraphResizeGr32.TestStretchGr32_WithMitchellKernel;
 begin
   CreateTestBitmap(100, 100);
+  PaintHalves;
 
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      StretchGr32(FBitmap, 1.5, 1.5, KernelResampler, MitchellKernel);
-    end,
-    'StretchGr32(FBitmap, 1.5, 1.5, KernelResampler, MitchellKern must not raise');
+  StretchGr32(FBitmap, 1.5, 1.5, KernelResampler, MitchellKernel);
 
-  Assert.AreEqual(150, FBitmap.Width, 'Width should be 150');
+  Assert.AreEqual(150, FBitmap.Width,  'Width should be 150');
+  Assert.AreEqual(150, FBitmap.Height, 'Height should be 150');
+  Assert.AreEqual(ColorHex(clLime), PixelHex(FBitmap, 37, 75),  'The left half must stay lime');
+  Assert.AreEqual(ColorHex(clBlue), PixelHex(FBitmap, 112, 75), 'The right half must stay blue');
 end;
 
 

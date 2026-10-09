@@ -22,6 +22,7 @@ type
   private
     FBitmap: TBitmap;
     procedure CreateTestBitmap(Width, Height: Integer);
+    procedure PaintHalves;
   public
     [Setup]
     procedure Setup;
@@ -109,6 +110,28 @@ begin
 end;
 
 
+{ Left half red, right half blue: a scaled image keeps both halves, a crop or a flip does not }
+procedure TTestGraphResizeFMX.PaintHalves;
+begin
+  FBitmap.Canvas.Brush.Color:= clRed;
+  FBitmap.Canvas.FillRect(Rect(0, 0, FBitmap.Width DIV 2, FBitmap.Height));
+  FBitmap.Canvas.Brush.Color:= clBlue;
+  FBitmap.Canvas.FillRect(Rect(FBitmap.Width DIV 2, 0, FBitmap.Width, FBitmap.Height));
+end;
+
+
+function ColorHex(Color: TColor): string;
+begin
+  Result:= IntToHex(ColorToRGB(Color) and $FFFFFF, 6);
+end;
+
+
+function PixelHex(BMP: TBitmap; X, Y: Integer): string;
+begin
+  Result:= ColorHex(BMP.Canvas.Pixels[X, Y]);
+end;
+
+
 { ResizeFMX Tests }
 
 procedure TTestGraphResizeFMX.TestResizeFMX_NilBitmap;
@@ -149,24 +172,30 @@ end;
 
 procedure TTestGraphResizeFMX.TestResizeFMX_BasicCall;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      ResizeFMX(FBitmap, 100, 50);
-    end,
-    'ResizeFMX(FBitmap, 100, 50) must not raise');
+  PaintHalves;   { The Setup bitmap is 200x100 }
+
+  ResizeFMX(FBitmap, 100, 50);
+
+  { FMX CreateThumbnail returns exactly the asked size: c:\Delphi\Delphi 13\source\fmx\FMX.Graphics.pas:4620 }
+  Assert.AreEqual(100, FBitmap.Width,  'Width must be the requested 100');
+  Assert.AreEqual(50,  FBitmap.Height, 'Height must be the requested 50');
+  Assert.AreEqual(ColorHex(clRed),  PixelHex(FBitmap, 25, 25), 'The left half must stay red');
+  Assert.AreEqual(ColorHex(clBlue), PixelHex(FBitmap, 75, 25), 'The right half must stay blue');
 end;
 
 
 procedure TTestGraphResizeFMX.TestResizeFMX_ResizesDown;
 begin
   CreateTestBitmap(400, 300);
+  PaintHalves;
 
   ResizeFMX(FBitmap, 100, 75);
 
-  { FMX CreateThumbnail may not produce exact dimensions but should be close }
-  Assert.IsTrue(FBitmap.Width <= 100, 'Width should be <= 100');
-  Assert.IsTrue(FBitmap.Height <= 75, 'Height should be <= 75');
+  { FMX CreateThumbnail returns exactly the asked size: c:\Delphi\Delphi 13\source\fmx\FMX.Graphics.pas:4620 }
+  Assert.AreEqual(100, FBitmap.Width,  'Width must be the requested 100');
+  Assert.AreEqual(75,  FBitmap.Height, 'Height must be the requested 75');
+  Assert.AreEqual(ColorHex(clRed),  PixelHex(FBitmap, 25, 37), 'The left half must stay red');
+  Assert.AreEqual(ColorHex(clBlue), PixelHex(FBitmap, 75, 37), 'The right half must stay blue');
 end;
 
 
@@ -273,14 +302,15 @@ var
   Result: TBitmap;
 begin
   CreateTestBitmap(400, 300);
+  PaintHalves;
 
   Result:= ResizeFmxF(FBitmap, 100, 75);
   TRY
-    { FMX CreateThumbnail may not produce exact dimensions but should be close }
-    Assert.IsTrue(Result.Width <= 100, 'Width should be <= 100');
-    Assert.IsTrue(Result.Height <= 75, 'Height should be <= 75');
-    Assert.IsTrue(Result.Width > 0, 'Width should be positive');
-    Assert.IsTrue(Result.Height > 0, 'Height should be positive');
+    { FMX CreateThumbnail returns exactly the asked size: c:\Delphi\Delphi 13\source\fmx\FMX.Graphics.pas:4620 }
+    Assert.AreEqual(100, Result.Width,  'Width must be the requested 100');
+    Assert.AreEqual(75,  Result.Height, 'Height must be the requested 75');
+    Assert.AreEqual(ColorHex(clRed),  PixelHex(Result, 25, 37), 'The left half must stay red');
+    Assert.AreEqual(ColorHex(clBlue), PixelHex(Result, 75, 37), 'The right half must stay blue');
   FINALLY
     FreeAndNil(Result);
   END;

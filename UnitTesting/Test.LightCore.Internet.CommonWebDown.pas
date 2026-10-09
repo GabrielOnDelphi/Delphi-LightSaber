@@ -51,7 +51,23 @@ type
 implementation
 
 uses
-  LightCore.Internet.CommonWebDown;
+  LightCore.Download,
+  LightCore.Internet.CommonWebDown,
+  Test.LightCore.Download;
+
+
+{ How many request heads TLocalHttpServer.Requests holds: each one starts with its request line 'GET /' }
+function CountRequests(CONST Requests: string): Integer;
+VAR P: Integer;
+begin
+  Result:= 0;
+  P:= Pos('GET /', Requests);
+  while P > 0 do
+    begin
+      Inc(Result);
+      P:= Pos('GET /', Requests, P + 1);
+    end;
+end;
 
 
 procedure TTestCommonWebDown.Setup;
@@ -121,16 +137,33 @@ begin
 end;
 
 
+{ A non-Unsplash page, served by TLocalHttpServer on 127.0.0.1: it downloads fine but has no og:image meta tag.
+  GetUnsplashImage must stop at the missing tag: return FALSE, write no file and request nothing more. }
 procedure TTestCommonWebDown.TestGetUnsplashImage_NonUnsplashURL_ReturnsFalse;
+CONST
+  PAGE_WITHOUT_IMAGE = '<html><head><meta property="og:title" content="Not an Unsplash page"></head><body>No image</body></html>';
 var
-  Result: Boolean;
+  Server: TLocalHttpServer;
+  LocalFile, Page, Requests: string;
+  Found: Boolean;
 begin
-  // A non-Unsplash URL won't have the expected meta tags
-  // This may timeout or return False - both are acceptable
-  Result:= GetUnsplashImage('https://example.com',
-                            TPath.Combine(FTempDir, 'test.jpg'));
+  LocalFile:= TPath.Combine(FTempDir, 'test.jpg');
+  Server:= TLocalHttpServer.Create(PAGE_WITHOUT_IMAGE);
+  try
+    { The page must arrive, or GetUnsplashImage would leave through its "empty page" exit instead of the "no tag" exit }
+    Page:= DownloadAsString(Server.Url('/precheck'));
+    Found:= GetUnsplashImage(Server.Url('/photos/no-image'), LocalFile);
+    Server.Stop;
+    Requests:= Server.Requests;
+  finally
+    FreeAndNil(Server);
+  end;
 
-  Assert.IsFalse(Result, 'Should return False for non-Unsplash URL (no og:image meta tag)');
+  Assert.AreEqual(PAGE_WITHOUT_IMAGE, Page, 'The local server must deliver the page');
+  Assert.IsFalse(Found, 'A page without the og:image meta tag must give FALSE');
+  Assert.IsFalse(FileExists(LocalFile), 'No file may be written');
+  Assert.IsTrue(Pos('GET /photos/no-image HTTP/1.1', Requests) > 0, 'GetUnsplashImage must request the given URL. Requests: ' + Requests);
+  Assert.AreEqual(2, CountRequests(Requests), 'The precheck and the page, and no image download. Requests: ' + Requests);
 end;
 
 

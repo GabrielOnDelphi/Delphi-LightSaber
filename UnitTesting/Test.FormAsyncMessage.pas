@@ -45,41 +45,53 @@ type
 
     { MesajAsync Tests }
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestMesajAsync_CreatesForm;
 
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestMesajAsync_SetsCaption;
 
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestMesajAsync_SetsMessage;
 
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestMesajAsync_SetsBorderStyle;
 
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestMesajAsync_EnablesKeyPreview;
 
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestMesajAsync_WithPopupParent;
 
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestMesajAsync_WithoutPopupParent;
 
     { MessageAsync Alias Test }
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestMessageAsync_IsAlias;
 
     { Convenience Function Tests }
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestMessageInfoAsync_SetsInfoCaption;
 
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestMessageWarnAsync_SetsWarningCaption;
 
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestMesajWarnAsync_IsLegacyAlias;
 
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestMessageErrorAsync_SetsErrorCaption;
 
     { Form Behavior Tests }
@@ -100,12 +112,15 @@ type
 
     { Edge Case Tests }
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestMesajAsync_EmptyMessage;
 
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestMesajAsync_EmptyCaption;
 
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestMesajAsync_LongMessage;
   end;
 

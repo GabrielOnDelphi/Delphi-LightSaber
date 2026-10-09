@@ -122,7 +122,7 @@ uses
   LightVcl.Visual.RichLogUtils;
 
 type
-  { Reaches the protected field Indent }
+  { Reaches the protected fields Indent and RawLines }
   TRamLogAccess = class(TRamLog);
 
 
@@ -356,7 +356,7 @@ begin
   RamLog.AddMsgInt('Count: ', 42);
 
   Assert.AreEqual(1, RamLog.Count, 'AddMsgInt should add a message');
-  Assert.IsTrue(Pos('42', RamLog.Text_) > 0, 'Message should contain the integer');
+  Assert.AreEqual('Count: 42', RamLog.Text_, 'AddMsgInt must store the text followed by the number');
 end;
 
 
@@ -367,9 +367,22 @@ begin
   RamLog:= TRamLog.Create;
   FRamLog:= RamLog;
 
+  { At lvrInfos an info message is stored and the two lower levels are filtered out }
+  RamLog.Verbosity:= lvrInfos;
+  RamLog.AddMsgLvl('Verbose', lvrVerbose);
+  RamLog.AddMsgLvl('Hint', lvrHints);
   RamLog.AddMsgLvl('Test', lvrInfos);
+  Assert.AreEqual(1, RamLog.Count, 'At lvrInfos only the info message may be stored');
+  Assert.AreEqual('Test', RamLog.Text_, 'The info message must be stored as written');
+  { '#3#' is the level code AddInfo writes; it is saved to disk by SaveToStream and read back by GetLevel }
+  Assert.AreEqual('#3#Test', TRamLogAccess(RamLog).RawLines[0], 'lvrInfos must be routed to AddInfo');
 
-  Assert.AreEqual(1, RamLog.Count, 'AddMsgLvl should add a message');
+  { At lvrImportant the info message is filtered out, so it cannot have gone to AddImpo, AddWarn or AddError }
+  RamLog.Clear(FALSE);
+  RamLog.Verbosity:= lvrImportant;
+  RamLog.AddMsgLvl('Test', lvrInfos);
+  Assert.AreEqual(0, RamLog.Count, 'At lvrImportant an info message must be filtered out');
+  Assert.IsFalse(RamLog.HasWarnings, 'An info message must not set HasWarnings');
 end;
 
 

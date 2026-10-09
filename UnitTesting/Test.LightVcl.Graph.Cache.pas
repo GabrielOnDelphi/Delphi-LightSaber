@@ -249,19 +249,44 @@ end;
 
 { AddToCache / GetThumbFor Tests }
 
+{ A new TCacheObj starts with an empty DB (the constructor does not call LoadDB), so the first thumbnail is number 1: '000000001.JPG'.
+  ExtractThumbnail scales the 800x600 image to the default ThumbWidth of 128, so the thumbnail is 128x96 }
 procedure TTestGraphCache.TestGetThumbFor_NewImage_CreatesThumb;
 var
   Cache: TCacheObj;
   ThumbPath: string;
+  Jpg: TJPEGImage;
+  BMP: TBitmap;
+  Pixel: Integer;
 begin
   Cache:= TCacheObj.Create(FCacheFolder);
   try
     ThumbPath:= Cache.GetThumbFor(FTestImagePath);
-    Assert.IsNotEmpty(ThumbPath, 'Thumb path should not be empty');
+    Assert.AreEqual(Trail(FCacheFolder) + '000000001.JPG', ThumbPath, 'The first thumbnail must be 000000001.JPG in the cache folder');
     Assert.IsTrue(FileExists(ThumbPath), 'Thumbnail file should exist');
-    Assert.IsTrue(ThumbPath.StartsWith(Cache.CacheFolder), 'Thumb should be in cache folder');
   finally
     FreeAndNil(Cache);
+  end;
+
+  Jpg:= TJPEGImage.Create;
+  try
+    Jpg.LoadFromFile(ThumbPath);
+    Assert.AreEqual(128, Jpg.Width,  'The thumbnail must be ThumbWidth (128) wide');
+    Assert.AreEqual(96,  Jpg.Height, 'The 4:3 image must keep its ratio: 96 high');
+
+    BMP:= TBitmap.Create;
+    try
+      BMP.Assign(Jpg);
+      Pixel:= ColorToRGB(BMP.Canvas.Pixels[64, 48]);
+      { The source image is pure red; JPEG allows a few units of error per channel }
+      Assert.AreEqual(Double(255), Double(Pixel AND $FF),          Double(8), 'The thumbnail must be red (red channel)');
+      Assert.AreEqual(Double(0),   Double((Pixel SHR 8) AND $FF),  Double(8), 'The thumbnail must be red (green channel)');
+      Assert.AreEqual(Double(0),   Double((Pixel SHR 16) AND $FF), Double(8), 'The thumbnail must be red (blue channel)');
+    finally
+      FreeAndNil(BMP);
+    end;
+  finally
+    FreeAndNil(Jpg);
   end;
 end;
 
@@ -274,7 +299,10 @@ begin
   try
     ThumbPath1:= Cache.GetThumbFor(FTestImagePath);
     ThumbPath2:= Cache.GetThumbFor(FTestImagePath);  { Request same image again }
+    Assert.AreEqual(Trail(FCacheFolder) + '000000001.JPG', ThumbPath1, 'The first request must create thumbnail 1');
     Assert.AreEqual(ThumbPath1, ThumbPath2, 'Should return same cached thumbnail');
+    Assert.IsFalse(FileExists(Trail(FCacheFolder) + '000000002.JPG'), 'The second request must not create a second thumbnail');
+    Assert.AreEqual(0, Cache.ImagePosDB(FTestImagePath), 'The image must be in the DB once, at position 0');
   finally
     FreeAndNil(Cache);
   end;
@@ -343,9 +371,12 @@ var
 begin
   Cache:= TCacheObj.Create(FCacheFolder);
   try
-    Cache.GetThumbFor(FTestImagePath);  { Add to cache first }
+    Cache.GetThumbFor(FTestImagePath);   { Position 0 }
+    Cache.GetThumbFor(FTestImagePath2);  { Position 1 }
     Position:= Cache.ImagePosDB(LowerCase(FTestImagePath));
-    Assert.IsTrue(Position >= 0, 'Position should be >= 0 for existing image');
+    Assert.AreEqual(0, Position, 'The first image added must be at position 0');
+    Assert.AreEqual(1, Cache.ImagePosDB(LowerCase(FTestImagePath2)), 'The second image added must be at position 1');
+    Assert.AreEqual(1, Cache.ImagePosDB(UpperCase(FTestImagePath2)), 'The lookup must ignore the case of the path');
   finally
     FreeAndNil(Cache);
   end;
@@ -373,12 +404,15 @@ var
 begin
   Cache:= TCacheObj.Create(FCacheFolder);
   try
-    Cache.GetThumbFor(FTestImagePath);  { Add to cache first }
+    Cache.GetThumbFor(FTestImagePath);   { Thumbnail 1, position 0 }
+    Cache.GetThumbFor(FTestImagePath2);  { Thumbnail 2, position 1 }
+    Position:= Cache.ImagePosDB(LowerCase(FTestImagePath2), ShortPath);
+    Assert.AreEqual(1, Position, 'The second image must be at position 1');
+    Assert.AreEqual('000000002.JPG', ShortPath, 'ShortPath must be the name of the second thumbnail');
+
     Position:= Cache.ImagePosDB(LowerCase(FTestImagePath), ShortPath);
-    Assert.IsTrue(Position >= 0, 'Position should be >= 0');
-    Assert.IsNotEmpty(ShortPath, 'ShortPath should not be empty');
-    Assert.IsTrue(ShortPath.EndsWith('.JPG') OR ShortPath.EndsWith('.BMP'),
-      'ShortPath should have valid extension');
+    Assert.AreEqual(0, Position, 'The first image must be at position 0');
+    Assert.AreEqual('000000001.JPG', ShortPath, 'ShortPath must be the name of the first thumbnail');
   finally
     FreeAndNil(Cache);
   end;
@@ -394,10 +428,13 @@ var
 begin
   Cache:= TCacheObj.Create(FCacheFolder);
   try
-    Cache.GetThumbFor(FTestImagePath);  { Add to cache }
-    Cache.ImagePosDB(LowerCase(FTestImagePath), ShortPath);  { Get short name }
+    Cache.GetThumbFor(FTestImagePath);   { 000000001.JPG, position 0 }
+    Cache.GetThumbFor(FTestImagePath2);  { 000000002.JPG, position 1 }
+    Cache.ImagePosDB(LowerCase(FTestImagePath2), ShortPath);  { Get short name }
+    Assert.AreEqual('000000002.JPG', ShortPath, 'Precondition: the second thumbnail name');
     Position:= Cache.ThumbPosDB(LowerCase(ShortPath));
-    Assert.IsTrue(Position >= 0, 'Position should be >= 0 for existing thumb');
+    Assert.AreEqual(1, Position, 'The second thumbnail must be at position 1 (lookup ignores case)');
+    Assert.AreEqual(0, Cache.ThumbPosDB('000000001.JPG'), 'The first thumbnail must be at position 0');
   finally
     FreeAndNil(Cache);
   end;
@@ -582,18 +619,24 @@ end;
 procedure TTestGraphCache.TestMaintainCache_RemovesOrphanThumbs;
 var
   Cache: TCacheObj;
-  OrphanFile: string;
+  OrphanFile, ThumbPath: string;
   DeletedCount: Integer;
 begin
   Cache:= TCacheObj.Create(FCacheFolder);
   try
+    { A real entry first, so MaintainCache takes its non-empty-DB branch, which compares each file on disk with the DB }
+    ThumbPath:= Cache.GetThumbFor(FTestImagePath);
+    Assert.IsTrue(FileExists(ThumbPath), 'Precondition: the real thumbnail exists');
+
     { Create an orphan thumbnail file that's not in DB }
     OrphanFile:= TPath.Combine(FCacheFolder, 'orphan.jpg');
     TFile.WriteAllText(OrphanFile, 'fake data');
 
     DeletedCount:= Cache.MaintainCache;
-    Assert.IsTrue(DeletedCount >= 1, 'Should delete at least one orphan file');
+    Assert.AreEqual(1, DeletedCount, 'Exactly the one orphan file must be counted');
     Assert.IsFalse(FileExists(OrphanFile), 'Orphan file should be deleted');
+    Assert.IsTrue(FileExists(ThumbPath), 'The thumbnail that is in the DB must stay on disk');
+    Assert.AreEqual(0, Cache.ImagePosDB(FTestImagePath), 'The real entry must stay in the DB');
   finally
     FreeAndNil(Cache);
   end;
@@ -695,17 +738,19 @@ end;
 
 procedure TTestGraphCache.TestFormatName_GeneratesCorrectName;
 var
-  Cache: TCacheObj;
-  ThumbPath, ShortPath: string;
+  Cache: TCacheObjCracker;
+  ShortPath: string;
 begin
-  Cache:= TCacheObj.Create(FCacheFolder);
+  Cache:= TCacheObjCracker.Create(FCacheFolder);
   try
-    ThumbPath:= Cache.GetThumbFor(FTestImagePath);
+    Cache.GetThumbFor(FTestImagePath);
     Cache.ImagePosDB(LowerCase(FTestImagePath), ShortPath);
 
-    { Check that format is correct: 9 digits + extension }
-    Assert.AreEqual(13, Length(ShortPath), 'Should be 9 digits + 4 chars extension');
-    Assert.IsTrue(ShortPath[1] = '0', 'Should start with leading zeros');
+    { 9 digits with leading zeros + extension }
+    Assert.AreEqual('000000001.JPG', ShortPath, 'The first thumbnail name');
+    Assert.AreEqual('000000042.JPG', Cache.FormatName(42, 9), 'The example of the routine header');
+    Assert.AreEqual('123456789.JPG', Cache.FormatName(123456789, 9), 'A number of 9 digits needs no zeros');
+    Assert.AreEqual('00007.JPG',     Cache.FormatName(7, 5), 'NameLength sets the number of digits');
   finally
     FreeAndNil(Cache);
   end;

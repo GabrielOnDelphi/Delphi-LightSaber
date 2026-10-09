@@ -210,16 +210,18 @@ end;
 
 { TSendThread Tests }
 
+{ The caller sets URL and DestFile before Start, so the constructor must create the thread suspended.
+  TThread.AfterConstruction resumes a thread created with Create(FALSE), which clears Suspended
+  (c:\Delphi\Delphi 13\source\rtl\common\System.Classes.pas, TThread.AfterConstruction and TThread.InternalStart). }
 procedure TTestDownloadIndy.TestTSendThread_Create;
 var
   Thread: TSendThread;
 begin
   Thread:= TSendThread.Create;
   TRY
-    Assert.IsNotNull(Thread, 'Thread should be created');
-    Assert.AreEqual('', Thread.URL, 'URL should be empty initially');
-    Assert.AreEqual('', Thread.DestFile, 'DestFile should be empty initially');
-    Assert.AreEqual('', Thread.ErrorMsg, 'ErrorMsg should be empty initially');
+    Assert.IsTrue(Thread.Handle <> 0, 'The constructor must create the OS thread');
+    Assert.IsTrue(Thread.Suspended, 'The thread must wait for Start');
+    Assert.IsFalse(Thread.FreeOnTerminate, 'The caller frees the thread itself');
   FINALLY
     FreeAndNil(Thread);
   END;
@@ -243,7 +245,14 @@ begin
 end;
 
 
-{ Invalid URL Tests }
+{ Invalid URL Tests
+
+  The URL points at port 1 of the loopback address, where nothing listens: the request fails on this PC, with no
+  DNS lookup and no traffic leaving it. Plain http, so a missing OpenSSL DLL is not the cause either: TIdSSLIOHandlerSocketOpenSSL
+  ignores it in pass-through mode (c:\Delphi\Delphi 13\source\Indy10\Protocols\IdSSLOpenSSL.pas:2789-2790).
+  The connect fails with an Indy socket error: 10061 (connection refused), or 10013 when a firewall blocks the EXE. }
+CONST
+  UnreachableURL = 'http://127.0.0.1:1/file.txt';
 
 procedure TTestDownloadIndy.TestDownloadFile_InvalidURL_ReturnsFalse;
 var
@@ -254,11 +263,12 @@ begin
   TempFile:= GetTempFile('.txt');
 
   // An invalid/unreachable URL should return False with an error message
-  Result:= DownloadFile('https://invalid-domain-that-does-not-exist-12345.com/file.txt',
-                        '', TempFile, ErrorMsg);
+  Result:= DownloadFile(UnreachableURL, '', TempFile, ErrorMsg);
 
   Assert.IsFalse(Result, 'Should return False for invalid URL');
-  Assert.IsNotEmpty(ErrorMsg, 'ErrorMsg should contain error description');
+  Assert.AreEqual(1, Pos('Socket Error #', ErrorMsg), 'ErrorMsg must carry the socket error of the failed connect. Got: ' + ErrorMsg);
+  Assert.AreEqual(' (-1)', Copy(ErrorMsg, Length(ErrorMsg) - 4, 5), 'No HTTP response arrived, so the response code in ErrorMsg is -1. Got: ' + ErrorMsg);
+  Assert.IsTrue(NOT FileExists(TempFile) OR (LightCore.IO.GetFileSize(TempFile) = 0), 'Nothing may be written to the destination file');
 end;
 
 
@@ -271,11 +281,12 @@ begin
   TempFile:= GetTempFile('.txt');
 
   // An invalid/unreachable URL should return False with an error message
-  Result:= DownloadThread('https://invalid-domain-that-does-not-exist-12345.com/file.txt',
-                          TempFile, ErrorMsg);
+  Result:= DownloadThread(UnreachableURL, TempFile, ErrorMsg);
 
   Assert.IsFalse(Result, 'Should return False for invalid URL');
-  Assert.IsNotEmpty(ErrorMsg, 'ErrorMsg should contain error description');
+  Assert.AreEqual(1, Pos('Socket Error #', ErrorMsg), 'ErrorMsg must carry the socket error of the failed connect. Got: ' + ErrorMsg);
+  Assert.AreEqual(' (-1)', Copy(ErrorMsg, Length(ErrorMsg) - 4, 5), 'No HTTP response arrived, so the response code in ErrorMsg is -1. Got: ' + ErrorMsg);
+  Assert.IsFalse(FileExists(TempFile), 'DownloadThread saves the file only after a successful Get');
 end;
 
 

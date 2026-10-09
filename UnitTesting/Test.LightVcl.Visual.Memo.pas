@@ -25,6 +25,7 @@ uses
 
 type
   [TestFixture]
+  [Ignore('Shows a window on screen - not run')]
   TTesTLightMemo = class
   private
     FForm: TForm;

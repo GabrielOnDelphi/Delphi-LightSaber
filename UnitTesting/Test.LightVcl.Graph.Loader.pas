@@ -35,6 +35,7 @@ type
     procedure CreateTempJpgFile;
     procedure CreateTempGifFile;
     procedure CleanupTempFiles;
+    procedure AssertPixel(BMP: TBitmap; X, Y: Integer; Expected: TColor; Tolerance: Integer; const Msg: string);
   public
     [Setup]
     procedure Setup;
@@ -220,6 +221,20 @@ begin
 end;
 
 
+{ Compares the R, G and B of one pixel with Expected. Tolerance is the largest difference allowed per channel (0 = exact; a JPEG needs a few units). }
+procedure TTestGraphLoader.AssertPixel(BMP: TBitmap; X, Y: Integer; Expected: TColor; Tolerance: Integer; const Msg: string);
+var
+  Actual, Exp: Integer;
+begin
+  Actual:= ColorToRGB(BMP.Canvas.Pixels[X, Y]);
+  Exp:= ColorToRGB(Expected);
+  Assert.AreEqual(Double(Exp AND $FF),          Double(Actual AND $FF),          Double(Tolerance), Msg + ' (red channel)');
+  Assert.AreEqual(Double((Exp SHR 8) AND $FF),  Double((Actual SHR 8) AND $FF),  Double(Tolerance), Msg + ' (green channel)');
+  Assert.AreEqual(Double((Exp SHR 16) AND $FF), Double((Actual SHR 16) AND $FF), Double(Tolerance), Msg + ' (blue channel)');
+end;
+
+
+{ The test images have a 50x50 block of a second colour in the top-left corner, so a pixel test also catches a blank, mirrored or flipped result. }
 procedure TTestGraphLoader.CreateTempBmpFile;
 var
   Bmp: TBitmap;
@@ -232,6 +247,8 @@ begin
     Bmp.PixelFormat:= pf24bit;
     Bmp.Canvas.Brush.Color:= clRed;
     Bmp.Canvas.FillRect(Rect(0, 0, 100, 100));
+    Bmp.Canvas.Brush.Color:= clBlue;
+    Bmp.Canvas.FillRect(Rect(0, 0, 50, 50));
     Bmp.SaveToFile(FTempBmpFile);
   FINALLY
     FreeAndNil(Bmp);
@@ -250,6 +267,8 @@ begin
   TRY
     Png.Canvas.Brush.Color:= clBlue;
     Png.Canvas.FillRect(Rect(0, 0, 100, 100));
+    Png.Canvas.Brush.Color:= clYellow;
+    Png.Canvas.FillRect(Rect(0, 0, 50, 50));
     Png.SaveToFile(FTempPngFile);
   FINALLY
     FreeAndNil(Png);
@@ -270,6 +289,8 @@ begin
     Bmp.PixelFormat:= pf24bit;
     Bmp.Canvas.Brush.Color:= clGreen;
     Bmp.Canvas.FillRect(Rect(0, 0, 100, 100));
+    Bmp.Canvas.Brush.Color:= clWhite;
+    Bmp.Canvas.FillRect(Rect(0, 0, 50, 50));
 
     Jpg:= TJPEGImage.Create;
     TRY
@@ -310,6 +331,8 @@ begin
       Bmp.PixelFormat:= pf24bit;
       Bmp.Canvas.Brush.Color:= clYellow;
       Bmp.Canvas.FillRect(Rect(0, 0, 100, 100));
+      Bmp.Canvas.Brush.Color:= clNavy;
+      Bmp.Canvas.FillRect(Rect(0, 0, 50, 50));
       Gif.Add(Bmp);              { copies Bmp - we still own it }
     FINALLY
       FreeAndNil(Bmp);
@@ -345,6 +368,9 @@ begin
     Assert.IsNotNull(Bmp, 'LoadGraph should return a bitmap for valid BMP file');
     Assert.AreEqual(100, Bmp.Width, 'Width should be 100');
     Assert.AreEqual(100, Bmp.Height, 'Height should be 100');
+    AssertPixel(Bmp, 10, 10, clBlue, 0, 'Top-left block must be blue');
+    AssertPixel(Bmp, 75, 75, clRed,  0, 'Bottom-right must be red');
+    AssertPixel(Bmp, 75, 10, clRed,  0, 'Top-right must be red');
   FINALLY
     FreeAndNil(Bmp);
   END;
@@ -362,6 +388,9 @@ begin
     Assert.IsNotNull(Bmp, 'LoadGraph should return a bitmap for valid PNG file');
     Assert.AreEqual(100, Bmp.Width, 'Width should be 100');
     Assert.AreEqual(100, Bmp.Height, 'Height should be 100');
+    AssertPixel(Bmp, 10, 10, clYellow, 0, 'Top-left block must be yellow');
+    AssertPixel(Bmp, 75, 75, clBlue,   0, 'Bottom-right must be blue');
+    AssertPixel(Bmp, 10, 75, clBlue,   0, 'Bottom-left must be blue');
   FINALLY
     FreeAndNil(Bmp);
   END;
@@ -379,6 +408,10 @@ begin
     Assert.IsNotNull(Bmp, 'LoadGraph should return a bitmap for valid JPG file');
     Assert.AreEqual(100, Bmp.Width, 'Width should be 100');
     Assert.AreEqual(100, Bmp.Height, 'Height should be 100');
+    { JPEG is lossy: a few units of error per channel, far from the block edge }
+    AssertPixel(Bmp, 10, 10, clWhite, 8, 'Top-left block must be white');
+    AssertPixel(Bmp, 75, 75, clGreen, 8, 'Bottom-right must be green');
+    AssertPixel(Bmp, 75, 10, clGreen, 8, 'Top-right must be green');
   FINALLY
     FreeAndNil(Bmp);
   END;
@@ -524,6 +557,9 @@ begin
     Assert.IsNotNull(Bmp, 'LoadBMP should return a bitmap');
     Assert.AreEqual(100, Bmp.Width, 'Width should be 100');
     Assert.AreEqual(100, Bmp.Height, 'Height should be 100');
+    AssertPixel(Bmp, 10, 10, clBlue, 0, 'Top-left block must be blue');
+    AssertPixel(Bmp, 75, 75, clRed,  0, 'Bottom-right must be red');
+    AssertPixel(Bmp, 10, 75, clRed,  0, 'Bottom-left must be red');
   FINALLY
     FreeAndNil(Bmp);
   END;
@@ -554,6 +590,9 @@ begin
     Assert.IsNotNull(Bmp, 'LoadPNG should return a bitmap');
     Assert.AreEqual(100, Bmp.Width, 'Width should be 100');
     Assert.AreEqual(100, Bmp.Height, 'Height should be 100');
+    AssertPixel(Bmp, 10, 10, clYellow, 0, 'Top-left block must be yellow');
+    AssertPixel(Bmp, 75, 75, clBlue,   0, 'Bottom-right must be blue');
+    AssertPixel(Bmp, 75, 10, clBlue,   0, 'Top-right must be blue');
   FINALLY
     FreeAndNil(Bmp);
   END;
@@ -584,6 +623,10 @@ begin
     Assert.IsNotNull(Bmp, 'LoadJpg should return a bitmap');
     Assert.AreEqual(100, Bmp.Width, 'Width should be 100');
     Assert.AreEqual(100, Bmp.Height, 'Height should be 100');
+    { JPEG is lossy: a few units of error per channel, far from the block edge }
+    AssertPixel(Bmp, 10, 10, clWhite, 8, 'Top-left block must be white');
+    AssertPixel(Bmp, 75, 75, clGreen, 8, 'Bottom-right must be green');
+    AssertPixel(Bmp, 10, 75, clGreen, 8, 'Bottom-left must be green');
   FINALLY
     FreeAndNil(Bmp);
   END;
@@ -629,6 +672,11 @@ begin
   Bmp:= LoadGIF(FTempGifFile);
   TRY
     Assert.IsNotNull(Bmp, 'LoadGIF should return a bitmap');
+    Assert.AreEqual(100, Bmp.Width,  'Width should be 100');
+    Assert.AreEqual(100, Bmp.Height, 'Height should be 100');
+    AssertPixel(Bmp, 10, 10, clNavy,   0, 'Top-left block must be navy');
+    AssertPixel(Bmp, 75, 75, clYellow, 0, 'Bottom-right must be yellow');
+    AssertPixel(Bmp, 75, 10, clYellow, 0, 'Top-right must be yellow');
   FINALLY
     FreeAndNil(Bmp);
   END;
@@ -645,7 +693,9 @@ begin
   Bmp:= LoadGIF(FTempGifFile, FrameCount);
   TRY
     Assert.IsNotNull(Bmp, 'LoadGIF should return a bitmap');
-    Assert.IsTrue(FrameCount >= 1, 'FrameCount should be >= 1 for valid GIF');
+    Assert.AreEqual(Cardinal(1), FrameCount, 'A GIF with one frame must report FrameCount = 1');
+    AssertPixel(Bmp, 10, 10, clNavy,   0, 'The first frame must be loaded: top-left block navy');
+    AssertPixel(Bmp, 75, 75, clYellow, 0, 'The first frame must be loaded: bottom-right yellow');
   FINALLY
     FreeAndNil(Bmp);
   END;
@@ -717,6 +767,9 @@ begin
     Assert.IsNotNull(Bmp, 'loadGraphWic should return a bitmap');
     Assert.AreEqual(100, Bmp.Width, 'Width should be 100');
     Assert.AreEqual(100, Bmp.Height, 'Height should be 100');
+    AssertPixel(Bmp, 10, 10, clYellow, 0, 'Top-left block must be yellow');
+    AssertPixel(Bmp, 75, 75, clBlue,   0, 'Bottom-right must be blue');
+    AssertPixel(Bmp, 10, 75, clBlue,   0, 'Bottom-left must be blue');
   FINALLY
     FreeAndNil(Bmp);
   END;
@@ -843,7 +896,10 @@ begin
 
   BMP:= TBitmap.Create;
   TRY
-    BMP.SetSize(50, 50);                { Pre-existing dimensions to verify they survive }
+    BMP.SetSize(50, 50);                { Pre-existing dimensions and content to verify they survive }
+    BMP.PixelFormat:= pf24bit;
+    BMP.Canvas.Brush.Color:= clFuchsia;
+    BMP.Canvas.FillRect(Rect(0, 0, 50, 50));
 
     Assert.WillNotRaiseAny(
       procedure
@@ -854,6 +910,8 @@ begin
 
     Assert.AreEqual(50, BMP.Width, 'BMP dimensions should survive a failed load');
     Assert.AreEqual(50, BMP.Height, 'BMP dimensions should survive a failed load');
+    Assert.AreEqual(Ord(pf24bit), Ord(BMP.PixelFormat), 'BMP pixel format should survive a failed load');
+    AssertPixel(BMP, 25, 25, clFuchsia, 0, 'BMP content should survive a failed load');
   FINALLY
     FreeAndNil(BMP);
     DeleteFile(CorruptFile);
@@ -971,6 +1029,11 @@ begin
   TRY
     Assert.IsNotNull(Pic, 'LoadTPicture should return a picture');
     Assert.IsNotNull(Pic.Graphic, 'Picture should have a graphic');
+    Assert.IsTrue(Pic.Graphic is TBitmap, 'A .bmp file must load as TBitmap, not ' + Pic.Graphic.ClassName);
+    Assert.AreEqual(100, Pic.Width,  'Width should be 100');
+    Assert.AreEqual(100, Pic.Height, 'Height should be 100');
+    AssertPixel(Pic.Bitmap, 10, 10, clBlue, 0, 'Top-left block must be blue');
+    AssertPixel(Pic.Bitmap, 75, 75, clRed,  0, 'Bottom-right must be red');
   FINALLY
     FreeAndNil(Pic);
   END;

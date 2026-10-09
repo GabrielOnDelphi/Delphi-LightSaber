@@ -130,6 +130,63 @@ begin
 end;
 
 
+{ The text after LabelText on the report line that starts with LabelText (leading spaces and the tabs around the value removed).
+  Returns '<label not found>' when no line starts with LabelText. }
+function ReportValue(CONST Report, LabelText: string): string;
+VAR
+  Line: string;
+begin
+  for Line in Report.Split([#13#10]) do
+    if TrimLeft(Line).StartsWith(LabelText)
+    then EXIT(Trim(Copy(TrimLeft(Line), Length(LabelText) + 1, MaxInt)));
+  Result:= '<label not found>';
+end;
+
+
+{ Major.Minor.Build of the running Windows, as RtlGetVersion reports it }
+function ExpectedOsVersion: string;
+{$IFDEF MSWINDOWS}
+VAR
+  Info: TOSVersionInfoExW;
+begin
+  Info:= Default(TOSVersionInfoExW);
+  Info.dwOSVersionInfoSize:= SizeOf(Info);
+  Assert.AreEqual(0, RtlGetVersion(Info), 'RtlGetVersion failed');
+
+  Result:= IntToStr(Info.dwMajorVersion) + '.' + IntToStr(Info.dwMinorVersion);
+  if Info.dwBuildNumber > 0
+  then Result:= Result + '.' + IntToStr(Info.dwBuildNumber);
+end;
+{$ELSE}
+begin
+  Result:= '';
+end;
+{$ENDIF}
+
+
+{ The CPU name OsArchitecture must give, from GetNativeSystemInfo }
+function ExpectedOsArchitecture: string;
+{$IFDEF MSWINDOWS}
+VAR
+  Info: TSystemInfo;
+begin
+  Info:= Default(TSystemInfo);
+  GetNativeSystemInfo(Info);
+  case Info.wProcessorArchitecture of
+    PROCESSOR_ARCHITECTURE_INTEL: Result:= 'Intel/AMD x86 (32-bit)';
+    PROCESSOR_ARCHITECTURE_AMD64: Result:= 'Intel/AMD x64 (64-bit)';
+    PROCESSOR_ARCHITECTURE_ARM64: Result:= 'ARM (64-bit)';
+  else
+    Result:= 'Unidentified Architecture';
+  end;
+end;
+{$ELSE}
+begin
+  Result:= '';
+end;
+{$ENDIF}
+
+
 procedure TTestLightCorePlatform.Setup;
 begin
   { No setup needed }
@@ -154,19 +211,8 @@ end;
 
 procedure TTestLightCorePlatform.TestOsVersion_MatchesRtlGetVersion;
 {$IFDEF MSWINDOWS}
-var
-  Info: TOSVersionInfoExW;
-  Expected: string;
 begin
-  Info:= Default(TOSVersionInfoExW);
-  Info.dwOSVersionInfoSize:= SizeOf(Info);
-  Assert.AreEqual(0, RtlGetVersion(Info), 'RtlGetVersion failed');
-
-  Expected:= IntToStr(Info.dwMajorVersion) + '.' + IntToStr(Info.dwMinorVersion);
-  if Info.dwBuildNumber > 0
-  then Expected:= Expected + '.' + IntToStr(Info.dwBuildNumber);
-
-  Assert.AreEqual(Expected, OsVersion, 'OsVersion must be Major.Minor.Build as RtlGetVersion reports it');
+  Assert.AreEqual(ExpectedOsVersion, OsVersion, 'OsVersion must be Major.Minor.Build as RtlGetVersion reports it');
 end;
 {$ELSE}
 begin
@@ -179,20 +225,8 @@ end;
 
 procedure TTestLightCorePlatform.TestOsArchitecture_MatchesNativeSystemInfo;
 {$IFDEF MSWINDOWS}
-var
-  Info: TSystemInfo;
-  Expected: string;
 begin
-  Info:= Default(TSystemInfo);
-  GetNativeSystemInfo(Info);
-  case Info.wProcessorArchitecture of
-    PROCESSOR_ARCHITECTURE_INTEL: Expected:= 'Intel/AMD x86 (32-bit)';
-    PROCESSOR_ARCHITECTURE_AMD64: Expected:= 'Intel/AMD x64 (64-bit)';
-    PROCESSOR_ARCHITECTURE_ARM64: Expected:= 'ARM (64-bit)';
-  else
-    Expected:= 'Unidentified Architecture';
-  end;
-  Assert.AreEqual(Expected, OsArchitecture, 'OsArchitecture must name the CPU that GetNativeSystemInfo reports');
+  Assert.AreEqual(ExpectedOsArchitecture, OsArchitecture, 'OsArchitecture must name the CPU that GetNativeSystemInfo reports');
 end;
 {$ELSE}
 begin
@@ -225,7 +259,8 @@ begin
   then Assert.IsTrue(IsMobile, 'Android/iOS should be mobile')
   else
     if (OS = 'Windows') OR (OS = 'macOS') OR (OS = 'Linux')
-    then Assert.IsFalse(IsMobile, 'Desktop OS should not be mobile');
+    then Assert.IsFalse(IsMobile, 'Desktop OS should not be mobile')
+    else Assert.Fail('OsType returned "' + OS + '", which is no platform this library supports');
 end;
 
 
@@ -305,19 +340,30 @@ end;
 
 procedure TTestLightCorePlatform.TestGeneratePlatformRep_ContainsPlatform;
 begin
-  Assert.IsTrue(Pos('Platform:', GeneratePlatformRep) > 0);
+  { Expected value: the compile target, not TOSVersion that OsType reads }
+  Assert.AreEqual(CompileTargetOsName, ReportValue(GeneratePlatformRep, 'Platform:'), 'The Platform line must name the platform this EXE was compiled for');
 end;
 
 
 procedure TTestLightCorePlatform.TestGeneratePlatformRep_ContainsArchitecture;
 begin
-  Assert.IsTrue(Pos('Architecture:', GeneratePlatformRep) > 0);
+  {$IFDEF MSWINDOWS}
+  { Expected value: GetNativeSystemInfo, not TOSVersion that OsArchitecture reads }
+  Assert.AreEqual(ExpectedOsArchitecture, ReportValue(GeneratePlatformRep, 'OsArchitecture:'), 'The OsArchitecture line must name the CPU that GetNativeSystemInfo reports');
+  {$ELSE}
+  Assert.IsTrue(ReportValue(GeneratePlatformRep, 'OsArchitecture:').Contains('-bit'), 'The OsArchitecture line must name a bit width');
+  {$ENDIF}
 end;
 
 
 procedure TTestLightCorePlatform.TestGeneratePlatformRep_ContainsVersion;
 begin
-  Assert.IsTrue(Pos('OS Version:', GeneratePlatformRep) > 0);
+  {$IFDEF MSWINDOWS}
+  { Expected value: RtlGetVersion, not TOSVersion that OsVersion reads }
+  Assert.AreEqual(ExpectedOsVersion, ReportValue(GeneratePlatformRep, 'OS Version:'), 'The OS Version line must hold Major.Minor.Build as RtlGetVersion reports it');
+  {$ELSE}
+  Assert.IsTrue(CharInSet(ReportValue(GeneratePlatformRep, 'OS Version:')[1], ['0'..'9']), 'The OS Version value must start with a digit');
+  {$ENDIF}
 end;
 
 
@@ -330,20 +376,38 @@ end;
 
 
 procedure TTestLightCorePlatform.TestGenerateAppBitnessRep_ContainsBitness;
+var
+  Expected: string;
 begin
-  Assert.IsTrue(Pos('AppBitness:', GenerateAppBitnessRep) > 0);
+  if SizeOf(Pointer) = 8
+  then Expected:= '64bit'
+  else Expected:= '32bit';
+  Assert.AreEqual(Expected, ReportValue(GenerateAppBitnessRep, 'AppBitness:'), 'The AppBitness line must match the pointer size');
 end;
 
 
 procedure TTestLightCorePlatform.TestGenerateAppBitnessRep_ContainsIs64Bit;
+var
+  Expected: string;
 begin
-  Assert.IsTrue(Pos('Is64Bit:', GenerateAppBitnessRep) > 0);
+  { BoolToStr(B, TRUE) writes 'True' / 'False' }
+  if SizeOf(Pointer) = 8
+  then Expected:= 'True'
+  else Expected:= 'False';
+  Assert.AreEqual(Expected, ReportValue(GenerateAppBitnessRep, 'Is64Bit:'), 'The Is64Bit line must match the pointer size');
 end;
 
 
 procedure TTestLightCorePlatform.TestGenerateAppBitnessRep_ContainsIsMobile;
+var
+  Expected: string;
 begin
-  Assert.IsTrue(Pos('Is Mobile:', GenerateAppBitnessRep) > 0);
+  {$IF Defined(ANDROID) OR Defined(IOS)}
+  Expected:= 'True';
+  {$ELSE}
+  Expected:= 'False';
+  {$ENDIF}
+  Assert.AreEqual(Expected, ReportValue(GenerateAppBitnessRep, 'Is Mobile:'), 'The Is Mobile line must match the compile target');
 end;
 
 

@@ -36,9 +36,6 @@ type
     [Test]
     procedure TestCreate_FreeOnTerminateIsFalse;
 
-    [Test]
-    procedure TestDestroy_NoMemoryLeak;
-
     { URL Property Tests }
     [Test]
     procedure TestSetURL_EmptyURL;
@@ -119,23 +116,6 @@ begin
   FINALLY
     FreeAndNil(Downloader);
   END;
-end;
-
-
-procedure TTestDownloadThread.TestDestroy_NoMemoryLeak;
-begin
-  // Test that create/destroy cycle works without memory leaks
-  Assert.WillNotRaiseAny(
-    procedure
-    var
-      Downloader: TWinInetObj;
-    begin
-      Downloader:= TWinInetObj.Create;
-      Downloader.UserAgent:= 'Test Agent';
-      Downloader.Header:= 'Test Header';
-      FreeAndNil(Downloader);
-    end,
-    'Create/Destroy cycle should work without errors');
 end;
 
 

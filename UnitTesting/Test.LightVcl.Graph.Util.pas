@@ -23,6 +23,9 @@ type
     FBitmap: TBitmap;
     procedure CreateColorBitmap(Width, Height: Integer; Color: TColor);
     procedure CreateSolidBitmap24(Width, Height: Integer; R, G, B: Byte);
+    procedure SetPixel24(X, Y: Integer; R, G, B: Byte);
+    procedure AssertRGB(Color: TColor; R, G, B: Byte; const Msg: string);
+    procedure AssertPixel24(X, Y: Integer; R, G, B: Byte; const Msg: string);
   public
     [Setup]
     procedure Setup;
@@ -235,9 +238,6 @@ type
 
     { Theme Functions Tests }
     [Test]
-    procedure TestWindowsThemesEnabled_NoCrash;
-
-    [Test]
     procedure TestVclStylesEnabled_NoCrash;
 
     [Test]
@@ -296,6 +296,37 @@ begin
       Line[Col].B:= B;
     end;
   end;
+end;
+
+
+procedure TTestGraphUtil.SetPixel24(X, Y: Integer; R, G, B: Byte);
+var
+  Line: PRGB24Array;
+begin
+  Line:= FBitmap.ScanLine[Y];
+  Line[X].R:= R;
+  Line[X].G:= G;
+  Line[X].B:= B;
+end;
+
+
+{ Checks all three channels of Color, so a routine that gets only one channel right cannot pass }
+procedure TTestGraphUtil.AssertRGB(Color: TColor; R, G, B: Byte; const Msg: string);
+begin
+  Assert.AreEqual(Integer(R), Integer(GetRValue(Color)), Msg + ' (red channel)');
+  Assert.AreEqual(Integer(G), Integer(GetGValue(Color)), Msg + ' (green channel)');
+  Assert.AreEqual(Integer(B), Integer(GetBValue(Color)), Msg + ' (blue channel)');
+end;
+
+
+procedure TTestGraphUtil.AssertPixel24(X, Y: Integer; R, G, B: Byte; const Msg: string);
+var
+  Line: PRGB24Array;
+begin
+  Line:= FBitmap.ScanLine[Y];
+  Assert.AreEqual(Integer(R), Integer(Line[X].R), Msg + ' (red channel)');
+  Assert.AreEqual(Integer(G), Integer(Line[X].G), Msg + ' (green channel)');
+  Assert.AreEqual(Integer(B), Integer(Line[X].B), Msg + ' (blue channel)');
 end;
 
 
@@ -392,72 +423,44 @@ end;
 { ChangeBrightness Tests }
 
 procedure TTestGraphUtil.TestChangeBrightness_Increase;
-var
-  Result: TColor;
-  R: Byte;
 begin
-  Result:= ChangeBrightness(RGB(100, 100, 100), 50);
-  R:= GetRValue(Result);
-  Assert.AreEqual(Byte(150), R, 'Brightness should increase by 50');
+  { Each channel different, so a routine that mixes up or skips a channel fails }
+  AssertRGB(ChangeBrightness(RGB(100, 60, 30), 50), 150, 110, 80, 'Each channel must increase by 50');
 end;
 
 
 procedure TTestGraphUtil.TestChangeBrightness_Decrease;
-var
-  Result: TColor;
-  R: Byte;
 begin
-  Result:= ChangeBrightness(RGB(100, 100, 100), -50);
-  R:= GetRValue(Result);
-  Assert.AreEqual(Byte(50), R, 'Brightness should decrease by 50');
+  AssertRGB(ChangeBrightness(RGB(100, 60, 200), -50), 50, 10, 150, 'Each channel must decrease by 50');
 end;
 
 
 procedure TTestGraphUtil.TestChangeBrightness_ClampMax;
-var
-  Result: TColor;
-  R: Byte;
 begin
-  Result:= ChangeBrightness(RGB(200, 200, 200), 100);
-  R:= GetRValue(Result);
-  Assert.AreEqual(Byte(255), R, 'Brightness should clamp at 255');
+  { R and B overflow and clamp; G does not, so it proves the clamp is per channel }
+  AssertRGB(ChangeBrightness(RGB(200, 100, 160), 100), 255, 200, 255, 'Brightness should clamp at 255');
 end;
 
 
 procedure TTestGraphUtil.TestChangeBrightness_ClampMin;
-var
-  Result: TColor;
-  R: Byte;
 begin
-  Result:= ChangeBrightness(RGB(50, 50, 50), -100);
-  R:= GetRValue(Result);
-  Assert.AreEqual(Byte(0), R, 'Brightness should clamp at 0');
+  { R and B underflow and clamp; G does not }
+  AssertRGB(ChangeBrightness(RGB(50, 150, 30), -100), 0, 50, 0, 'Brightness should clamp at 0');
 end;
 
 
 { ChangeColor Tests }
 
+{ Odd source values make every half-way difference an integer (254/2, 154/2, 54/2), so Round has no .5 case to decide }
 procedure TTestGraphUtil.TestChangeColor_TowardsWhite;
-var
-  Result: TColor;
-  R: Byte;
 begin
-  Result:= ChangeColor(clBlack, clWhite, 50);
-  R:= GetRValue(Result);
-  { Black towards white at 50% should give mid-gray }
-  Assert.IsTrue((R >= 127) and (R <= 128), 'Should move towards white');
+  AssertRGB(ChangeColor(RGB(1, 101, 201), clWhite, 50), 128, 178, 228, 'Each channel must move half way towards white');
 end;
 
 
 procedure TTestGraphUtil.TestChangeColor_TowardsBlack;
-var
-  Result: TColor;
-  R: Byte;
 begin
-  Result:= ChangeColor(clWhite, clBlack, 50);
-  R:= GetRValue(Result);
-  { White towards black at 50% should give mid-gray }
-  Assert.IsTrue((R >= 127) and (R <= 128), 'Should move towards black');
+  AssertRGB(ChangeColor(RGB(254, 154, 54), clBlack, 50), 127, 77, 27, 'Each channel must move half way towards black');
 end;
 
 
@@ -486,7 +489,13 @@ end;
 
 procedure TTestGraphUtil.TestSimilarColor_OutsideTolerance;
 begin
-  Assert.IsFalse(SimilarColor(RGB(100, 100, 100), RGB(120, 100, 100), 10), 'Colors outside tolerance should not be similar');
+  { One unit past the tolerance, one channel at a time: each channel must be checked on its own }
+  Assert.IsFalse(SimilarColor(RGB(100, 100, 100), RGB(111, 100, 100), 10), 'Red 11 apart must not be similar');
+  Assert.IsFalse(SimilarColor(RGB(100, 100, 100), RGB(100, 111, 100), 10), 'Green 11 apart must not be similar');
+  Assert.IsFalse(SimilarColor(RGB(100, 100, 100), RGB(100, 100, 111), 10), 'Blue 11 apart must not be similar');
+  Assert.IsFalse(SimilarColor(RGB(111, 100, 100), RGB(100, 100, 100), 10), 'The difference must count in both directions');
+  { The boundary: a difference of exactly Tolerance is still similar (the routine compares with <=) }
+  Assert.IsTrue(SimilarColor(RGB(100, 100, 100), RGB(110, 90, 110), 10), 'A difference of exactly 10 is still similar');
 end;
 
 
@@ -699,15 +708,15 @@ end;
 
 { BlendColors Tests }
 
+{ BlendColors turns 50% into A = Round(2.55 * 50), which is 127 or 128 depending on the floating-point precision.
+  Each channel = Color2 + A * (Color1 - Color2) div 255. With an ODD difference d below 255, 127*d div 255 and 128*d div 255
+  are the same number, so these colours give one exact answer for both values of A:
+    R: 1   + 199 * A div 255 = 1   + 99  = 100
+    G: 31  + 69  * A div 255 = 31  + 34  = 65
+    B: 241 - 231 * A div 255 = 241 - 115 = 126 }
 procedure TTestGraphUtil.TestBlendColors_50Percent;
-var
-  Result: TColor;
-  R: Byte;
 begin
-  Result:= BlendColors(clBlack, clWhite, 50);
-  R:= GetRValue(Result);
-  { 50% blend should give mid-gray }
-  Assert.IsTrue((R >= 127) and (R <= 128), '50% blend should give mid-gray');
+  AssertRGB(BlendColors(RGB(200, 100, 10), RGB(1, 31, 241), 50), 100, 65, 126, '50% blend of each channel');
 end;
 
 
@@ -760,30 +769,33 @@ begin
 end;
 
 
+{ Each channel = BG + 128 * (FG - BG) div 255 (div truncates towards zero):
+    R: 0   + 128 * 200  div 255 = 0   + 100  = 100
+    G: 50  + 128 * 50   div 255 = 50  + 25   = 75
+    B: 250 + 128 * -240 div 255 = 250 - 120  = 130 }
 procedure TTestGraphUtil.TestMixColors_128_MidBlend;
-var
-  Result: TColor;
-  R, B: Byte;
 begin
-  Result:= MixColors(clRed, clBlue, 128);
-  R:= GetRValue(Result);
-  B:= GetBValue(Result);
-  { Mid blend should give balanced result }
-  Assert.IsTrue(R > 100, 'Red should be significant');
-  Assert.IsTrue(B > 100, 'Blue should be significant');
+  AssertRGB(MixColors(RGB(200, 100, 10), RGB(0, 50, 250), 128), 100, 75, 130, 'Mid blend of each channel');
 end;
 
 
 { ReplaceColor Tests }
 
+{ The match must be exact on all three channels: the neighbours differ from OldColor by 1 in one channel each and must stay }
 procedure TTestGraphUtil.TestReplaceColor_BasicCall;
 begin
-  CreateColorBitmap(10, 10, clRed);
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      ReplaceColor(FBitmap, clRed, clBlue);
-    end, 'Should not raise any exception');
+  CreateSolidBitmap24(10, 10, 200, 100, 50);
+  SetPixel24(1, 0, 201, 100, 50);
+  SetPixel24(2, 0, 200, 101, 50);
+  SetPixel24(3, 0, 200, 100, 51);
+
+  ReplaceColor(FBitmap, RGB(200, 100, 50), RGB(10, 20, 30));
+
+  AssertPixel24(0, 0, 10, 20, 30,   'The exact match must be replaced');
+  AssertPixel24(9, 9, 10, 20, 30,   'The exact match must be replaced in the last row too');
+  AssertPixel24(1, 0, 201, 100, 50, 'Red off by 1 must stay');
+  AssertPixel24(2, 0, 200, 101, 50, 'Green off by 1 must stay');
+  AssertPixel24(3, 0, 200, 100, 51, 'Blue off by 1 must stay');
 end;
 
 
@@ -823,14 +835,29 @@ end;
 
 { ReplaceColor with Tolerance Tests }
 
+{ A different tolerance per channel (10, 20, 30). Each pixel moves one channel just inside or just outside its own tolerance,
+  so a routine that swaps the tolerances, or ignores one, fails }
 procedure TTestGraphUtil.TestReplaceColorTolerance_BasicCall;
 begin
-  CreateColorBitmap(10, 10, clRed);
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      ReplaceColor(FBitmap, clRed, clBlue, 10, 10, 10);
-    end, 'Should not raise any exception');
+  CreateSolidBitmap24(10, 10, 0, 0, 0);
+  SetPixel24(0, 0, 209, 100, 50);    { R  9 away: inside 10 }
+  SetPixel24(1, 0, 211, 100, 50);    { R 11 away: outside 10 }
+  SetPixel24(2, 0, 200, 119, 50);    { G 19 away: inside 20 }
+  SetPixel24(3, 0, 200, 121, 50);    { G 21 away: outside 20 }
+  SetPixel24(4, 0, 200, 100, 79);    { B 29 away: inside 30 }
+  SetPixel24(5, 0, 200, 100, 81);    { B 31 away: outside 30 }
+  SetPixel24(6, 0, 191, 81, 21);     { all three inside, below OldColor }
+
+  ReplaceColor(FBitmap, RGB(200, 100, 50), RGB(10, 20, 30), 10, 20, 30);
+
+  AssertPixel24(0, 0, 10, 20, 30,   'R inside its tolerance must be replaced');
+  AssertPixel24(1, 0, 211, 100, 50, 'R outside its tolerance must stay');
+  AssertPixel24(2, 0, 10, 20, 30,   'G inside its tolerance must be replaced');
+  AssertPixel24(3, 0, 200, 121, 50, 'G outside its tolerance must stay');
+  AssertPixel24(4, 0, 10, 20, 30,   'B inside its tolerance must be replaced');
+  AssertPixel24(5, 0, 200, 100, 81, 'B outside its tolerance must stay');
+  AssertPixel24(6, 0, 10, 20, 30,   'A pixel below OldColor, inside all three tolerances, must be replaced');
+  AssertPixel24(9, 9, 0, 0, 0,      'Black is far from OldColor and must stay');
 end;
 
 
@@ -914,15 +941,21 @@ begin
 end;
 
 
+{ Rows 1 and 3 hold a colour, rows 0 and 2 are black. Fast mode reads only the odd rows (the routine's header), so it sees only the colour;
+  the normal mode averages all four rows, so it gets half of each channel }
 procedure TTestGraphUtil.TestGetAverageColor_FastMode;
 var
-  Result1, Result2: TColor;
+  Col: Integer;
 begin
-  { For uniform color, Fast mode should give same result as normal }
-  CreateSolidBitmap24(10, 10, 128, 128, 128);
-  Result1:= GetAverageColor(FBitmap, False);
-  Result2:= GetAverageColor(FBitmap, True);
-  Assert.AreEqual(Result1, Result2, 'Fast mode should give same result for uniform color');
+  CreateSolidBitmap24(10, 4, 0, 0, 0);
+  for Col:= 0 to 9 do
+  begin
+    SetPixel24(Col, 1, 200, 100, 50);
+    SetPixel24(Col, 3, 200, 100, 50);
+  end;
+
+  AssertRGB(GetAverageColor(FBitmap, True),  200, 100, 50, 'Fast mode must average only the odd rows');
+  AssertRGB(GetAverageColor(FBitmap, False), 100, 50,  25, 'Normal mode must average all rows');
 end;
 
 
@@ -993,28 +1026,30 @@ end;
 
 { GetDeviceColorDepth Tests }
 
+{ The screen's bits per pixel, read through a second API (EnumDisplaySettings) that the routine does not use }
 procedure TTestGraphUtil.TestGetDeviceColorDepth_ReturnsPositive;
+const
+  ENUM_CURRENT_SETTINGS = DWORD(-1);   { Not declared in Winapi.Windows; same value as C:\Projects\LightSaber\External\MonitorHelper.pas }
 var
   Depth: Integer;
+  DevMode: TDeviceMode;
 begin
   Depth:= GetDeviceColorDepth;
-  Assert.IsTrue(Depth > 0, 'Color depth should be positive');
-  Assert.IsTrue(Depth >= 8, 'Color depth should be at least 8');
+
+  FillChar(DevMode, SizeOf(DevMode), 0);
+  DevMode.dmSize:= SizeOf(DevMode);
+  Assert.IsTrue(EnumDisplaySettings(NIL, ENUM_CURRENT_SETTINGS, DevMode), 'EnumDisplaySettings must read the current display mode');
+  Assert.AreEqual(Integer(DevMode.dmBitsPerPel), Depth, 'The colour depth must match the current display mode');
 end;
 
 
 { Theme Functions Tests }
 
 { The test EXE loads no VCL style, so the active style is the plain Windows one (TUxThemeStyle): not custom,
-  and its GetSystemColor returns ColorToRGB of the colour asked for (c:\Delphi\Delphi 13\source\vcl\Vcl.Themes.pas, TUxThemeStyle.DoGetSystemColor). }
-procedure TTestGraphUtil.TestWindowsThemesEnabled_NoCrash;
-begin
-  { Measured 2026-10-08: FALSE in this console test EXE (TUxThemeStyle.GetEnabled needs comctl32 v6 and active themes).
-    The routine promises the value of TStyleManager.Enabled, so that is what it is compared with. }
-  Assert.AreEqual(TStyleManager.Enabled, WindowsThemesEnabled, 'WindowsThemesEnabled must return TStyleManager.Enabled');
-end;
-
-
+  and its GetSystemColor returns ColorToRGB of the colour asked for (c:\Delphi\Delphi 13\source\vcl\Vcl.Themes.pas, TUxThemeStyle.DoGetSystemColor).
+  WindowsThemesEnabled has no test: its body is Result:= TStyleManager.Enabled, which is FALSE in this test EXE
+  (TUxThemeStyle.GetEnabled needs comctl32 v6 and active themes), so a broken body returning FALSE would pass,
+  and making it TRUE means changing the global VCL style for every other test. }
 procedure TTestGraphUtil.TestVclStylesEnabled_NoCrash;
 begin
   Assert.IsFalse(VclStylesEnabled, 'The test EXE loads no custom VCL style');

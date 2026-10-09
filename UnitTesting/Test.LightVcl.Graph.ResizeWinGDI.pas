@@ -155,12 +155,18 @@ end;
 
 procedure TTestResizeWinGDI.TestResizeBitmapGDI_BasicCall;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      ResizeBitmapGDI(FSource, FDest, 100, 50);
-    end,
-    'ResizeBitmapGDI(FSource, FDest, 100, 50) must not raise');
+  { The Setup source is 200x100. Left half red, right half blue: a scaled image keeps both halves, a crop or a flip does not }
+  FSource.Canvas.Brush.Color:= clRed;
+  FSource.Canvas.FillRect(Rect(0, 0, 100, 100));
+  FSource.Canvas.Brush.Color:= clBlue;
+  FSource.Canvas.FillRect(Rect(100, 0, 200, 100));
+
+  ResizeBitmapGDI(FSource, FDest, 100, 50);
+
+  Assert.AreEqual(100, FDest.Width,  'Dest width should be 100');
+  Assert.AreEqual(50,  FDest.Height, 'Dest height should be 50');
+  Assert.AreEqual(IntToHex(Integer(clRed),  6), IntToHex(ColorToRGB(FDest.Canvas.Pixels[25, 25]) and $FFFFFF, 6), 'The left half must stay red');
+  Assert.AreEqual(IntToHex(Integer(clBlue), 6), IntToHex(ColorToRGB(FDest.Canvas.Pixels[75, 25]) and $FFFFFF, 6), 'The right half must stay blue');
 end;
 
 

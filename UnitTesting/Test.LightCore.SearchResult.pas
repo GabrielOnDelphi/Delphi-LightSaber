@@ -115,6 +115,34 @@ type
 
 implementation
 
+uses
+  System.Classes;
+
+TYPE
+  { A TSearchResult that writes its FileName into Log when it is destroyed, so a test can see whether an owner freed it }
+  TLoggedSearchResult = class(TSearchResult)
+  private
+    FLog: TStrings;
+  public
+    constructor Create(CONST aFileName: string; aLog: TStrings);
+    destructor Destroy; override;
+  end;
+
+
+constructor TLoggedSearchResult.Create(CONST aFileName: string; aLog: TStrings);
+begin
+  inherited Create(aFileName);
+  FLog:= aLog;
+end;
+
+
+destructor TLoggedSearchResult.Destroy;
+begin
+  FLog.Add(FileName);
+  inherited Destroy;
+end;
+
+
 { TTestSearchResult }
 
 procedure TTestSearchResult.Setup;
@@ -276,9 +304,10 @@ begin
   FSearchResult.AddNewPos(10, 1, '  var x: Integer;', 'x', 'Unused variable');
   Output:= FSearchResult.AsString;
 
-  Assert.IsTrue(Pos('Line 10', Output) > 0, 'Should contain line number');
-  Assert.IsTrue(Pos('var x: Integer;', Output) > 0, 'Should contain code line');
-  Assert.IsTrue(Pos('Unused variable', Output) > 0, 'Should contain warning');
+  { Header line, the trimmed code line, then 'Offender WarningMsg'; the last CRLF is removed }
+  Assert.AreEqual('   Line 10:'           + #13#10 +
+                  '   var x: Integer;'    + #13#10 +
+                  '   x Unused variable', Output);
 end;
 
 
@@ -290,10 +319,13 @@ begin
   FSearchResult.AddNewPos(20, 1, 'Line 20 code', '', 'Warning 2');
   Output:= FSearchResult.AsString;
 
-  Assert.IsTrue(Pos('Line 10', Output) > 0, 'Should contain first line number');
-  Assert.IsTrue(Pos('Line 20', Output) > 0, 'Should contain second line number');
-  Assert.IsTrue(Pos('Warning 1', Output) > 0, 'Should contain first warning');
-  Assert.IsTrue(Pos('Warning 2', Output) > 0, 'Should contain second warning');
+  { Each position gives 3 lines. The Offender is empty, so the third line is 3 spaces + ' ' + WarningMsg. }
+  Assert.AreEqual('   Line 10:'     + #13#10 +
+                  '   Line 10 code' + #13#10 +
+                  '    Warning 1'   + #13#10 +
+                  '   Line 20:'     + #13#10 +
+                  '   Line 20 code' + #13#10 +
+                  '    Warning 2', Output);
 end;
 
 
@@ -343,18 +375,38 @@ end;
 
 
 procedure TTestSearchResult.TestPositions_ReturnsListReference;
+var
+  List: TList<TIDEPosition>;
 begin
-  Assert.IsNotNull(FSearchResult.Positions);
-  Assert.IsTrue(FSearchResult.Positions is TList<TIDEPosition>);
+  List:= FSearchResult.Positions;
+  Assert.IsNotNull(List);
+  Assert.AreSame(List, FSearchResult.Positions, 'Every read must return the same list object');
+
+  { A list taken BEFORE the add sees the add: it is the object's own list, not a copy }
+  FSearchResult.AddNewPos(7, 3, 'code');
+  Assert.AreEqual(1, List.Count, 'The list read earlier must see the new position');
+  Assert.AreEqual(7, List[0].LinePos);
+
+  { A change made through the reference reaches the object }
+  List.Clear;
+  Assert.AreEqual(0, FSearchResult.Count, 'Clearing the returned list must clear the object''s positions');
 end;
 
 
 { TSearchResults Tests }
 
 procedure TTestSearchResult.TestSearchResults_Create;
+var
+  Fresh: TSearchResults;
 begin
-  Assert.IsNotNull(FSearchResults);
-  Assert.AreEqual(0, FSearchResults.Count);
+  Fresh:= TSearchResults.Create;
+  try
+    Assert.AreEqual(0, Fresh.Count, 'A new collection must be empty');
+    { TSearchResults declares no constructor, so it keeps the one of TObjectList<T>, which owns its items }
+    Assert.IsTrue(Fresh.OwnsObjects, 'A new collection must own the results it holds');
+  finally
+    FreeAndNil(Fresh);
+  end;
 end;
 
 
@@ -404,16 +456,23 @@ end;
 procedure TTestSearchResult.TestSearchResults_OwnsObjects;
 var
   SR: TSearchResult;
+  DestroyLog: TStringList;
 begin
-  { TObjectList should own objects by default - verify we can add and clear without leaks }
-  SR:= TSearchResult.Create('Test.pas');
-  SR.AddNewPos(1, 1, 'test');
+  DestroyLog:= TStringList.Create;
+  try
+    SR:= TLoggedSearchResult.Create('Test.pas', DestroyLog);
+    SR.AddNewPos(1, 1, 'test');
 
-  FSearchResults.Add(SR);
-  FSearchResults.Clear;
+    FSearchResults.Add(SR);
+    FSearchResults.Clear;
 
-  Assert.AreEqual(0, FSearchResults.Count);
-  { If there was a memory leak, it would be caught by leak detection tools }
+    Assert.AreEqual(0, FSearchResults.Count);
+    { The owner must have freed the result: its destructor wrote its FileName into the log }
+    Assert.AreEqual(1, DestroyLog.Count, 'Clear must free the result the collection owns');
+    Assert.AreEqual('Test.pas', DestroyLog[0]);
+  finally
+    FreeAndNil(DestroyLog);
+  end;
 end;
 
 

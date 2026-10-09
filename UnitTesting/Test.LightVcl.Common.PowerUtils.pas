@@ -132,11 +132,26 @@ end;
 
 { BatteryLeft Tests }
 
+{ Expected BatteryLeft from the documented codes: ACLineStatus 255 or BatteryLifePercent 255 = unknown (-1),
+  otherwise BatteryLifePercent (same page as above). A PC without a battery reports 255, so here only the -1 leg runs. }
+function ExpectedBatteryLeft(CONST SysPowerStatus: TSystemPowerStatus): Integer;
+begin
+  if (SysPowerStatus.ACLineStatus = 255) OR (SysPowerStatus.BatteryLifePercent = 255)
+  then Result:= -1
+  else Result:= SysPowerStatus.BatteryLifePercent;
+end;
+
+
 procedure TTestPowerUtils.TestBatteryLeft_ReturnsValidRange;
 var
   Battery: Integer;
+  SysPowerStatus: TSystemPowerStatus;
 begin
+  Assert.IsTrue(GetSystemPowerStatus(SysPowerStatus), 'GetSystemPowerStatus failed');
   Battery:= BatteryLeft;
+
+  Assert.AreEqual(ExpectedBatteryLeft(SysPowerStatus), Battery,
+    'BatteryLeft for ACLineStatus = ' + IntToStr(SysPowerStatus.ACLineStatus) + ', BatteryLifePercent = ' + IntToStr(SysPowerStatus.BatteryLifePercent));
   // Returns -1 if unknown, or 0-100 for percentage
   Assert.IsTrue((Battery >= -1) AND (Battery <= 100),
     'BatteryLeft should return -1 (unknown) or 0-100 (percentage)');
@@ -146,9 +161,17 @@ end;
 procedure TTestPowerUtils.TestBatteryLeft_NotAbove100;
 var
   Battery: Integer;
+  SysPowerStatus: TSystemPowerStatus;
 begin
+  Assert.IsTrue(GetSystemPowerStatus(SysPowerStatus), 'GetSystemPowerStatus failed');
   Battery:= BatteryLeft;
+
   Assert.IsTrue(Battery <= 100, 'BatteryLeft should never exceed 100%');
+
+  { The raw code 255 ("unknown") must never come through as a percentage }
+  if SysPowerStatus.BatteryLifePercent = 255
+  then Assert.AreEqual(-1, Battery, 'BatteryLifePercent 255 (unknown) must become -1')
+  else Assert.AreEqual(ExpectedBatteryLeft(SysPowerStatus), Battery, 'A known percentage is returned as it is, or -1 when the AC status is unknown');
 end;
 
 

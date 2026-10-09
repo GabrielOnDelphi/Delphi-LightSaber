@@ -89,6 +89,9 @@ IMPLEMENTATION
 
 USES
   System.IniFiles,
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  {$ENDIF}
   FMX.Forms, FMX.Graphics,
   LightFmx.Common.IniFile,
   FormScreenCapture, LightFmx.Visual.ScreenCapture;
@@ -292,24 +295,74 @@ begin
 end;
 
 
+{ Counts the pixels of Crop whose RGB differs from the pixel of Source at (X + OffsetX, Y + OffsetY).
+  The alpha byte is left out: GDI leaves it 0 in a screen capture. }
+function CountDifferentPixels(Source, Crop: FMX.Graphics.TBitmap; OffsetX, OffsetY: Integer): Integer;
+VAR
+  SrcData, CropData: TBitmapData;
+  X, Y: Integer;
+begin
+  Result:= 0;
+  Assert.IsTrue(Source.Map(TMapAccess.Read, SrcData), 'Source.Map failed');
+  TRY
+    Assert.IsTrue(Crop.Map(TMapAccess.Read, CropData), 'Crop.Map failed');
+    TRY
+      for Y:= 0 to Crop.Height - 1 do
+        for X:= 0 to Crop.Width - 1 do
+          if (SrcData.GetPixel(X + OffsetX, Y + OffsetY) AND $00FFFFFF) <> (CropData.GetPixel(X, Y) AND $00FFFFFF)
+          then Inc(Result);
+    FINALLY
+      Crop.Unmap(CropData);
+    END;
+  FINALLY
+    Source.Unmap(SrcData);
+  END;
+end;
+
+
 procedure TTestScreenCaptureManager.TestCaptureSelectedArea_ValidRect_AfterScreenshot;
 VAR
   Manager: TScreenCaptureManager;
   SelectRect: TRectF;
+  Cropped: FMX.Graphics.TBitmap;
+  {$IFDEF MSWINDOWS}
+  ScreenW, ScreenH: Integer;
+  {$ENDIF}
 begin
   Manager:= TScreenCaptureManager.Create;
   try
-    // First capture screen (only works on Windows with display)
     {$IFDEF MSWINDOWS}
+    { StartCapture copies the primary screen, whose size Windows reports through GetSystemMetrics }
+    ScreenW:= GetSystemMetrics(SM_CXSCREEN);
+    ScreenH:= GetSystemMetrics(SM_CYSCREEN);
     Manager.StartCapture;
 
-    // If screenshot was captured, test selection
-    if Assigned(Manager.Screenshot) AND NOT Manager.Screenshot.IsEmpty then
+    { A monitor that sleeps or is unplugged can switch the display mode in the middle of the capture (seen once: 1920 -> 1680 wide) }
+    if (ScreenW <> GetSystemMetrics(SM_CXSCREEN)) OR (ScreenH <> GetSystemMetrics(SM_CYSCREEN)) then
       begin
-        SelectRect:= TRectF.Create(10, 10, 110, 110);  // 100x100 selection
-        Assert.IsTrue(Manager.CaptureSelectedArea(SelectRect), 'Valid rect should succeed');
-        Assert.AreEqual(1, Manager.GetCapturedImages.Count, 'Should have one captured image');
+        Assert.Pass('The display mode changed during the capture');
+        EXIT;
       end;
+
+    Assert.IsFalse(Manager.Screenshot.IsEmpty, 'StartCapture must fill the screenshot');
+    Assert.AreEqual(ScreenW, Manager.Screenshot.Width,  'Screenshot width = primary screen width');
+    Assert.AreEqual(ScreenH, Manager.Screenshot.Height, 'Screenshot height = primary screen height');
+
+    SelectRect:= TRectF.Create(10, 10, 110, 110);  // 100x100 selection
+    Assert.IsTrue(Manager.CaptureSelectedArea(SelectRect), 'Valid rect should succeed');
+    Assert.AreEqual(1, Manager.GetCapturedImages.Count, 'Should have one captured image');
+
+    Cropped:= Manager.GetCapturedImages[0];
+    Assert.AreEqual(100, Cropped.Width,  'The crop is as wide as the selection');
+    Assert.AreEqual(100, Cropped.Height, 'The crop is as high as the selection');
+
+    { The crop is the screenshot area that starts at (10, 10), pixel for pixel }
+    Assert.AreEqual(0, CountDifferentPixels(Manager.Screenshot, Cropped, 10, 10), 'Pixels of the crop that differ from the screenshot at (10, 10)');
+
+    Assert.AreEqual(Double(10),  Double(Manager.LastSelectionRect.Left),   0.001, 'LastSelectionRect.Left');
+    Assert.AreEqual(Double(110), Double(Manager.LastSelectionRect.Bottom), 0.001, 'LastSelectionRect.Bottom');
+    {$ELSE}
+    Assert.Pass('StartCapture is tested on Windows only');
     {$ENDIF}
   finally
     FreeAndNil(Manager);

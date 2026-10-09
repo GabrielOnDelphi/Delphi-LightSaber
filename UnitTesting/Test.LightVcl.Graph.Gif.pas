@@ -17,6 +17,7 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.IOUtils,
+  Winapi.Windows,   { Before Vcl.Graphics: Winapi.Windows also declares a TBitmap }
   Vcl.Graphics;
 
 type
@@ -190,17 +191,45 @@ begin
 end;
 
 
+{ The GDI objects (bitmaps, device contexts, palettes) that this process holds now }
+function GdiObjectCount: Cardinal;
+begin
+  Result:= GetGuiResources(GetCurrentProcess, GR_GDIOBJECTS);
+end;
+
+
+{ An opened loader holds GDI objects. Open draws the first frame through the renderer, and TGIFRenderer.RenderFrame
+  (c:\Delphi\Delphi 13\source\vcl\Vcl.Imaging.GIFImg.pas) fills the renderer's buffer bitmap (TGIFRenderer.FBuffer) with the
+  palette and the bitmap of the frame (TGIFFrame.Palette, TGIFFrame.Bitmap), which belong to the TGIFImage.
+  A destructor that does not free GIFImg or Renderer leaves them behind, and the count after Free shows it. }
 procedure TTestGraphGif.TestGifLoader_Destroy_NoException;
 var
   Loader: TGifLoader;
+  Opened: Boolean;
+  Before, WhileOpen: Cardinal;
 begin
+  { Warm-up: the first GIF drawn in the process may create GDI objects that the VCL keeps for later }
+  Loader:= TGifLoader.Create;
+  TRY
+    Assert.IsTrue(Loader.Open(FAnimatedGifPath), 'Precondition: the 3-frame GIF opens');
+  FINALLY
+    FreeAndNil(Loader);
+  END;
+
+  Before:= GdiObjectCount;
+  Loader:= TGifLoader.Create;
+  Opened:= Loader.Open(FAnimatedGifPath);
+  WhileOpen:= GdiObjectCount;
   Assert.WillNotRaiseAny(
     procedure
     begin
-      Loader:= TGifLoader.Create;
       FreeAndNil(Loader);
     end,
-    'Loader:= TGifLoader.Create must not raise');
+    'TGifLoader.Destroy must not raise');
+
+  Assert.IsTrue(Opened, 'Precondition: the 3-frame GIF opens');
+  Assert.IsTrue(WhileOpen > Before, 'Precondition: an opened loader holds GDI objects. Before: ' + IntToStr(Before) + ', while open: ' + IntToStr(WhileOpen));
+  Assert.AreEqual(Before, GdiObjectCount, 'TGifLoader.Destroy must free every GDI object the loader made (GIFImg and Renderer)');
 end;
 
 

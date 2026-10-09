@@ -197,10 +197,14 @@ var
   Data: TBytes;
   ErrorCode: Cardinal;
 begin
+  { The guard for an empty or blank URL returns ERROR_INTERNET_UNRECOGNIZED_SCHEME = INTERNET_ERROR_BASE + 6 = 12000 + 6 (c:\Delphi\Delphi 13\source\rtl\win\Winapi.WinInet.pas:2426, :2438) before WinINet is called }
   ErrorCode:= DownloadBytes('', '', Data);
+  Assert.AreEqual(Cardinal(12006), ErrorCode, 'Empty URL must return ERROR_INTERNET_UNRECOGNIZED_SCHEME');
+  Assert.AreEqual(0, Length(Data), 'A failed download must return no data');
 
-  { Empty URL should return an error (ERROR_INTERNET_UNRECOGNIZED_SCHEME or similar) }
-  Assert.AreNotEqual(Cardinal(ERROR_SUCCESS), ErrorCode, 'Empty URL should return error code');
+  ErrorCode:= DownloadBytes('   ', '', Data);
+  Assert.AreEqual(Cardinal(12006), ErrorCode, 'A blank URL must return ERROR_INTERNET_UNRECOGNIZED_SCHEME');
+  Assert.AreEqual(0, Length(Data), 'A failed download must return no data');
 end;
 
 

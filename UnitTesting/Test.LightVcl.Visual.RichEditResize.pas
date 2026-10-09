@@ -26,6 +26,7 @@ uses
 
 type
   [TestFixture]
+  [Ignore('Shows a window on screen - not run')]
   TTestRichEditResize = class
   private
     FForm: TForm;

@@ -64,6 +64,7 @@ type
 implementation
 
 uses
+  System.Rtti,
   LightFmx.Common.Helpers;
 
 
@@ -197,9 +198,13 @@ begin
     EXIT;
   end;
 
+  { Another text first, so the read-back below can only match after a real write }
+  ClipboardService.SetClipboard('Text before the test');
+
   // Test copying text
   CopyResult:= CopyToClipboard('Test clipboard text');
   Assert.IsTrue(CopyResult, 'CopyToClipboard should return True when clipboard is available');
+  Assert.AreEqual('Test clipboard text', ClipboardService.GetClipboard.ToString, 'The text must be on the clipboard');
 end;
 
 
@@ -208,6 +213,7 @@ var
   ClipboardService: IFMXClipboardService;
   ClipboardAvailable: Boolean;
   CopyResult: Boolean;
+  ClipValue: TValue;
 begin
   ClipboardAvailable:= TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, ClipboardService);
 
@@ -217,9 +223,18 @@ begin
     EXIT;
   end;
 
+  { Another text first, so the empty read-back below can only come from the write }
+  ClipboardService.SetClipboard('Text before the test');
+
   // Empty string should still succeed (copies empty text to clipboard)
   CopyResult:= CopyToClipboard('');
   Assert.IsTrue(CopyResult, 'CopyToClipboard should succeed with empty string');
+
+  { An empty TEXT is on the clipboard, not "nothing": GetClipboard returns TValue.Empty only when no text and no image is there
+    (c:\Delphi\Delphi 13\source\fmx\FMX.Clipboard.Win.pas:114-121) }
+  ClipValue:= ClipboardService.GetClipboard;
+  Assert.IsFalse(ClipValue.IsEmpty, 'An empty text must still be on the clipboard');
+  Assert.AreEqual('', ClipValue.AsString, 'The old text must be replaced by the empty one');
 end;
 
 

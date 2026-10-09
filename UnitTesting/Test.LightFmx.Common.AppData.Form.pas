@@ -148,6 +148,18 @@ begin
   end;
 end;
 
+{ The tags MainFormCaption appends after the caption, one per active mode, read from AppData's own flags }
+function ExpectedCaptionTags: string;
+begin
+  Result:= '';
+  if AppData.RunningHome    then Result:= Result + ' [Running home]';
+  if AppData.BetaTesterMode then Result:= Result + ' [BetaTesterMode]';
+  {$IFDEF DEBUG}
+  Result:= Result + ' [Debug]';
+  {$ENDIF}
+end;
+
+
 procedure TTestLightForm.TestMainFormCaption_EmptyCaption;
 var
   Form: TLightForm;
@@ -162,11 +174,11 @@ begin
   try
     Form.MainFormCaption('');
 
-    // When caption is empty, just AppName should be shown (plus debug/running home suffixes)
-    Assert.IsTrue(Pos(AppData.AppName, Form.Caption) > 0,
-      'Caption should contain AppName when empty caption passed');
+    // When caption is empty, just AppName is shown, with no ' - ' separator, then the tags
+    Assert.AreEqual(AppData.AppName + ExpectedCaptionTags, Form.Caption,
+      'An empty caption gives the AppName and the tags only');
   finally
-    Form.Free;
+    FreeAndNil(Form);
   end;
 end;
 
@@ -184,15 +196,11 @@ begin
   try
     Form.MainFormCaption('Test Caption');
 
-    // Should contain both AppName and the custom caption
-    Assert.IsTrue(Pos(AppData.AppName, Form.Caption) > 0,
-      'Caption should contain AppName');
-    Assert.IsTrue(Pos('Test Caption', Form.Caption) > 0,
-      'Caption should contain custom text');
-    Assert.IsTrue(Pos(' - ', Form.Caption) > 0,
-      'Caption should contain separator');
+    // AppName, the separator, the custom caption, then the tags - in this order
+    Assert.AreEqual(AppData.AppName + ' - Test Caption' + ExpectedCaptionTags, Form.Caption,
+      'Caption must be "AppName - caption" followed by the tags');
   finally
-    Form.Free;
+    FreeAndNil(Form);
   end;
 end;
 

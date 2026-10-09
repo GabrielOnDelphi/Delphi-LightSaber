@@ -186,12 +186,18 @@ end;
 
 procedure TTestGraphResizeWinWIC.TestResizeBitmapWic_BasicCall;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      ResizeBitmapWic(FBitmap, 100, 50);
-    end,
-    'ResizeBitmapWic(FBitmap, 100, 50) must not raise');
+  { The Setup bitmap is 200x100. Left half red, right half blue: a scaled image keeps both halves, a crop or a flip does not }
+  FBitmap.Canvas.Brush.Color:= clRed;
+  FBitmap.Canvas.FillRect(Rect(0, 0, 100, 100));
+  FBitmap.Canvas.Brush.Color:= clBlue;
+  FBitmap.Canvas.FillRect(Rect(100, 0, 200, 100));
+
+  ResizeBitmapWic(FBitmap, 100, 50);
+
+  Assert.AreEqual(100, FBitmap.Width,  'Width should be 100');
+  Assert.AreEqual(50,  FBitmap.Height, 'Height should be 50');
+  Assert.AreEqual(IntToHex(Integer(clRed),  6), IntToHex(ColorToRGB(FBitmap.Canvas.Pixels[25, 25]) and $FFFFFF, 6), 'The left half must stay red');
+  Assert.AreEqual(IntToHex(Integer(clBlue), 6), IntToHex(ColorToRGB(FBitmap.Canvas.Pixels[75, 25]) and $FFFFFF, 6), 'The right half must stay blue');
 end;
 
 

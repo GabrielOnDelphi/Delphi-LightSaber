@@ -154,6 +154,14 @@ implementation
 uses
   LightVcl.Visual.CalendarCanvas;
 
+
+{ The date and the time, so a failed date assertion shows both and a stray time fraction is seen too }
+function DateStr(CONST aDate: TDateTime): string;
+begin
+  Result:= FormatDateTime('yyyy-mm-dd hh:nn:ss', aDate);
+end;
+
+
 { Setup and TearDown }
 
 procedure TTestCalendarCanvas.Setup;
@@ -397,11 +405,12 @@ var
 begin
   Calendar:= TCalendarCanvas.Create(FBitmap.Canvas);
   try
-    { Jan 7, 2024 is a Sunday; week should start on Sunday (US) or Monday (ISO) }
+    { Jan 7, 2024 is a Sunday. WkStartMonday is FALSE by default, so the week starts on Sunday:
+      a Sunday is the first day of its own week }
     TestDate:= EncodeDate(2024, 1, 7);
     ResultDate:= Calendar.WeeksFirstDay(TestDate);
-    { US week starts Sunday, so result should be Jan 7 }
-    Assert.IsTrue(DayOfWeek(ResultDate) = 1, 'Week should start on Sunday (US format)');
+    Assert.AreEqual('2024-01-07 00:00:00', DateStr(ResultDate), 'A Sunday starts its own week (US format)');
+    Assert.AreEqual(1, DayOfWeek(ResultDate), 'Week should start on Sunday (US format)');
   finally
     FreeAndNil(Calendar);
   end;
@@ -414,12 +423,11 @@ var
 begin
   Calendar:= TCalendarCanvas.Create(FBitmap.Canvas);
   try
-    { Jan 10, 2024 is a Wednesday }
+    { Jan 10, 2024 is a Wednesday. The US week (WkStartMonday FALSE, the default) runs Sunday Jan 7 to Saturday Jan 13 }
     TestDate:= EncodeDate(2024, 1, 10);
     ResultDate:= Calendar.WeeksFirstDay(TestDate);
-    { Should go back to Sunday Jan 7 }
-    Assert.IsTrue(ResultDate < TestDate, 'Week start should be before Wednesday');
-    Assert.IsTrue(DayOfWeek(ResultDate) = 1, 'Week should start on Sunday');
+    Assert.AreEqual('2024-01-07 00:00:00', DateStr(ResultDate), 'The week of Wednesday Jan 10 starts on Sunday Jan 7');
+    Assert.AreEqual(1, DayOfWeek(ResultDate), 'Week should start on Sunday');
   finally
     FreeAndNil(Calendar);
   end;
@@ -432,12 +440,11 @@ var
 begin
   Calendar:= TCalendarCanvas.Create(FBitmap.Canvas);
   try
-    { Jan 7, 2024 is a Sunday }
+    { Jan 7, 2024 is a Sunday. The US week (WkStartMonday FALSE, the default) runs Sunday Jan 7 to Saturday Jan 13 }
     TestDate:= EncodeDate(2024, 1, 7);
     ResultDate:= Calendar.WeeksLastDay(TestDate);
-    { Should go forward to Saturday Jan 13 }
-    Assert.IsTrue(ResultDate > TestDate, 'Week end should be after Sunday');
-    Assert.IsTrue(DayOfWeek(ResultDate) = 7, 'Week should end on Saturday');
+    Assert.AreEqual('2024-01-13 00:00:00', DateStr(ResultDate), 'The week of Sunday Jan 7 ends on Saturday Jan 13');
+    Assert.AreEqual(7, DayOfWeek(ResultDate), 'Week should end on Saturday');
   finally
     FreeAndNil(Calendar);
   end;
@@ -450,12 +457,11 @@ var
 begin
   Calendar:= TCalendarCanvas.Create(FBitmap.Canvas);
   try
-    { Jan 10, 2024 is a Wednesday }
+    { Jan 10, 2024 is a Wednesday. The US week (WkStartMonday FALSE, the default) runs Sunday Jan 7 to Saturday Jan 13 }
     TestDate:= EncodeDate(2024, 1, 10);
     ResultDate:= Calendar.WeeksLastDay(TestDate);
-    { Should go forward to Saturday Jan 13 }
-    Assert.IsTrue(ResultDate > TestDate, 'Week end should be after Wednesday');
-    Assert.IsTrue(DayOfWeek(ResultDate) = 7, 'Week should end on Saturday');
+    Assert.AreEqual('2024-01-13 00:00:00', DateStr(ResultDate), 'The week of Wednesday Jan 10 ends on Saturday Jan 13');
+    Assert.AreEqual(7, DayOfWeek(ResultDate), 'Week should end on Saturday');
   finally
     FreeAndNil(Calendar);
   end;
@@ -500,14 +506,21 @@ end;
 procedure TTestCalendarCanvas.TestDayOfYear_Today;
 var
   Calendar: TCalendarCanvas;
-  Y, M, D: Word;
   ExpectedDay: Integer;
 begin
   Calendar:= TCalendarCanvas.Create(FBitmap.Canvas);
   try
-    DecodeDate(Date, Y, M, D);
-    ExpectedDay:= CalculateDayOfYear(Y, M, D);
-    Assert.AreEqual(ExpectedDay, Calendar.DayOfYear, 'DayOfYear should match calculated value');
+    { The constructor sets CalendarDate to today. The RTL's System.DateUtils.DayOfTheYear is the independent source.
+      CalendarDate (not a second call to Date) is the input, so a run across midnight cannot fail. }
+    ExpectedDay:= DayOfTheYear(Calendar.CalendarDate);
+    Assert.AreEqual(ExpectedDay, Calendar.DayOfYear, 'DayOfYear of today must match System.DateUtils.DayOfTheYear');
+
+    { Fixed dates whose month and day differ, so a swap of month and day is seen on any day the test runs }
+    Calendar.CalendarDate:= EncodeDate(2024, 3, 1);
+    Assert.AreEqual(61, Calendar.DayOfYear, 'Mar 1 2024 is day 61 (31 Jan + 29 Feb + 1)');
+
+    Calendar.CalendarDate:= EncodeDate(2023, 12, 31);
+    Assert.AreEqual(365, Calendar.DayOfYear, 'Dec 31 2023 is day 365 (not a leap year)');
   finally
     FreeAndNil(Calendar);
   end;
@@ -554,9 +567,9 @@ begin
   Calendar:= TCalendarCanvas.Create(FBitmap.Canvas);
   try
     Calendar.CalendarDate:= EncodeDate(2024, 1, 1);
-    { Jan 1, 2024 is a Monday, so it's week 1 }
-    Assert.IsTrue(Calendar.WeekNumber >= 1, 'Week number should be at least 1');
-    Assert.IsTrue(Calendar.WeekNumber <= 53, 'Week number should be at most 53');
+    { Jan 1, 2024 is a Monday. ISO 8601 puts it in week 1 (the week that holds the first Thursday).
+      The product's default rule (WkStartMonday FALSE: weeks start on Sunday, week 1 starts Sunday Dec 31 2023) gives 1 too. }
+    Assert.AreEqual(1, Calendar.WeekNumber, 'Jan 1 2024 is in week 1');
   finally
     FreeAndNil(Calendar);
   end;
@@ -569,9 +582,9 @@ begin
   Calendar:= TCalendarCanvas.Create(FBitmap.Canvas);
   try
     Calendar.CalendarDate:= EncodeDate(2024, 6, 15);
-    { Mid-June should be around week 24-25 }
-    Assert.IsTrue(Calendar.WeekNumber >= 20, 'Week number should be around 24');
-    Assert.IsTrue(Calendar.WeekNumber <= 30, 'Week number should be around 24');
+    { Saturday Jun 15 2024 is day 167 of the year. ISO 8601 (week 1 starts Monday Jan 1 2024) gives week 24 (Jun 10-16).
+      The product's default rule (WkStartMonday FALSE: week 1 starts Sunday Dec 31 2023) gives 167 div 7 + 1 = 24 (Jun 9-15). }
+    Assert.AreEqual(24, Calendar.WeekNumber, 'Jun 15 2024 is in week 24');
   finally
     FreeAndNil(Calendar);
   end;
@@ -667,11 +680,10 @@ begin
   try
     Calendar.WkStartMonday:= True;
 
-    { Jan 10, 2024 is a Wednesday }
+    { Jan 10, 2024 is a Wednesday. The ISO 8601 week (Monday first) runs Monday Jan 8 to Sunday Jan 14 }
     TestDate:= EncodeDate(2024, 1, 10);
     ResultDate:= Calendar.WeeksFirstDay(TestDate);
-    { German week starts Monday, so result should be Monday Jan 8 }
-    Assert.IsTrue(ResultDate < TestDate, 'Week start should be before Wednesday');
+    Assert.AreEqual('2024-01-08 00:00:00', DateStr(ResultDate), 'The German week of Wednesday Jan 10 starts on Monday Jan 8');
     Assert.AreEqual(2, DayOfWeek(ResultDate), 'Week should start on Monday (DayOfWeek=2)');
   finally
     FreeAndNil(Calendar);
@@ -687,11 +699,10 @@ begin
   try
     Calendar.WkStartMonday:= True;
 
-    { Jan 10, 2024 is a Wednesday }
+    { Jan 10, 2024 is a Wednesday. The ISO 8601 week (Monday first) runs Monday Jan 8 to Sunday Jan 14 }
     TestDate:= EncodeDate(2024, 1, 10);
     ResultDate:= Calendar.WeeksLastDay(TestDate);
-    { German week ends Sunday, so result should be Sunday Jan 14 }
-    Assert.IsTrue(ResultDate > TestDate, 'Week end should be after Wednesday');
+    Assert.AreEqual('2024-01-14 00:00:00', DateStr(ResultDate), 'The German week of Wednesday Jan 10 ends on Sunday Jan 14');
     Assert.AreEqual(1, DayOfWeek(ResultDate), 'Week should end on Sunday (DayOfWeek=1)');
   finally
     FreeAndNil(Calendar);

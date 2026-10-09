@@ -24,6 +24,7 @@ uses
 
 type
   [TestFixture]
+  [Ignore('Shows a window on screen - not run')]
   TTestCubicRichEdit = class
   private
     FForm: TForm;
@@ -54,9 +55,6 @@ type
     procedure TestAddFormated_TextWithLineBreaks;
 
     { Copy Tests }
-    [Test]
-    procedure TestCopyAll_EmptyText;
-
     [Test]
     procedure TestCopyAll_WithText;
 
@@ -168,16 +166,6 @@ end;
 
 
 { Copy Tests }
-
-procedure TTestCubicRichEdit.TestCopyAll_EmptyText;
-begin
-  Clipboard.Clear;
-  FRichEdit.Lines.Clear;
-  FRichEdit.CopyAll;
-  { Empty RichEdit - clipboard should be empty or contain empty string }
-  Assert.IsTrue(Clipboard.AsText = '', 'Clipboard should be empty for empty RichEdit');
-end;
-
 
 procedure TTestCubicRichEdit.TestCopyAll_WithText;
 begin

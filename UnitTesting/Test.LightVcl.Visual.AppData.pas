@@ -65,6 +65,7 @@ type
     procedure TestFormLogExists;
 
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestFormLogNotMainForm;
 
     { Font Tests }
@@ -102,6 +103,7 @@ type
     procedure TestMinimize;
 
     [Test]
+    [Ignore('Shows a window on screen - not run')]
     procedure TestRestore;
 
     { Startup Tests }
@@ -151,36 +153,73 @@ end;
 
 
 { Version Info Tests
-  This unit is linked by more than one test EXE, so the expected version is read from the running EXE itself,
-  straight through GetFileVersionInfo/VerQueryValue - not through LightCore.ExeVersion, which the routines under test use.
+  This unit is linked by more than one test EXE, so the expected version is read from the running EXE itself.
+  The routines under test go through LightCore.ExeVersion, which calls GetFileVersionInfo + VerQueryValue. The tests do not:
+  they read the raw RT_VERSION resource of the EXE module and find VS_FIXEDFILEINFO by its signature.
   Tests_LightVcl.Visual.dproj gives its EXE the version 1.2.3.4 (four different numbers, so a routine that returns
   the wrong field fails), linked by the $R *.res line in Tests_LightVcl.Visual.dpr. That EXE must always take the real leg. }
 CONST
   VersionedTestExe = 'Tests_LightVcl.Visual.exe';
 
-{ Reads the four fields of VS_FIXEDFILEINFO of the running EXE. Returns FALSE when the EXE has no version resource. }
+{ Reads the four fields of VS_FIXEDFILEINFO of the running EXE. Returns FALSE when the EXE has no version resource.
+  Layout: the DWORD signature $FEEF04BD, then dwStrucVersion, dwFileVersionMS (Major, Minor), dwFileVersionLS (Release, Build).
+  https://learn.microsoft.com/en-us/windows/win32/api/verrsrc/ns-verrsrc-vs_fixedfileinfo }
 function ReadExeVersion(OUT Major, Minor, Release, Build: Word): Boolean;
+CONST
+  FixedInfoSignature: Cardinal = $FEEF04BD;
+  VersionResourceID = 1;   { The one VS_VERSION_INFO resource of a module }
 VAR
-  Size, Dummy, InfoLen: DWORD;
-  Buffer: TBytes;
-  Info: PVSFixedFileInfo;
+  Stream: TResourceStream;
+  Bytes: TBytes;
+  Offset: Integer;
+  Signature, VersionMS, VersionLS: Cardinal;
 begin
   Major:= 0; Minor:= 0; Release:= 0; Build:= 0;
-  Size:= GetFileVersionInfoSize(PChar(ParamStr(0)), Dummy);
-  if Size = 0
+  if FindResource(MainInstance, MakeIntResource(VersionResourceID), RT_VERSION) = 0
   then EXIT(FALSE);
 
-  SetLength(Buffer, Size);
-  if NOT GetFileVersionInfo(PChar(ParamStr(0)), 0, Size, Buffer)
-  then EXIT(FALSE);
-  if NOT VerQueryValue(Buffer, '\', Pointer(Info), InfoLen) OR (InfoLen < SizeOf(TVSFixedFileInfo))
-  then EXIT(FALSE);
+  Stream:= TResourceStream.CreateFromID(MainInstance, VersionResourceID, RT_VERSION);
+  try
+    SetLength(Bytes, Stream.Size);
+    Stream.ReadBuffer(Bytes, Length(Bytes));
+  finally
+    FreeAndNil(Stream);
+  end;
 
-  Major  := HiWord(Info.dwFileVersionMS);
-  Minor  := LoWord(Info.dwFileVersionMS);
-  Release:= HiWord(Info.dwFileVersionLS);
-  Build  := LoWord(Info.dwFileVersionLS);
-  Result:= TRUE;
+  { The structure is DWORD-aligned inside the resource }
+  Offset:= 0;
+  while Offset + 16 <= Length(Bytes) do
+    begin
+      Move(Bytes[Offset], Signature, SizeOf(Signature));
+      if Signature = FixedInfoSignature then
+        begin
+          Move(Bytes[Offset + 8],  VersionMS, SizeOf(VersionMS));
+          Move(Bytes[Offset + 12], VersionLS, SizeOf(VersionLS));
+          Major  := HiWord(VersionMS);
+          Minor  := LoWord(VersionMS);
+          Release:= HiWord(VersionLS);
+          Build  := LoWord(VersionLS);
+          EXIT(TRUE);
+        end;
+      Inc(Offset, 4);
+    end;
+  Result:= FALSE;
+end;
+
+{ The text TAppData.GetVersionInfo must return for the running EXE. 'N/A' for an EXE without a version resource,
+  which is refused in VersionedTestExe. }
+function ExpectedVersionText(ShowBuildNo: Boolean): string;
+VAR Major, Minor, Release, Build: Word;
+begin
+  if NOT ReadExeVersion(Major, Minor, Release, Build) then
+    begin
+      Assert.IsFalse(SameText(ExtractFileName(ParamStr(0)), VersionedTestExe), VersionedTestExe + ' must carry a version resource ($R *.res in its .dpr, VerInfo_* in its .dproj)');
+      EXIT('N/A');
+    end;
+
+  Result:= IntToStr(Major)+ '.'+ IntToStr(Minor)+ '.'+ IntToStr(Release);
+  if ShowBuildNo
+  then Result:= Result+ '.'+ IntToStr(Build);
 end;
 
 { Reads the version of the running EXE, or skips the test when the EXE has no version resource.
@@ -195,12 +234,10 @@ begin
   else Assert.Pass('No version resource in ' + ExtractFileName(ParamStr(0)));
 end;
 
+{ Called with no parameter: the default must be "no build number" }
 procedure TTestAppDataVcl.TestGetVersionInfo;
-var
-  Version: string;
 begin
-  Version:= TAppData.GetVersionInfo;
-  Assert.IsNotEmpty(Version, 'Version should not be empty');
+  Assert.AreEqual(ExpectedVersionText(FALSE), TAppData.GetVersionInfo, 'Version without build number, or N/A without a version resource');
 end;
 
 procedure TTestAppDataVcl.TestGetVersionInfo_NoBuildNo;
@@ -217,12 +254,10 @@ begin
   Assert.AreEqual(IntToStr(Major)+ '.'+ IntToStr(Minor)+ '.'+ IntToStr(Release)+ '.'+ IntToStr(Build), TAppData.GetVersionInfo(True), 'Version with build number');
 end;
 
+{ The leading space is part of the format: callers write AppName + GetVersionInfoV }
 procedure TTestAppDataVcl.TestGetVersionInfoV;
-var
-  Version: string;
 begin
-  Version:= TAppData.GetVersionInfoV;
-  Assert.IsNotEmpty(Version);
+  Assert.AreEqual(' v'+ ExpectedVersionText(FALSE), TAppData.GetVersionInfoV, 'A space, a "v", then the version without build number');
 end;
 
 procedure TTestAppDataVcl.TestGetVersionInfoV_HasPrefix;
@@ -302,6 +337,9 @@ end;
 
 procedure TTestAppDataVcl.TestHintType_Tooltips;
 begin
+  AppData.HintType:= htOff;
+  Assert.IsFalse(Application.ShowHint, 'Precondition: htOff turns ShowHint off');
+
   AppData.HintType:= htTooltips;
   Assert.AreEqual(htTooltips, AppData.HintType);
   Assert.IsTrue(Application.ShowHint, 'ShowHint should be TRUE when HintType is htTooltips');
@@ -309,6 +347,9 @@ end;
 
 procedure TTestAppDataVcl.TestHintType_StatusBar;
 begin
+  AppData.HintType:= htOff;
+  Assert.IsFalse(Application.ShowHint, 'Precondition: htOff turns ShowHint off');
+
   AppData.HintType:= htStatBar;
   Assert.AreEqual(htStatBar, AppData.HintType);
   Assert.IsTrue(Application.ShowHint, 'ShowHint should be TRUE when HintType is htStatBar');
@@ -354,9 +395,12 @@ begin
   Assert.IsFalse(AppData.InstanceRunning, 'The window was destroyed');
 end;
 
+{ Both runners that link this unit (Tests_LightVcl.Visual.dpr and BioniX's Tests_BioniX.dpr) create AppData with an empty
+  WindowClassName, and then TAppDataCore.Create must fall back to the app name }
 procedure TTestAppDataVcl.TestSingleInstClassName_NotEmpty;
 begin
-  Assert.IsNotEmpty(AppData.SingleInstClassName);
+  Assert.IsNotEmpty(AppData.AppName, 'Precondition: the runner gave AppData a name');
+  Assert.AreEqual(AppData.AppName, AppData.SingleInstClassName, 'Without a window class name, the class name must be the app name');
 end;
 
 procedure TTestAppDataVcl.TestSetSingleInstanceName;
@@ -416,22 +460,68 @@ end;
 
 { Uninstaller Registry Tests }
 
+{ The uninstaller reads two values from HKCU\Software\CubicDesign\<AppName>: 'App data path' and 'Install path'
+  (TAppData.writeAppDataFolder / writeInstallationFolder write them). The tests write both values for a unique test
+  app name, so a routine that reads the wrong key or the wrong value name fails, then delete the test key. }
+CONST
+  UninstallerKey  = '\Software\CubicDesign\';
+  TestAppDataPath = 'C:\LightSaberTest\AppData\';
+  TestInstallPath = 'C:\LightSaberTest\Install\';
+
+function WriteUninstallerValues: string;
+VAR Reg: TRegistry;
+begin
+  Result:= 'LightSaberTest_' + TGUID.NewGuid.ToString;
+  Reg:= TRegistry.Create(KEY_READ OR KEY_WRITE);
+  try
+    Reg.RootKey:= HKEY_CURRENT_USER;
+    Assert.IsTrue(Reg.OpenKey(UninstallerKey + Result, TRUE), 'Precondition: the test key must be created');
+    Reg.WriteString('App data path', TestAppDataPath);
+    Reg.WriteString('Install path',  TestInstallPath);
+    Reg.CloseKey;
+  finally
+    FreeAndNil(Reg);
+  end;
+end;
+
+procedure DeleteUninstallerValues(CONST TestApp: string);
+VAR Reg: TRegistry;
+begin
+  Reg:= TRegistry.Create(KEY_ALL_ACCESS);
+  try
+    Reg.RootKey:= HKEY_CURRENT_USER;
+    Reg.DeleteKey(UninstallerKey + TestApp);
+  finally
+    FreeAndNil(Reg);
+  end;
+end;
+
 procedure TTestAppDataVcl.TestReadAppDataFolder_Empty;
 var
-  Path: string;
+  TestApp: string;
 begin
-  // Reading for non-existent app should return empty
-  Path:= AppData.ReadAppDataFolder('NonExistentAppXYZ123');
-  Assert.AreEqual('', Path, 'Non-existent app should return empty path');
+  Assert.AreEqual('', AppData.ReadAppDataFolder('NonExistentAppXYZ123'), 'Non-existent app should return empty path');
+
+  TestApp:= WriteUninstallerValues;
+  try
+    Assert.AreEqual(TestAppDataPath, AppData.ReadAppDataFolder(TestApp), 'Must read the "App data path" value of the app''s key');
+  finally
+    DeleteUninstallerValues(TestApp);
+  end;
 end;
 
 procedure TTestAppDataVcl.TestReadInstallationFolder_Empty;
 var
-  Path: string;
+  TestApp: string;
 begin
-  // Reading for non-existent app should return empty
-  Path:= AppData.ReadInstallationFolder('NonExistentAppXYZ123');
-  Assert.AreEqual('', Path, 'Non-existent app should return empty path');
+  Assert.AreEqual('', AppData.ReadInstallationFolder('NonExistentAppXYZ123'), 'Non-existent app should return empty path');
+
+  TestApp:= WriteUninstallerValues;
+  try
+    Assert.AreEqual(TestInstallPath, AppData.ReadInstallationFolder(TestApp), 'Must read the "Install path" value of the app''s key');
+  finally
+    DeleteUninstallerValues(TestApp);
+  end;
 end;
 
 
@@ -440,23 +530,34 @@ end;
 
 
 
+{ In the test runner Initializing stays TRUE: the startup sequence that calls EndInitialization never runs, and nothing
+  outside TAppDataCore can set it back to TRUE (FInitializing is private, only the constructor sets it), so ending the
+  initialization here would break the rest of the run. The guard is "(AppData <> NIL) AND AppData.Initializing", so the
+  not-raising path is reached through its other half: no AppData. AppData is put back before anything else runs. }
 procedure TTestAppDataVcl.TestRaiseIfStillInitializing_NotInitializing;
+var
+  SavedAppData: TAppData;
 begin
-  { In the test runner, Initializing remains TRUE because the full app startup
-    sequence (which sets Initializing:= FALSE) is never completed.
-    We cannot test the "not initializing" path without RTTI hacking.
-    Verify the property is accessible and consistent with RaiseIfStillInitializing behavior. }
-  if TAppData.Initializing
-  then Assert.WillRaise(
-         procedure
-         begin
-           TAppData.RaiseIfStillInitializing;
-         end, Exception)
-  else Assert.WillNotRaise(
-         procedure
-         begin
-           TAppData.RaiseIfStillInitializing;
-         end);
+  Assert.IsTrue(TAppData.Initializing, 'Precondition: the runner is still initializing');
+
+  SavedAppData:= AppData;
+  AppData:= NIL;
+  try
+    Assert.WillNotRaiseAny(
+      procedure
+      begin
+        TAppData.RaiseIfStillInitializing;
+      end,
+      'With no AppData there is no application that is still initializing');
+  finally
+    AppData:= SavedAppData;
+  end;
+
+  Assert.WillRaise(
+    procedure
+    begin
+      TAppData.RaiseIfStillInitializing;
+    end, Exception, 'With AppData back, the guard must raise again');
 end;
 
 

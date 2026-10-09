@@ -1,7 +1,7 @@
 ﻿unit Test.LightVcl.Visual.CheckBox;
 
 {=============================================================================================================
-   2026.10.07
+   2026.10.08
    Unit tests for LightVcl.Visual.CheckBox.pas
    Tests the TLightCheckBox component - an auto-resizing checkbox.
 
@@ -87,10 +87,38 @@ implementation
 
 uses
   Vcl.Graphics,
+  Vcl.Themes,
   LightVcl.Visual.CheckBox;
 
 type
   TLightCheckBoxAccess = class(TLightCheckBox);   { Opens the protected Loaded }
+
+
+{ The width AutoSize must give, built from three parts measured here and not by the control:
+  the caption's text width, measured on a canvas of our own with the control's font;
+  the checkbox glyph as the active theme reports it (the theme part tbCheckBoxUncheckedNormal, which
+  c:\Delphi\Delphi 13\source\vcl\Vcl.CheckLst.pas:487 draws), or 13 pixels at 96 DPI with no theme;
+  the 4-pixel gap at 96 DPI between glyph and text (GLYPH_GAP in LightVcl.Visual.CheckBox.pas). }
+function ExpectedAutoWidth(CheckBox: TLightCheckBox): Integer;
+var
+  BMP: TBitmap;
+  DPI, GlyphWidth: Integer;
+  GlyphSize: TSize;
+begin
+  BMP:= TBitmap.Create;
+  try
+    BMP.Canvas.Font:= CheckBox.Font;
+    DPI:= GetDeviceCaps(BMP.Canvas.Handle, LOGPIXELSX);
+    if StyleServices.Enabled
+    AND StyleServices.GetElementSize(BMP.Canvas.Handle, StyleServices.GetElementDetails(tbCheckBoxUncheckedNormal), esActual, GlyphSize, DPI)
+    AND (GlyphSize.Width > 0)
+    then GlyphWidth:= GlyphSize.Width
+    else GlyphWidth:= MulDiv(13, DPI, 96);
+    Result:= BMP.Canvas.TextWidth(CheckBox.Caption) + GlyphWidth + MulDiv(4, DPI, 96);
+  finally
+    FreeAndNil(BMP);
+  end;
+end;
 
 
 procedure TTesTLightCheckBox.Setup;
@@ -168,7 +196,7 @@ begin
 
   { Width should be adjusted to fit caption }
   Assert.AreNotEqual(OriginalWidth, CubicCheckBox.Width, 'Width should change when AutoSize is enabled');
-  Assert.IsTrue(CubicCheckBox.Width > 0, 'Width should be positive');
+  Assert.AreEqual(ExpectedAutoWidth(CubicCheckBox), CubicCheckBox.Width, 'Width must be the caption text + the glyph + the gap');
   FCheckBox:= CubicCheckBox;
 end;
 
@@ -221,12 +249,15 @@ begin
   FTestForm:= TForm.CreateNew(NIL);
   CubicCheckBox:= TLightCheckBox.Create(FTestForm);
   CubicCheckBox.Parent:= FTestForm;
+  { A wide start, so only AdjustBounds can bring the width under 100 (the VCL default of 97 already is) }
+  CubicCheckBox.Width:= 300;
   CubicCheckBox.Caption:= 'OK';
+  Assert.AreEqual(300, CubicCheckBox.Width, 'Precondition: with AutoSize FALSE a caption change must not resize');
   CubicCheckBox.AutoSize:= TRUE;
 
-  { Width should be small for short caption }
   Assert.IsTrue(CubicCheckBox.Width < 100, 'Width should be small for short caption');
   Assert.IsTrue(CubicCheckBox.Width >= 21, 'Width should include checkbox indicator width');
+  Assert.AreEqual(ExpectedAutoWidth(CubicCheckBox), CubicCheckBox.Width, 'Width must be the caption text + the glyph + the gap');
   FCheckBox:= CubicCheckBox;
 end;
 

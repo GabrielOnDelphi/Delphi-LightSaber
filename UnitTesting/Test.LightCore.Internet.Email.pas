@@ -268,8 +268,8 @@ VAR
   Msg: string;
 begin
   Msg:= ValidateEmailAddress('invalid', False);
-  Assert.IsTrue(Length(Msg) > 0, 'Should return error message for invalid email');
-  Assert.IsTrue(Pos('invalid', Msg) > 0, 'Error message should contain the email');
+  { 'invalid' has no '@': fail code flNoSeperator ('Missing @ symbol!'), fail position 0. The message is: the address, the fixed text, the reason, the position }
+  Assert.AreEqual('invalid  is an invalid email address! Missing @ symbol! at position 0 ', Msg, 'The whole message');
 end;
 
 { CorrectEmailAddress Tests }
@@ -523,13 +523,17 @@ begin
 
     Output:= EmailSortByDomain(Input);
     TRY
+      { Every pass walks the remaining list from the end and keeps the first address with the smallest domain.
+        All domains are equal, so each pass takes the LAST remaining address: bob, then alice, then charlie }
       Assert.AreEqual(3, Output.Count);
-      { All same domain, order depends on which was found first in each pass }
+      Assert.AreEqual('bob@example.com',     Output[0]);
+      Assert.AreEqual('alice@example.com',   Output[1]);
+      Assert.AreEqual('charlie@example.com', Output[2]);
     FINALLY
-      Output.Free;
+      FreeAndNil(Output);
     END;
   FINALLY
-    Input.Free;
+    FreeAndNil(Input);
   END;
 end;
 

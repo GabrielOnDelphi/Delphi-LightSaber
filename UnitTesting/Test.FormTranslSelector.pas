@@ -39,7 +39,7 @@ type
 
     { Form Creation Tests }
     [Test]
-    procedure TestFormCreate_Succeeds;
+    procedure TestFormCreate_SetsTagAndButtons;
 
     { Component Tests }
     [Test]
@@ -138,6 +138,7 @@ type
 implementation
 
 uses
+  Winapi.Windows,
   LightCore.AppData,
   LightCore.IO,
   LightCore.TextFile,
@@ -215,14 +216,17 @@ end;
 
 { Form Creation Tests }
 
-procedure TTestFormTranslSelector.TestFormCreate_Succeeds;
+{ The DFM leaves Tag at 0 and both buttons visible; FormCreate must change them }
+procedure TTestFormTranslSelector.TestFormCreate_SetsTagAndButtons;
 var
   Form: TfrmTranslSelector;
 begin
   Form:= TfrmTranslSelector.Create(NIL);
   FTestForm:= Form;
 
-  Assert.IsNotNull(Form, 'Form creation should succeed');
+  Assert.AreEqual(Integer(DontTranslate), Integer(Form.Tag), 'FormCreate must mark the form as DontTranslate');
+  Assert.AreEqual(NOT AppData.RunningFirstTime, Form.btnTranslate.Visible, 'btnTranslate is hidden only on the first run');
+  Assert.AreEqual(Form.btnTranslate.Visible, Form.btnRefresh.Visible, 'btnRefresh follows btnTranslate');
 end;
 
 
@@ -322,27 +326,64 @@ begin
 end;
 
 
+{ The handlers below are fired as a click would fire them. The ones that apply a language change the global
+  translator, so those tests restore its language and credits afterwards. }
+
 procedure TTestFormTranslSelector.TestListBox_HasClickHandler;
 var
   Form: TfrmTranslSelector;
+  OldLanguage, OldAuthors: string;
 begin
   Form:= TfrmTranslSelector.Create(NIL);
   FTestForm:= Form;
 
   Assert.IsTrue(Assigned(Form.ListBox.OnClick),
     'ListBox should have OnClick handler assigned');
+
+  OldLanguage:= AppData.Translator.CurLanguage;
+  OldAuthors := AppData.Translator.Authors;
+  TRY
+    Form.ListBox.ItemIndex:= Form.ListBox.Items.IndexOf(TestLangB);
+    Assert.IsTrue(Form.ListBox.ItemIndex >= 0, TestLangB + ' must be listed');
+
+    { A single click applies the selected language at once }
+    Form.ListBox.OnClick(Form.ListBox);
+
+    Assert.AreEqual(TestLangB + '.ini', AppData.Translator.CurLanguageName, 'The click must apply the selected language');
+    Assert.AreEqual('Translated by: Test Author B', Form.lblAuthors.Caption, 'The click must show the credits of the selected language');
+    Assert.IsTrue(Form.lblAuthors.Visible, 'The credits label must become visible');
+  FINALLY
+    AppData.Translator.CurLanguage:= OldLanguage;
+    AppData.Translator.Authors:= OldAuthors;
+  END;
 end;
 
 
 procedure TTestFormTranslSelector.TestListBox_HasDblClickHandler;
 var
   Form: TfrmTranslSelector;
+  OldLanguage, OldAuthors: string;
 begin
   Form:= TfrmTranslSelector.Create(NIL);
   FTestForm:= Form;
 
   Assert.IsTrue(Assigned(Form.ListBox.OnDblClick),
     'ListBox should have OnDblClick handler assigned');
+
+  OldLanguage:= AppData.Translator.CurLanguage;
+  OldAuthors := AppData.Translator.Authors;
+  TRY
+    Form.ListBox.ItemIndex:= Form.ListBox.Items.IndexOf(TestLangA);
+    Assert.IsTrue(Form.ListBox.ItemIndex >= 0, TestLangA + ' must be listed');
+
+    Form.ListBox.OnDblClick(Form.ListBox);
+
+    Assert.AreEqual(TestLangA + '.ini', AppData.Translator.CurLanguageName, 'The double click must apply the selected language');
+    Assert.AreEqual('Translated by: Test Author A', Form.lblAuthors.Caption, 'The double click must show the credits of the selected language');
+  FINALLY
+    AppData.Translator.CurLanguage:= OldLanguage;
+    AppData.Translator.Authors:= OldAuthors;
+  END;
 end;
 
 
@@ -350,6 +391,7 @@ procedure TTestFormTranslSelector.TestListBox_PopulatedOnCreate;
 var
   Form: TfrmTranslSelector;
   Files: TStringList;
+  Expected, LastLang: Integer;
 begin
   Form:= TfrmTranslSelector.Create(NIL);
   FTestForm:= Form;
@@ -357,11 +399,20 @@ begin
   { FormCreate calls PopulateLanguageFiles: one entry per .ini file in the Lang folder, without the extension }
   Files:= ListFilesOf(AppData.Translator.GetLangFolder, '*.ini', TRUE, FALSE);
   TRY
-    Assert.IsTrue(Files.Count >= 2, 'Setup wrote 2 language files');
-    Assert.AreEqual(Files.Count, Form.ListBox.Items.Count,
+    { When Setup had to create the Lang folder, it holds exactly the 2 files Setup wrote }
+    if FCreatedLangFolder
+    then Expected:= 2
+    else Expected:= Files.Count;
+    Assert.AreEqual(Expected, Form.ListBox.Items.Count,
       'ListBox should hold one entry per language file');
     Assert.IsTrue(Form.ListBox.Items.IndexOf(TestLangA) >= 0, 'ListBox must list ' + TestLangA);
     Assert.IsTrue(Form.ListBox.Items.IndexOf(TestLangB) >= 0, 'ListBox must list ' + TestLangB);
+
+    { Pre-selection: the language in use if it is listed, else the first entry }
+    LastLang:= Form.ListBox.Items.IndexOf(ExtractOnlyName(AppData.Translator.CurLanguageName));
+    if LastLang < 0
+    then LastLang:= 0;
+    Assert.AreEqual(LastLang, Form.ListBox.ItemIndex, 'The language in use, or the first entry, must be pre-selected');
   FINALLY
     FreeAndNil(Files);
   END;
@@ -373,12 +424,32 @@ end;
 procedure TTestFormTranslSelector.TestApplyButton_HasClickHandler;
 var
   Form: TfrmTranslSelector;
+  OldLanguage, OldAuthors: string;
+  Msg: TMsg;
 begin
   Form:= TfrmTranslSelector.Create(NIL);
   FTestForm:= Form;
 
   Assert.IsTrue(Assigned(Form.btnApplyLang.OnClick),
     'btnApplyLang should have OnClick handler assigned');
+
+  OldLanguage:= AppData.Translator.CurLanguage;
+  OldAuthors := AppData.Translator.Authors;
+  TRY
+    Form.ListBox.ItemIndex:= Form.ListBox.Items.IndexOf(TestLangB);
+    Assert.IsTrue(Form.ListBox.ItemIndex >= 0, TestLangB + ' must be listed');
+
+    { Apply = apply the language, then Close. Close on this form ends in Release (FormClose sets caFree),
+      and Release posts CM_RELEASE (c:\Delphi\Delphi 13\source\vcl\Vcl.Forms.pas:9950). The test takes that
+      message out of the queue, which proves Close ran and keeps the form alive for TearDown to free. }
+    Form.btnApplyLang.OnClick(Form.btnApplyLang);
+
+    Assert.AreEqual(TestLangB + '.ini', AppData.Translator.CurLanguageName, 'Apply must apply the selected language');
+    Assert.IsTrue(PeekMessage(Msg, Form.Handle, CM_RELEASE, CM_RELEASE, PM_REMOVE), 'Apply must close the form (CM_RELEASE posted)');
+  FINALLY
+    AppData.Translator.CurLanguage:= OldLanguage;
+    AppData.Translator.Authors:= OldAuthors;
+  END;
 end;
 
 
@@ -391,18 +462,34 @@ begin
 
   Assert.IsTrue(Assigned(Form.btnRefresh.OnClick),
     'btnRefresh should have OnClick handler assigned');
+
+  { Refresh must re-read the Lang folder: a stale entry goes, the language files come back }
+  Form.ListBox.Items.Clear;
+  Form.ListBox.Items.Add('Stale entry');
+  Form.btnRefresh.OnClick(Form.btnRefresh);
+
+  Assert.AreEqual(-1, Form.ListBox.Items.IndexOf('Stale entry'), 'Refresh must clear the old entries');
+  Assert.IsTrue(Form.ListBox.Items.IndexOf(TestLangA) >= 0, 'Refresh must list ' + TestLangA);
+  Assert.IsTrue(Form.ListBox.Items.IndexOf(TestLangB) >= 0, 'Refresh must list ' + TestLangB);
 end;
 
 
+{ The handler opens the translation editor form, so it is not fired here (no test may put a window on screen).
+  The test checks instead that the button is wired to btnTranslateClick of this very form. }
 procedure TTestFormTranslSelector.TestTranslateButton_HasClickHandler;
 var
   Form: TfrmTranslSelector;
+  Handler: TMethod;
 begin
   Form:= TfrmTranslSelector.Create(NIL);
   FTestForm:= Form;
 
   Assert.IsTrue(Assigned(Form.btnTranslate.OnClick),
     'btnTranslate should have OnClick handler assigned');
+
+  Handler:= TMethod(Form.btnTranslate.OnClick);
+  Assert.IsTrue(Handler.Code = Form.MethodAddress('btnTranslateClick'), 'btnTranslate must call btnTranslateClick');
+  Assert.IsTrue(Handler.Data = Pointer(Form), 'btnTranslate must call the handler of its own form');
 end;
 
 
@@ -508,6 +595,16 @@ begin
 
   Assert.IsTrue(Assigned(Form.OnActivate),
     'Form should have OnActivate handler assigned');
+
+  { Activating the form re-reads the Lang folder: a stale entry goes, the language files come back }
+  Form.ListBox.Items.Clear;
+  Form.ListBox.Items.Add('Stale entry');
+  Form.OnActivate(Form);
+
+  Assert.AreEqual(-1, Form.ListBox.Items.IndexOf('Stale entry'), 'OnActivate must clear the old entries');
+  Assert.IsTrue(Form.ListBox.Items.IndexOf(TestLangA) >= 0, 'OnActivate must list ' + TestLangA);
+  Assert.IsTrue(Form.ListBox.Items.IndexOf(TestLangB) >= 0, 'OnActivate must list ' + TestLangB);
+  Assert.IsTrue(Form.ListBox.ItemIndex >= 0, 'OnActivate must pre-select a language');
 end;
 
 

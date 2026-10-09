@@ -236,7 +236,9 @@ begin
   RichLog.Parent:= FTestForm;
   FRichLog:= RichLog;
 
-  Assert.IsTrue(RichLog.MaxLength > 0, 'MaxLength should be set to a positive value');
+  Assert.AreEqual($7FFFFFF0, RichLog.MaxLength, 'The constructor must lift the text limit to $7FFFFFF0');
+  { TCustomEdit.CreateWnd passes FMaxLength to the window: c:\Delphi\Delphi 13\source\vcl\Vcl.StdCtrls.pas:3426 }
+  Assert.AreEqual($7FFFFFF0, Integer(SendMessage(RichLog.Handle, EM_GETLIMITTEXT, 0, 0)), 'The rich edit window must carry the same limit');
 end;
 
 
@@ -346,12 +348,22 @@ begin
   RichLog.Parent:= FTestForm;
   FRichLog:= RichLog;
 
+  { At lvrInfos an info message lands and the two lower levels are filtered out, so lvrInfos cannot have gone to AddVerb or AddHint }
   RichLog.Clear;
-  RichLog.Verbosity:= lvrVerbose;
+  RichLog.Verbosity:= lvrInfos;
+  RichLog.AddMsg('Verbose line', lvrVerbose);
+  RichLog.AddMsg('Hint line', lvrHints);
+  RichLog.AddMsg('Info line', lvrInfos);
+  Assert.AreEqual(1, RichLog.Lines.Count, 'At lvrInfos only the info message may land');
+  Assert.AreEqual('Info line', RichLog.Lines[0], 'The info message must land as written');
 
-  RichLog.AddMsg('Test info', lvrInfos);
-
-  Assert.IsTrue(RichLog.Lines.Count > 0, 'AddMsg with verbosity type should add line when verbosity allows');
+  { At lvrImportant the info message is filtered out, so lvrInfos cannot have gone to AddImpo, AddWarn or AddError }
+  RichLog.Clear;
+  RichLog.Verbosity:= lvrImportant;
+  RichLog.AddMsg('Info line', lvrInfos);
+  RichLog.AddMsg('Important line', lvrImportant);
+  Assert.AreEqual(1, RichLog.Lines.Count, 'At lvrImportant the info message must be filtered out');
+  Assert.AreEqual('Important line', RichLog.Lines[0], 'Only the important message may land');
 end;
 
 
@@ -483,21 +495,24 @@ end;
 procedure TTestRichLog.TestAddDateStamp_AddsCurrentDate;
 var
   RichLog: TRichLog;
+  DayBefore, DayAfter, Line: string;
 begin
   RichLog:= TRichLog.Create(FTestForm);
   RichLog.Parent:= FTestForm;
   FRichLog:= RichLog;
 
   RichLog.Clear;
+  RichLog.Verbosity:= lvrErrors;   { A date stamp is a forced message: no verbosity may filter it }
+  RichLog.InsertTime:= TRUE;       { AddDateStamp must switch the time prefix off for its own line }
 
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      RichLog.AddDateStamp;
-    end,
-    'RichLog.AddDateStamp must not raise');
+  DayBefore:= DateToStr(Date);
+  RichLog.AddDateStamp;
+  DayAfter:= DateToStr(Date);      { The run may cross midnight }
 
-  Assert.IsTrue(RichLog.Lines.Count > 0, 'AddDateStamp should add a line');
+  Assert.AreEqual(1, RichLog.Lines.Count, 'AddDateStamp must add exactly one line');
+  Line:= RichLog.Lines[0];
+  Assert.IsTrue((Line = DayBefore) OR (Line = DayAfter), 'The line must be today''s date alone, with no time prefix. Got: ' + Line);
+  Assert.IsTrue(RichLog.InsertTime, 'AddDateStamp must restore InsertTime');
 end;
 
 
@@ -513,8 +528,11 @@ begin
   RichLog.Verbosity:= lvrVerbose;
 
   RichLog.AddInteger(42);
+  RichLog.AddInteger(-7);
 
-  Assert.IsTrue(RichLog.Lines.Count > 0, 'AddInteger should add a line');
+  Assert.AreEqual(2, RichLog.Lines.Count, 'Each AddInteger must add one line');
+  Assert.AreEqual('42', RichLog.Lines[0], 'AddInteger must log the number it was given');
+  Assert.AreEqual('-7', RichLog.Lines[1], 'AddInteger must log a negative number with its sign');
 end;
 
 
@@ -531,7 +549,8 @@ begin
 
   RichLog.AddMsgInt('Count: ', 10);
 
-  Assert.IsTrue(RichLog.Lines.Count > 0, 'AddMsgInt should add a line');
+  Assert.AreEqual(1, RichLog.Lines.Count, 'AddMsgInt must add one line');
+  Assert.AreEqual('Count: 10', RichLog.Lines[0], 'AddMsgInt must log the text followed by the number');
 end;
 
 

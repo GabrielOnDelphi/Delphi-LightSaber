@@ -153,13 +153,23 @@ begin
 end;
 
 
+{ The countdown started SleepBeforeReset ms earlier is stopped, then Restart must start the timer again with a full interval }
 procedure TTestCubicTimer.TestRestart_WhenDisabled_EnablesTimer;
+var
+  Ms: Int64;
+  EnabledAfterRestart: Boolean;
 begin
-  FTimer.Enabled:= FALSE;
+  EnabledAfterRestart:= FALSE;
+  Ms:= MsFromResetToFirstFire(FTimer,
+         procedure
+         begin
+           FTimer.Enabled:= FALSE;
+           FTimer.Restart;
+           EnabledAfterRestart:= FTimer.Enabled;
+         end);
 
-  FTimer.Restart;
-
-  Assert.IsTrue(FTimer.Enabled, 'Restart should enable a disabled timer');
+  Assert.IsTrue(EnabledAfterRestart, 'Restart should enable a disabled timer');
+  Assert.IsTrue(Ms >= TestInterval - 100, 'Restart must start a full countdown: OnTimer came ' + IntToStr(Ms) + ' ms after Restart');
 end;
 
 

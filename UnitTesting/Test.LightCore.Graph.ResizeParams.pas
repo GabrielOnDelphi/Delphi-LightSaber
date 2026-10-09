@@ -12,11 +12,15 @@ interface
 uses
   DUnitX.TestFramework,
   System.SysUtils,
-  System.Classes;
+  System.Classes,
+  LightCore.Graph.ResizeParams;
 
 type
   [TestFixture]
   TTestResizeParams = class
+  private
+    procedure Poison(VAR Params: RResizeParams);
+    procedure CheckPersistedOp(Op: TResizeOp; ExpectedByte: Byte);
   public
     { Reset Tests }
     [Test]
@@ -114,7 +118,70 @@ type
 implementation
 
 uses
-  LightCore.Graph.ResizeParams;
+  System.IOUtils,
+  LightCore.StreamBuff;
+
+
+{ Fills every field with a value that differs from the one Reset writes, so a field that Reset forgets keeps the wrong value }
+procedure TTestResizeParams.Poison(VAR Params: RResizeParams);
+begin
+  Params.ResizeOpp    := roStretch;
+  Params.MaxZoomVal   := -3;
+  Params.MaxZoomUse   := FALSE;
+  Params.CustomZoom   := 7.25;
+  Params.MaxWidth     := 11;
+  Params.MaxHeight    := 13;
+  Params.FitTolerance := 77;
+  Params.ResizePanoram:= TRUE;
+  Params.ForcedWidth  := 17;
+  Params.ForcedHeight := 19;
+  Params.OutW         := 23;
+  Params.OutH         := 29;
+end;
+
+
+{ Writes a record whose ResizeOpp is Op, checks the size and the first byte of the file, then reads it back.
+  The byte is what files saved by earlier builds hold, so it must never change. }
+procedure TTestResizeParams.CheckPersistedOp(Op: TResizeOp; ExpectedByte: Byte);
+CONST
+  { WriteToStream: Byte + Boolean + Integer + Single + Integer + Integer + Boolean + Byte = 1+1+4+4+4+4+1+1 = 20 bytes, plus the 64-byte validation padding (TLightStream.FrozenPaddingSize) }
+  RecordSize = 84;
+VAR
+  FileName: string;
+  Stream: TLightStream;
+  Written, ReadBack: RResizeParams;
+  Bytes: TBytes;
+begin
+  FileName:= TPath.GetTempFileName;
+  TRY
+    Written.Reset;
+    Written.ResizeOpp:= Op;
+    Stream:= TLightStream.CreateWrite(FileName);
+    TRY
+      Written.WriteToStream(Stream);
+    FINALLY
+      FreeAndNil(Stream);
+    END;
+
+    Bytes:= TFile.ReadAllBytes(FileName);
+    Assert.AreEqual(RecordSize, Length(Bytes), 'Size of the saved record');
+    Assert.AreEqual(ExpectedByte, Bytes[0], 'Persisted byte of the resize mode ' + IntToStr(Ord(Op)));
+
+    Poison(ReadBack);
+    if Op = roStretch
+    then ReadBack.ResizeOpp:= roNone;   { Poison sets roStretch; the read must overwrite it }
+    Stream:= TLightStream.CreateRead(FileName);
+    TRY
+      ReadBack.ReadFromStream(Stream);
+    FINALLY
+      FreeAndNil(Stream);
+    END;
+    Assert.AreEqual(Op, ReadBack.ResizeOpp, 'ReadFromStream must restore the resize mode ' + IntToStr(ExpectedByte));
+  FINALLY
+    if TFile.Exists(FileName)
+    then TFile.Delete(FileName);
+  END;
+end;
 
 
 { Reset Tests }
@@ -123,6 +190,7 @@ procedure TTestResizeParams.TestReset_DefaultValues;
 var
   Params: RResizeParams;
 begin
+  Poison(Params);
   Params.Reset;
 
   Assert.AreEqual(roAutoDetect, Params.ResizeOpp, 'Default ResizeOpp should be roAutoDetect');
@@ -142,6 +210,7 @@ procedure TTestResizeParams.TestReset_OutWOutH_Uninitialized;
 var
   Params: RResizeParams;
 begin
+  Poison(Params);
   Params.Reset;
 
   Assert.AreEqual(UNINITIALIZED_SIZE, Params.OutW, 'OutW should be UNINITIALIZED_SIZE after Reset');
@@ -265,9 +334,9 @@ begin
   { 1600x800 = 2:1 landscape, target is 800x600 = 4:3 }
   Params.ComputeOutputSize(1600, 800);
 
-  { Should fit by width: 800 wide, height = 800 / 2 = 400 }
+  { 2:1 is wider than 4:3, so Fit is bound by the width: zoom = 1600 / 800 = 2, OutW = 800, OutH = 800 / 2 = 400 }
   Assert.AreEqual(800, Params.OutW, 'Width should be constrained to 800');
-  Assert.IsTrue(Params.OutH <= 600, 'Height should fit within 600');
+  Assert.AreEqual(400, Params.OutH, 'Height = 800 / 2');
 end;
 
 
@@ -283,8 +352,8 @@ begin
   { 400x800 = 1:2 portrait, target is 800x600 }
   Params.ComputeOutputSize(400, 800);
 
-  { Should fit by height: 600 tall, width = 600 / 2 = 300 }
-  Assert.IsTrue(Params.OutW <= 800, 'Width should fit within 800');
+  { 1:2 is narrower than 4:3, so Fit is bound by the height: zoom = 800 / 600, OutH = 600, OutW = 400 / (800 / 600) = 300 }
+  Assert.AreEqual(300, Params.OutW, 'Width = 400 * 600 / 800');
   Assert.AreEqual(600, Params.OutH, 'Height should be constrained to 600');
 end;
 
@@ -317,8 +386,9 @@ begin
 
   Params.ComputeOutputSize(2000, 1500);
 
-  Assert.IsTrue(Params.OutW <= 800, 'Width should not exceed MaxWidth');
-  Assert.IsTrue(Params.OutH <= 600, 'Height should not exceed MaxHeight');
+  { 2000x1500 is 4:3 like the viewport: zoom = 1500 / 600 = 2000 / 800 = 2.5, so the image shrinks to exactly 800x600 }
+  Assert.AreEqual(800, Params.OutW, 'Width = 2000 / 2.5');
+  Assert.AreEqual(600, Params.OutH, 'Height = 1500 / 2.5');
 end;
 
 
@@ -336,9 +406,9 @@ begin
   { 1600x800 = 2:1 landscape }
   Params.ComputeOutputSize(1600, 800);
 
-  { Fill: at least one dimension should equal viewport }
-  Assert.IsTrue((Params.OutW >= 800) OR (Params.OutH >= 600),
-    'Fill should meet or exceed at least one viewport dimension');
+  { 2:1 is wider than 4:3, so Fill is bound by the height: zoom = 800 / 600, OutH = 600, OutW = 1600 / (800 / 600) = 1200 (the 400 extra pixels get cropped) }
+  Assert.AreEqual(1200, Params.OutW, 'Width = 1600 * 600 / 800');
+  Assert.AreEqual(600, Params.OutH, 'Height = viewport height');
 end;
 
 
@@ -354,9 +424,9 @@ begin
   { 400x800 = 1:2 portrait }
   Params.ComputeOutputSize(400, 800);
 
-  { Fill: at least one dimension should equal viewport }
-  Assert.IsTrue((Params.OutW >= 800) OR (Params.OutH >= 600),
-    'Fill should meet or exceed at least one viewport dimension');
+  { 1:2 is narrower than 4:3, so Fill is bound by the width: zoom = 400 / 800 = 0.5, OutW = 800, OutH = 800 / 0.5 = 1600 }
+  Assert.AreEqual(800, Params.OutW, 'Width = viewport width');
+  Assert.AreEqual(1600, Params.OutH, 'Height = 800 * 800 / 400');
 end;
 
 
@@ -371,9 +441,9 @@ begin
 
   Params.ComputeOutputSize(1000, 1000);
 
-  { Fill mode: viewport should be completely covered }
-  Assert.IsTrue((Params.OutW >= 800) AND (Params.OutH >= 600),
-    'Fill should cover entire viewport');
+  { 1:1 is narrower than 4:3, so Fill is bound by the width: zoom = 1000 / 800 = 1.25, OutW = 800, OutH = 1000 / 1.25 = 800. It covers the whole 800x600 viewport }
+  Assert.AreEqual(800, Params.OutW, 'Width = viewport width');
+  Assert.AreEqual(800, Params.OutH, 'Height = 1000 / 1.25');
 end;
 
 
@@ -565,8 +635,11 @@ begin
 
   Params.ComputeOutputSize(2560, 1440);
 
-  Assert.IsTrue(Params.OutW > 0, 'Output width should be positive');
-  Assert.IsTrue(Params.OutH > 0, 'Output height should be positive');
+  { 2560x1440 is 16:9 like the 1920x1080 viewport. AutoDetect tries Fill first: zoom = 2560 / 1920 = 1.333, so 1920x1080.
+    It shrinks the image, so the MaxZoom limit does not apply, and it covers exactly 100% of the viewport area
+    (not more than 105%), so there is no fall-back to Fit }
+  Assert.AreEqual(1920, Params.OutW, 'Width = 2560 / 1.333');
+  Assert.AreEqual(1080, Params.OutH, 'Height = 1440 / 1.333');
 end;
 
 
@@ -574,6 +647,16 @@ end;
 
 procedure TTestResizeParams.TestTResizeOp_EnumValues;
 begin
+  { WriteToStream saves the mode as one byte }
+  CheckPersistedOp(roAutoDetect,  0);
+  CheckPersistedOp(roCustom,      1);
+  CheckPersistedOp(roNone,        2);
+  CheckPersistedOp(roFill,        3);
+  CheckPersistedOp(roFit,         4);
+  CheckPersistedOp(roForceWidth,  5);
+  CheckPersistedOp(roForceHeight, 6);
+  CheckPersistedOp(roStretch,     7);
+
   Assert.AreEqual(0, Ord(roAutoDetect), 'roAutoDetect should be 0');
   Assert.AreEqual(1, Ord(roCustom), 'roCustom should be 1');
   Assert.AreEqual(2, Ord(roNone), 'roNone should be 2');

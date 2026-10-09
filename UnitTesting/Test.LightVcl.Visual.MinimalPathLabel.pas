@@ -1,7 +1,7 @@
 ﻿unit Test.LightVcl.Visual.MinimalPathLabel;
 
 {=============================================================================================================
-   2026.10.07
+   2026.10.08
    Unit tests for LightVcl.Visual.MinimalPathLabel.pas
    Tests the TMinimalPathLabel component that truncates file paths to fit within label width.
 
@@ -107,6 +107,17 @@ uses
   LightVcl.Visual.MinimalPathLabel;
 
 
+{ Turns AutoSize off and makes the label exactly as wide as Shown, measured on the label's own canvas.
+  Vcl.FileCtrl.MinimizeName (c:\Delphi\Delphi 13\source\vcl\Vcl.FileCtrl.pas:603-634) cuts one directory
+  at a time from the front of the path and stops at the first form whose width is not above the label's.
+  Every form before Shown holds more text than Shown, so at this width the label must show exactly Shown. }
+procedure SetWidthToText(Lbl: TMinimalPathLabel; CONST Shown: string);
+begin
+  Lbl.AutoSize:= FALSE;
+  Lbl.Width:= Lbl.Canvas.TextWidth(Shown);
+end;
+
+
 procedure TTestMinimalPathLabel.Setup;
 begin
   FForm:= TForm.CreateNew(nil);
@@ -194,13 +205,11 @@ begin
   LongPath:= 'C:\Very\Long\Path\That\Goes\On\And\On\Forever\Until\It\Cannot\Fit\In\The\Label\Width\Anymore\File.txt';
   Lbl:= TMinimalPathLabel.Create(FForm);
   Lbl.Parent:= FForm;
-  Lbl.Width:= 150; // Narrow width to force truncation
   try
+    SetWidthToText(Lbl, 'C:\...\Width\Anymore\File.txt');  { Narrow: the drive, the ellipsis, the last two folders and the file name }
     Lbl.CaptionMin:= LongPath;
 
-    // Caption should be different (truncated) from the original long path
-    Assert.AreNotEqual(LongPath, Lbl.Caption, 'Long path should be truncated when label is narrow');
-    // But stored value should be full path
+    Assert.AreEqual('C:\...\Width\Anymore\File.txt', Lbl.Caption, 'The long path must be cut in the middle, keeping the drive and the file name');
     Assert.AreEqual(LongPath, Lbl.CaptionMin, 'CaptionMin should store the full path');
   finally
     FreeAndNil(Lbl);
@@ -323,11 +332,16 @@ begin
   Lbl:= TMinimalPathLabel.Create(FForm);
   Lbl.Parent:= FForm;
   try
+    { Start wide: the whole path fits }
+    SetWidthToText(Lbl, LongPath);
     Lbl.CaptionMin:= LongPath;
-    Lbl.Width:= 80; // Very narrow
+    Assert.AreEqual(LongPath, Lbl.Caption, 'Precondition: the whole path fits before the resize');
 
-    Assert.IsTrue(Length(Lbl.Caption) < Length(LongPath),
-      'Caption should be shorter than original path when width is narrow');
+    { Then narrow: only Resize can shorten the caption now }
+    SetWidthToText(Lbl, 'C:\...\Configuration\Settings.xml');
+
+    Assert.AreEqual('C:\...\Configuration\Settings.xml', Lbl.Caption, 'Resize to a narrow width must cut the path in the middle, keeping the file name');
+    Assert.AreEqual(LongPath, Lbl.CaptionMin, 'The full path must be kept');
   finally
     FreeAndNil(Lbl);
   end;
@@ -342,10 +356,14 @@ begin
   ShortPath:= 'C:\Test.txt';
   Lbl:= TMinimalPathLabel.Create(FForm);
   Lbl.Parent:= FForm;
-  Lbl.AutoSize:= FALSE;   { otherwise AdjustBounds throws the 500 away }
   try
+    { Start narrow: only the file name fits. MinimizeName drops the folder, then the drive (Vcl.FileCtrl.pas:621-632). }
+    SetWidthToText(Lbl, 'Test.txt');
     Lbl.CaptionMin:= ShortPath;
-    Lbl.Width:= 500; // Very wide
+    Assert.AreEqual('Test.txt', Lbl.Caption, 'Precondition: the narrow label shows only the file name');
+
+    { Then wide: only Resize can bring the full path back }
+    Lbl.Width:= 500;
 
     Assert.AreEqual(ShortPath, Lbl.Caption, 'Full path should be shown when width is sufficient');
   finally
@@ -364,10 +382,11 @@ begin
   WinPath:= 'D:\Projects\Delphi\MyApp\Source\MainForm.pas';
   Lbl:= TMinimalPathLabel.Create(FForm);
   Lbl.Parent:= FForm;
-  Lbl.Width:= 400;
   try
+    SetWidthToText(Lbl, 'D:\...\Source\MainForm.pas');  { Narrow, so the shown text and the stored text differ }
     Lbl.CaptionMin:= WinPath;
 
+    Assert.AreEqual('D:\...\Source\MainForm.pas', Lbl.Caption, 'The Windows path must be cut in the middle, keeping the drive and the file name');
     Assert.AreEqual(WinPath, Lbl.CaptionMin, 'Windows path should be stored correctly');
   finally
     FreeAndNil(Lbl);
@@ -383,10 +402,12 @@ begin
   UNCPath:= '\\ServerName\SharedFolder\SubFolder\Document.docx';
   Lbl:= TMinimalPathLabel.Create(FForm);
   Lbl.Parent:= FForm;
-  Lbl.Width:= 400;
   try
+    { A UNC path has no drive, so MinimizeName keeps one leading backslash before the ellipsis (CutFirstDirectory, Vcl.FileCtrl.pas:572-601) }
+    SetWidthToText(Lbl, '\...\SubFolder\Document.docx');
     Lbl.CaptionMin:= UNCPath;
 
+    Assert.AreEqual('\...\SubFolder\Document.docx', Lbl.Caption, 'The UNC path must be cut in the middle, keeping the file name');
     Assert.AreEqual(UNCPath, Lbl.CaptionMin, 'UNC path should be stored correctly');
   finally
     FreeAndNil(Lbl);
@@ -402,10 +423,12 @@ begin
   RelPath:= '..\Data\Config\Settings.ini';
   Lbl:= TMinimalPathLabel.Create(FForm);
   Lbl.Parent:= FForm;
-  Lbl.Width:= 400;
   try
+    { The first cut drops '..\Data\': CutFirstDirectory deletes 4 characters from a folder that starts with a dot, then the rest up to the next backslash (Vcl.FileCtrl.pas:588-595) }
+    SetWidthToText(Lbl, '...\Config\Settings.ini');
     Lbl.CaptionMin:= RelPath;
 
+    Assert.AreEqual('...\Config\Settings.ini', Lbl.Caption, 'The relative path must be cut at the front, keeping the file name');
     Assert.AreEqual(RelPath, Lbl.CaptionMin, 'Relative path should be stored correctly');
   finally
     FreeAndNil(Lbl);
@@ -424,12 +447,12 @@ begin
                  StringOfChar('C', 50) + '\' + StringOfChar('D', 50) + '\File.txt';
   Lbl:= TMinimalPathLabel.Create(FForm);
   Lbl.Parent:= FForm;
-  Lbl.Width:= 200;
   try
+    SetWidthToText(Lbl, 'C:\...\' + StringOfChar('D', 50) + '\File.txt');
     Lbl.CaptionMin:= VeryLongPath;
 
     Assert.AreEqual(VeryLongPath, Lbl.CaptionMin, 'Very long path should be stored correctly');
-    Assert.IsTrue(Length(Lbl.Caption) < Length(VeryLongPath), 'Very long path should be truncated in Caption');
+    Assert.AreEqual('C:\...\' + StringOfChar('D', 50) + '\File.txt', Lbl.Caption, 'Very long path must be cut in the middle, keeping the last folder and the file name');
   finally
     FreeAndNil(Lbl);
   end;
@@ -444,10 +467,11 @@ begin
   SpacePath:= 'C:\Program Files\My Application\User Data\Config File.txt';
   Lbl:= TMinimalPathLabel.Create(FForm);
   Lbl.Parent:= FForm;
-  Lbl.Width:= 400;
   try
+    SetWidthToText(Lbl, 'C:\...\User Data\Config File.txt');
     Lbl.CaptionMin:= SpacePath;
 
+    Assert.AreEqual('C:\...\User Data\Config File.txt', Lbl.Caption, 'Spaces must not split a folder name: the cut keeps "User Data" and "Config File.txt" whole');
     Assert.AreEqual(SpacePath, Lbl.CaptionMin, 'Path with spaces should be stored correctly');
   finally
     FreeAndNil(Lbl);
@@ -503,6 +527,7 @@ var
 begin
   Lbl:= TMinimalPathLabel.Create(FForm);
   Lbl.Parent:= FForm;
+  Lbl.AutoSize:= FALSE;   { Otherwise TLabel widens itself to the text and the zero width never reaches UpdateMinimizedCaption }
   Lbl.Width:= 0; // Zero width edge case
   try
     Assert.WillNotRaiseAny(
@@ -510,6 +535,11 @@ begin
       begin
         Lbl.CaptionMin:= 'C:\Some\Path\File.txt';
       end);
+
+    { MinimizeName with MaxLen 0 raises nothing and cuts the path down to 'File.txt' (Vcl.FileCtrl.pas:603-634).
+      Only the Width > 0 guard keeps the full text. }
+    Assert.AreEqual(0, Lbl.Width, 'Precondition: the label is still 0 pixels wide');
+    Assert.AreEqual('C:\Some\Path\File.txt', Lbl.Caption, 'At zero width the label must fall back to the full path');
   finally
     FreeAndNil(Lbl);
   end;

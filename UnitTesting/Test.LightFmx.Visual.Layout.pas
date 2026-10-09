@@ -101,9 +101,13 @@ end;
 
 procedure TTestLightLayout.TestSetVisibleAtRuntime_True;
 begin
-  FLayout.VisibleAtRuntime:= False;  // First set to false
-  FLayout.VisibleAtRuntime:= True;   // Then set to true
-  Assert.IsTrue(FLayout.VisibleAtRuntime);
+  FLayout.VisibleAtRuntime:= False;
+  Assert.IsFalse(FLayout.VisibleAtRuntime, 'Precondition: VisibleAtRuntime was set to False');
+  Assert.IsFalse(FLayout.Visible,          'Precondition: the setter hid the layout');
+
+  FLayout.VisibleAtRuntime:= True;
+  Assert.IsTrue(FLayout.VisibleAtRuntime, 'VisibleAtRuntime must go back to True');
+  Assert.IsTrue(FLayout.Visible,          'At runtime the setter must show the layout again');
 end;
 
 
@@ -116,10 +120,13 @@ end;
 
 procedure TTestLightLayout.TestSetVisibleAtRuntime_SameValue_NoChange;
 begin
-  // Setting same value should not cause issues
+  { Hide the layout directly: VisibleAtRuntime stays True. Writing the same True again must exit early and leave Visible alone. }
+  FLayout.Visible:= False;
+  Assert.IsTrue(FLayout.VisibleAtRuntime, 'Precondition: Visible does not change VisibleAtRuntime');
+
   FLayout.VisibleAtRuntime:= True;
-  FLayout.VisibleAtRuntime:= True;
-  Assert.IsTrue(FLayout.VisibleAtRuntime);
+  Assert.IsTrue (FLayout.VisibleAtRuntime, 'VisibleAtRuntime must stay True');
+  Assert.IsFalse(FLayout.Visible, 'Writing the same value must not touch Visible');
 end;
 
 
@@ -139,7 +146,11 @@ end;
 
 procedure TTestLightLayout.TestLoaded_VisibleAtRuntimeFalse_ComponentNotVisible;
 begin
+  { Show the layout directly after VisibleAtRuntime = False: only Loaded can hide it again }
   FLayout.VisibleAtRuntime:= False;
+  FLayout.Visible:= True;
+  Assert.IsFalse(FLayout.VisibleAtRuntime, 'Precondition: Visible does not change VisibleAtRuntime');
+  Assert.IsTrue (FLayout.Visible, 'Precondition: the layout is visible before Loaded');
   // Simulate loading completion (at runtime)
   FLayout.CallLoaded;
   Assert.IsFalse(FLayout.Visible, 'Component should be hidden when VisibleAtRuntime is False');

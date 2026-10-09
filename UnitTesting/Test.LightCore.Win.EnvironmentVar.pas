@@ -25,6 +25,7 @@ type
   private
     CONST TEST_VAR_NAME = 'LIGHTSABER_TEST_VAR';
     CONST TEST_VAR_VALUE = 'TestValue123';
+    procedure RemoveTestVar;
   public
     [TearDown]
     procedure TearDown;
@@ -97,11 +98,18 @@ uses
 
 
 procedure TTestWinEnvironmentVar.TearDown;
+begin
+  RemoveTestVar;
+end;
+
+
+{ Deletes the test variable from HKCU\Environment and from the process environment }
+procedure TTestWinEnvironmentVar.RemoveTestVar;
 VAR
   Reg: TRegistry;
 begin
-  { Clean up test environment variable if it exists }
-  Reg:= TRegistry.Create(KEY_WRITE);
+  { KEY_READ is needed too: ValueExists calls RegQueryValueEx (c:\Delphi\Delphi 13\source\rtl\common\System.Win.Registry.pas:893 -> :555), which needs KEY_QUERY_VALUE, and KEY_WRITE alone lacks it (c:\Delphi\Delphi 13\source\rtl\win\Winapi.Windows.pas:3702) }
+  Reg:= TRegistry.Create(KEY_READ OR KEY_WRITE);
   TRY
     Reg.RootKey:= HKEY_CURRENT_USER;
     if Reg.OpenKey('Environment', False) then
@@ -137,10 +145,10 @@ procedure TTestWinEnvironmentVar.Test_ExpandEnvironmentStrings_SingleVar;
 VAR
   Expanded: string;
 begin
-  { %TEMP% should expand to an actual path }
+  { The expected value is read from the process environment through the RTL, not through the WinAPI expansion }
+  Assert.IsNotEmpty(System.SysUtils.GetEnvironmentVariable('TEMP'), 'Precondition: the TEMP environment variable');
   Expanded:= ExpandEnvironmentStrings('%TEMP%');
-  Assert.IsFalse(Expanded.Contains('%'), 'TEMP should be expanded');
-  Assert.IsTrue(Expanded.Length > 0, 'Expanded value should not be empty');
+  Assert.AreEqual(System.SysUtils.GetEnvironmentVariable('TEMP'), Expanded, '%TEMP% must expand to the TEMP variable');
 end;
 
 
@@ -149,9 +157,10 @@ VAR
   Expanded: string;
 begin
   { Test multiple variables in one string }
+  Assert.IsNotEmpty(System.SysUtils.GetEnvironmentVariable('TEMP'), 'Precondition: the TEMP environment variable');
+  Assert.IsNotEmpty(System.SysUtils.GetEnvironmentVariable('USERNAME'), 'Precondition: the USERNAME environment variable');
   Expanded:= ExpandEnvironmentStrings('%TEMP%\%USERNAME%');
-  Assert.IsFalse(Expanded.Contains('%TEMP%'), 'TEMP should be expanded');
-  Assert.IsFalse(Expanded.Contains('%USERNAME%'), 'USERNAME should be expanded');
+  Assert.AreEqual(System.SysUtils.GetEnvironmentVariable('TEMP') + '\' + System.SysUtils.GetEnvironmentVariable('USERNAME'), Expanded, 'Both variables must expand, and the text between them must stay');
 end;
 
 
@@ -169,9 +178,9 @@ procedure TTestWinEnvironmentVar.Test_ExpandEnvironmentStrings_NestedPath;
 VAR
   Expanded: string;
 begin
+  Assert.IsNotEmpty(System.SysUtils.GetEnvironmentVariable('USERPROFILE'), 'Precondition: the USERPROFILE environment variable');
   Expanded:= ExpandEnvironmentStrings('%USERPROFILE%\Documents\Test');
-  Assert.IsFalse(Expanded.Contains('%'), 'Variables should be expanded');
-  Assert.IsTrue(Expanded.EndsWith('\Documents\Test'), 'Path suffix should be preserved');
+  Assert.AreEqual(System.SysUtils.GetEnvironmentVariable('USERPROFILE') + '\Documents\Test', Expanded, 'The variable must expand and the path suffix must stay');
 end;
 
 
@@ -232,9 +241,26 @@ end;
 procedure TTestWinEnvironmentVar.Test_SetEnvironmentVars_UserVar;
 VAR
   Success: Boolean;
+  Reg: TRegistry;
 begin
-  Success:= SetEnvironmentVars(TEST_VAR_NAME, TEST_VAR_VALUE, True);
-  Assert.IsTrue(Success, 'SetEnvironmentVars should succeed for user variable');
+  RemoveTestVar;
+  Reg:= TRegistry.Create(KEY_READ);
+  TRY
+    Reg.RootKey:= HKEY_CURRENT_USER;
+    Assert.IsTrue(Reg.OpenKeyReadOnly('Environment'), 'Could not open HKCU\Environment');
+    Assert.IsFalse(Reg.ValueExists(TEST_VAR_NAME), 'Precondition: the variable is not in HKCU\Environment');
+    Assert.AreEqual('', System.SysUtils.GetEnvironmentVariable(TEST_VAR_NAME), 'Precondition: the variable is not in the process environment');
+
+    Success:= SetEnvironmentVars(TEST_VAR_NAME, TEST_VAR_VALUE, True);
+    Assert.IsTrue(Success, 'SetEnvironmentVars should succeed for user variable');
+
+    { Both places it writes, read back without GetEnvironmentVars: the process environment and HKCU\Environment as a REG_SZ value }
+    Assert.AreEqual(TEST_VAR_VALUE, System.SysUtils.GetEnvironmentVariable(TEST_VAR_NAME), 'The process environment must hold the value');
+    Assert.IsTrue(Reg.GetDataType(TEST_VAR_NAME) = rdString, 'The value must be a REG_SZ');
+    Assert.AreEqual(TEST_VAR_VALUE, Reg.ReadString(TEST_VAR_NAME), 'HKCU\Environment must hold the value');
+  FINALLY
+    FreeAndNil(Reg);
+  END;
 end;
 
 

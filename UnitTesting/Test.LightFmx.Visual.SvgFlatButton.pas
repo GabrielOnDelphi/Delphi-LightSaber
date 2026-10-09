@@ -231,9 +231,11 @@ end;
 
 procedure TTestSvgButton.TestIsToggled_SameValue_NoChange;
 begin
-  FButton.IsToggled:= False;
-  FButton.IsToggled:= False;
+  { Probe: a sentinel background color. A real toggle change runs ApplyColors, which resets Fill.Color; the same value must exit early and leave it. }
+  FButton.Fill.Color:= TAlphaColors.Red;
+  FButton.IsToggled:= False;     { already False }
   Assert.IsFalse(FButton.IsToggled);
+  Assert.AreEqual(Cardinal(TAlphaColors.Red), Cardinal(FButton.Fill.Color), 'Writing the same value must not repaint the button');
 end;
 
 

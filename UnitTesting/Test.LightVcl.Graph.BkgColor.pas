@@ -111,6 +111,34 @@ uses
 
 { Helper Methods }
 
+{ Paints one 1-pixel side of BMP in Color }
+procedure PaintSide(BMP: TBitmap; Side: TBorderType; Color: TColor);
+VAR R: TRect;
+begin
+  R:= Rect(0, 0, 0, 0);
+  case Side of
+    btTop   : R:= Rect(0, 0, BMP.Width, 1);
+    btBottom: R:= Rect(0, BMP.Height- 1, BMP.Width, BMP.Height);
+    btLeft  : R:= Rect(0, 0, 1, BMP.Height);
+    btRight : R:= Rect(BMP.Width- 1, 0, BMP.Width, BMP.Height);
+  end;
+  BMP.Canvas.Brush.Color:= Color;
+  BMP.Canvas.FillRect(R);
+end;
+
+
+{ Counts the pixels of BMP that are exactly black }
+function CountBlackPixels(BMP: TBitmap): Integer;
+VAR X, Y: Integer;
+begin
+  Result:= 0;
+  for Y:= 0 to BMP.Height- 1 do
+    for X:= 0 to BMP.Width- 1 do
+      if BMP.Canvas.Pixels[X, Y] = clBlack
+      then Inc(Result);
+end;
+
+
 function TTestBkgColor.CreateSolidColorBitmap(Width, Height: Integer; Color: TColor): TBitmap;
 begin
   Result:= TBitmap.Create;
@@ -241,10 +269,25 @@ end;
 { HasBlackBorder Tests }
 
 procedure TTestBkgColor.TestHasBlackBorder_WithBlackBorder;
+CONST
+  SideName: array[TBorderType] of string = ('top', 'bottom', 'left', 'right');
+VAR
+  Side: TBorderType;
 begin
   { Create bitmap with 1-pixel black border and white interior }
   FTestBitmap:= CreateBitmapWithBlackBorder(100, 100, 1, clWhite);
   Assert.IsTrue(HasBlackBorder(FTestBitmap, 5), 'Should detect black border');
+
+  { HasBlackBorder is TRUE only if all four sides are black, so one white side must make it FALSE.
+    The repainted side also whitens one corner pixel of each neighbouring side. That side then averages 255 DIV 100 = 2,
+    under the tolerance 5, so it still counts as black. }
+  for Side:= Low(TBorderType) to High(TBorderType) do
+    begin
+      FreeAndNil(FTestBitmap);
+      FTestBitmap:= CreateBitmapWithBlackBorder(100, 100, 1, clWhite);
+      PaintSide(FTestBitmap, Side, clWhite);
+      Assert.IsFalse(HasBlackBorder(FTestBitmap, 5), 'Three sides are black but the ' + SideName[Side] + ' side is white');
+    end;
 end;
 
 
@@ -281,6 +324,9 @@ VAR
   OrigWidth, OrigHeight: Integer;
 begin
   FTestBitmap:= CreateBitmapWithBlackBorder(100, 80, 1, clWhite);
+  { Mark the two corners of the interior, just inside the border }
+  FTestBitmap.Canvas.Pixels[1, 1]  := clRed;
+  FTestBitmap.Canvas.Pixels[98, 78]:= clLime;
   OrigWidth:= FTestBitmap.Width;
   OrigHeight:= FTestBitmap.Height;
 
@@ -289,6 +335,10 @@ begin
   { RemoveBorder crops 1 pixel from each side }
   Assert.AreEqual(OrigWidth - 2, FTestBitmap.Width, 'Width should decrease by 2');
   Assert.AreEqual(OrigHeight - 2, FTestBitmap.Height, 'Height should decrease by 2');
+  { The interior moves up and left by one pixel }
+  Assert.AreEqual(Integer(clRed),  Integer(FTestBitmap.Canvas.Pixels[0, 0]),   'Interior (1, 1) becomes (0, 0)');
+  Assert.AreEqual(Integer(clLime), Integer(FTestBitmap.Canvas.Pixels[97, 77]), 'Interior (98, 78) becomes (97, 77)');
+  Assert.AreEqual(0, CountBlackPixels(FTestBitmap), 'No pixel of the black border may remain');
 end;
 
 
@@ -313,6 +363,9 @@ VAR
   BorderSize: Integer;
 begin
   FTestBitmap:= CreateSolidColorBitmap(100, 80, clBlue);
+  { Mark two pixels of the original, one pixel inside its edge }
+  FTestBitmap.Canvas.Pixels[1, 1]  := clRed;
+  FTestBitmap.Canvas.Pixels[98, 78]:= clLime;
   OrigWidth:= FTestBitmap.Width;
   OrigHeight:= FTestBitmap.Height;
   BorderSize:= 10;
@@ -322,6 +375,25 @@ begin
   { Size should increase by 2*BorderSize in each dimension }
   Assert.AreEqual(OrigWidth + (BorderSize * 2), FTestBitmap.Width, 'Width should increase by 2*BorderSize');
   Assert.AreEqual(OrigHeight + (BorderSize * 2), FTestBitmap.Height, 'Height should increase by 2*BorderSize');
+
+  { The 10-pixel band around the original has FrameColor }
+  Assert.AreEqual(Integer(clWhite), Integer(FTestBitmap.Canvas.Pixels[0, 0]),    'Outer corner: FrameColor');
+  Assert.AreEqual(Integer(clWhite), Integer(FTestBitmap.Canvas.Pixels[9, 50]),   'Left band: FrameColor');
+  Assert.AreEqual(Integer(clWhite), Integer(FTestBitmap.Canvas.Pixels[110, 50]), 'Right band: FrameColor');
+  Assert.AreEqual(Integer(clWhite), Integer(FTestBitmap.Canvas.Pixels[60, 90]),  'Bottom band: FrameColor');
+  Assert.AreEqual(Integer(clWhite), Integer(FTestBitmap.Canvas.Pixels[119, 99]), 'Far outer corner: FrameColor');
+
+  { The original is copied to X 10..109, Y 10..89. Its outermost pixels become the inner frame, in
+    DarkenColor(clWhite, 40) = RGB(102, 102, 102): Round(255 * 40 / 100) = 102 (LightVcl.Graph.Util.DarkenColor) }
+  Assert.AreEqual(Integer($00666666), Integer(FTestBitmap.Canvas.Pixels[10, 10]),  'Inner frame, top-left corner');
+  Assert.AreEqual(Integer($00666666), Integer(FTestBitmap.Canvas.Pixels[109, 89]), 'Inner frame, bottom-right corner');
+  Assert.AreEqual(Integer($00666666), Integer(FTestBitmap.Canvas.Pixels[10, 50]),  'Inner frame, left side');
+  Assert.AreEqual(Integer($00666666), Integer(FTestBitmap.Canvas.Pixels[60, 10]),  'Inner frame, top side');
+
+  { Inside the inner frame the original stays, shifted by BorderSize }
+  Assert.AreEqual(Integer(clRed),  Integer(FTestBitmap.Canvas.Pixels[11, 11]),  'Original (1, 1) moves to (11, 11)');
+  Assert.AreEqual(Integer(clLime), Integer(FTestBitmap.Canvas.Pixels[108, 88]), 'Original (98, 78) moves to (108, 88)');
+  Assert.AreEqual(Integer(clBlue), Integer(FTestBitmap.Canvas.Pixels[60, 50]),  'Original (50, 40) moves to (60, 50)');
 end;
 
 
@@ -338,6 +410,12 @@ begin
   { Size should remain unchanged with zero border }
   Assert.AreEqual(OrigWidth, FTestBitmap.Width, 'Width should remain unchanged');
   Assert.AreEqual(OrigHeight, FTestBitmap.Height, 'Height should remain unchanged');
+
+  { A zero border leaves the picture as it was. Without the early exit the routine would still draw the darkened inner frame on the edge pixels. }
+  Assert.AreEqual(Integer(clBlue), Integer(FTestBitmap.Canvas.Pixels[0, 0]),   'Corner must stay blue');
+  Assert.AreEqual(Integer(clBlue), Integer(FTestBitmap.Canvas.Pixels[99, 79]), 'Far corner must stay blue');
+  Assert.AreEqual(Integer(clBlue), Integer(FTestBitmap.Canvas.Pixels[50, 0]),  'Top edge must stay blue');
+  Assert.AreEqual(Integer(clBlue), Integer(FTestBitmap.Canvas.Pixels[0, 40]),  'Left edge must stay blue');
 end;
 
 
@@ -431,6 +509,21 @@ begin
 
   DominantColor:= GetBorderDominantColor(FTestBitmap, btRight, 8);
   Assert.AreEqual(Integer(clRed), Integer(DominantColor), 'Right border should be red');
+
+  { Each side in its own color, so a side that samples the wrong row or column gives a wrong answer.
+    Left and right are painted last: they are red and lime over their whole length, while top and bottom keep
+    98 of their 100 pixels in their own color. }
+  FreeAndNil(FTestBitmap);
+  FTestBitmap:= CreateSolidColorBitmap(100, 100, clWhite);
+  PaintSide(FTestBitmap, btTop,    clBlue);
+  PaintSide(FTestBitmap, btBottom, clYellow);
+  PaintSide(FTestBitmap, btLeft,   clRed);
+  PaintSide(FTestBitmap, btRight,  clLime);
+
+  Assert.AreEqual(Integer(clBlue),   Integer(GetBorderDominantColor(FTestBitmap, btTop,    8)), 'Top border is blue');
+  Assert.AreEqual(Integer(clYellow), Integer(GetBorderDominantColor(FTestBitmap, btBottom, 8)), 'Bottom border is yellow');
+  Assert.AreEqual(Integer(clRed),    Integer(GetBorderDominantColor(FTestBitmap, btLeft,   8)), 'Left border is red');
+  Assert.AreEqual(Integer(clLime),   Integer(GetBorderDominantColor(FTestBitmap, btRight,  8)), 'Right border is lime');
 end;
 
 

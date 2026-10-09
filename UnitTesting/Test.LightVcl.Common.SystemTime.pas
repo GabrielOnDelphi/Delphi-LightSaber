@@ -107,12 +107,23 @@ end;
 
 { WindowsUpTime Tests }
 
+{ The independent reference is the Windows tick counter (milliseconds since boot), read before and after the call }
 procedure TTestSystemTime.Test_WindowsUpTime_ReturnsPositiveValue;
 VAR
   UpTime: TDateTime;
+  TickBefore, TickAfter: UInt64;
+  UpTimeMs: Double;
 begin
+  TickBefore:= GetTickCount64;
   UpTime:= WindowsUpTime;
+  TickAfter:= GetTickCount64;
+
   Assert.IsTrue(UpTime > 0, 'WindowsUpTime should return a positive value');
+
+  { 1 ms of slack on each side for the floating-point round trip ms -> days -> ms }
+  UpTimeMs:= UpTime * MSecsPerDay;
+  Assert.IsTrue((UpTimeMs >= TickBefore - 1) AND (UpTimeMs <= TickAfter + 1),
+    'WindowsUpTime in ms must lie between the two GetTickCount64 readings. Got ' + FloatToStr(UpTimeMs) + ', ticks ' + IntToStr(TickBefore) + '..' + IntToStr(TickAfter));
 end;
 
 
@@ -120,12 +131,16 @@ procedure TTestSystemTime.Test_WindowsUpTime_ReturnsReasonableValue;
 VAR
   UpTime: TDateTime;
   UpTimeDays: Double;
+  ExpectedSecs: Double;
 begin
   { System should have been up for at least a few seconds }
   UpTime:= WindowsUpTime;
+  ExpectedSecs:= GetTickCount64 / 1000;
   UpTimeDays:= UpTime;
 
-  { Convert to seconds for easier comparison }
+  { The uptime in seconds is the tick counter in seconds. A scale error (ms read as s) misses by a factor of 1000 }
+  Assert.AreEqual(ExpectedSecs, UpTimeDays * SecsPerDay, 1.0, 'WindowsUpTime in seconds must match GetTickCount64 div 1000');
+
   Assert.IsTrue(UpTimeDays * SecsPerDay > 1, 'System should have been up for at least 1 second');
 
   { System shouldn't report more than 10 years of uptime (sanity check) }
@@ -136,15 +151,18 @@ end;
 procedure TTestSystemTime.Test_WindowsUpTime_IsConsistent;
 VAR
   UpTime1, UpTime2: TDateTime;
+  ElapsedMs: Double;
 begin
-  { Two consecutive calls should return similar values }
+  { Two readings 100 ms apart must differ by about 100 ms }
   UpTime1:= WindowsUpTime;
-  Sleep(10);
+  Sleep(100);
   UpTime2:= WindowsUpTime;
 
-  { UpTime2 should be >= UpTime1 (allowing for small timing variations) }
-  Assert.IsTrue(UpTime2 >= UpTime1 - (1 / SecsPerDay),
-    'Second uptime reading should be >= first reading');
+  { GetTickCount64 ticks in steps of about 16 ms, so the measured gap is at least 100 - 16 ms.
+    The upper bound leaves room for a busy PC, but a constant (gap 0) or a factor-1000 scale error fails. }
+  ElapsedMs:= (UpTime2 - UpTime1) * MSecsPerDay;
+  Assert.IsTrue(ElapsedMs >= 84, 'Two readings 100 ms apart must differ by at least 84 ms. Got ' + FloatToStr(ElapsedMs));
+  Assert.IsTrue(ElapsedMs < 2000, 'Two readings 100 ms apart must differ by less than 2 s. Got ' + FloatToStr(ElapsedMs));
 end;
 
 
@@ -243,23 +261,26 @@ end;
 
 procedure TTestSystemTime.Test_GetSysFileTime_ReturnsReasonableDate;
 VAR
-  SysTime: TDateTime;
+  SysTime, Expected: TDateTime;
+  FileName: string;
 begin
+  { Skip only when none of the files exists; when one exists, GetSysFileTime must find it }
+  if NOT ExpectedSysFile(FileName, Expected) then
+    begin
+      Assert.Pass('None of the system files GetSysFileTime uses is readable on this PC');
+      EXIT;
+    end;
+
   SysTime:= GetSysFileTime;
+  Assert.IsTrue(SysTime <> 0, 'GetSysFileTime returned 0 although ' + FileName + ' exists');
 
-  if SysTime > 0 then
-  begin
-    { If we got a value, it should be in a reasonable range }
-    { Not before year 2000 }
-    Assert.IsTrue(YearOf(SysTime) >= 2000,
-      'System file time should be after year 2000. Got: ' + DateTimeToStr(SysTime));
+  { Not before year 2000 }
+  Assert.IsTrue(YearOf(SysTime) >= 2000,
+    'System file time should be after year 2000. Got: ' + DateTimeToStr(SysTime));
 
-    { Not more than 1 day in the future (accounting for time zones) }
-    Assert.IsTrue(SysTime <= Now + 1,
-      'System file time should not be more than 1 day in the future');
-  end
-  else
-    Assert.Pass('GetSysFileTime returned 0 (no suitable system file found)');
+  { Not more than 1 day in the future (accounting for time zones) }
+  Assert.IsTrue(SysTime <= Now + 1,
+    'System file time should not be more than 1 day in the future');
 end;
 
 
@@ -281,10 +302,22 @@ begin
 end;
 
 
+{ The TRUE leg needs a system clock set back before the system file's time: a system setting this suite must not change }
 procedure TTestSystemTime.Test_SystemTimeIsInvalid_NormallyReturnsFalse;
 VAR
   IsInvalid: Boolean;
+  FileTime: TDateTime;
+  FileName: string;
 begin
+  if NOT ExpectedSysFile(FileName, FileTime) then
+    begin
+      Assert.Pass('None of the system files GetSysFileTime uses is readable on this PC');
+      EXIT;
+    end;
+
+  { The precondition that makes FALSE the right answer: the system file was written before Now }
+  Assert.IsTrue(FileTime <= Now, 'The time of ' + FileName + ' is in the future: ' + DateTimeToStr(FileTime));
+
   { On a normal system, the clock should be valid }
   IsInvalid:= SystemTimeIsInvalid;
   Assert.IsFalse(IsInvalid,

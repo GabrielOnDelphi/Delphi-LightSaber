@@ -1,7 +1,7 @@
 ﻿unit Test.LightVcl.Visual.Panel;
 
 {=============================================================================================================
-   2026.10.07
+   2026.10.08
    Unit tests for LightVcl.Visual.Panel.pas
    Tests TCubicPanel word wrap and control enumeration functionality.
 
@@ -327,19 +327,25 @@ end;
 
 procedure TTestCubicPanel.TestResetToFirstCtrl;
 var
-  Lbl1: TLabel;
+  Lbl1, LblLow: TLabel;
 begin
+  { The lower label is created first, so it is Controls[0]: a walk that returns Controls[0] gives the wrong control }
+  LblLow:= TLabel.Create(FPanel);
+  LblLow.Parent:= FPanel;
+  LblLow.Top:= 200;
+
   Lbl1:= TLabel.Create(FPanel);
   Lbl1.Parent:= FPanel;
   Lbl1.Top:= 10;
 
   FPanel.ResetToFirstCtrl;
   var First1:= FPanel.NextControl;
+  Assert.AreSame(TObject(Lbl1), TObject(First1), 'After the reset NextControl must return the topmost control');
 
+  { Without a reset the walk would continue from Lbl1. LblLow starts far below Lbl1's bottom edge, so it would answer NIL. }
   FPanel.ResetToFirstCtrl;
   var First2:= FPanel.NextControl;
-
-  Assert.AreEqual(First1, First2, 'ResetToFirstCtrl should allow re-enumeration');
+  Assert.AreSame(TObject(Lbl1), TObject(First2), 'ResetToFirstCtrl must restart the walk at the topmost control');
 end;
 
 

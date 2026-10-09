@@ -338,12 +338,17 @@ var
   Params: RResizeParams;
 begin
   Frame:= TResizeParameters(FFrame);
+  { The DFM checks radZoomAuto, so move the selection away first }
+  Frame.radZoomFit.Checked:= TRUE;
+  Assert.IsFalse(Frame.radZoomAuto.Checked, 'Precondition: radZoomAuto must be unchecked');
+
   Params.Reset;
   Params.ResizeOpp:= roAutoDetect;
 
   Frame.GUIFromObject(@Params);
 
-  Assert.IsTrue(Frame.radZoomAuto.Checked, 'radZoomAuto should be checked');
+  Assert.IsTrue (Frame.radZoomAuto.Checked, 'radZoomAuto should be checked');
+  Assert.IsFalse(Frame.radZoomFit.Checked,  'radZoomFit must be unchecked again');
 end;
 
 
@@ -530,6 +535,10 @@ var
 begin
   Frame:= TResizeParameters(FFrame);
   Frame.radZoomAuto.Checked:= TRUE;
+  { The DFM leaves both enabled, and checking a radio button fires GUIChanged through OnClick.
+    So disable them afterwards: only the GUIChanged call below can enable them again. }
+  Frame.chkZoomMax.Enabled:= FALSE;
+  Frame.spnZoomMax.Enabled:= FALSE;
 
   Frame.GUIChanged(nil);
 

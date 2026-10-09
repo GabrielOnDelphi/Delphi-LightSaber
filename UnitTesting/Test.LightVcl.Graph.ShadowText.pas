@@ -28,6 +28,7 @@ type
     FBitmap: TBitmap;
     procedure PrepareCanvas(Background: TColor);
     function  CountPixels(Color: TColor): Integer;
+    function  ColorBox(Color: TColor): TRect;
     function  InkColumns(Background: TColor; out MinX, MaxX: Integer): Boolean;
     procedure CheckColorsPainted(TextColor, ShadowColor: TColor; UseRect: Boolean);
   public
@@ -169,6 +170,35 @@ begin
 end;
 
 
+{ The bounding box of the pixels that have exactly this colour. Right is -1 when there is none. }
+function TTestShadowText.ColorBox(Color: TColor): TRect;
+var
+  x, y: Integer;
+  RGBColor: TColorRef;
+  Line: PRGBTriple;
+begin
+  Result:= Rect(MaxInt, MaxInt, -1, -1);
+  RGBColor:= ColorToRGB(Color);
+  for y:= 0 to FBitmap.Height - 1 do
+  begin
+    Line:= FBitmap.ScanLine[y];
+    for x:= 0 to FBitmap.Width - 1 do
+    begin
+      if  (Line.rgbtRed   = GetRValue(RGBColor))
+      AND (Line.rgbtGreen = GetGValue(RGBColor))
+      AND (Line.rgbtBlue  = GetBValue(RGBColor)) then
+      begin
+        if x < Result.Left   then Result.Left  := x;
+        if y < Result.Top    then Result.Top   := y;
+        if x > Result.Right  then Result.Right := x;
+        if y > Result.Bottom then Result.Bottom:= y;
+      end;
+      Inc(Line);
+    end;
+  end;
+end;
+
+
 { Returns the first and the last column that holds a pixel different from Background }
 function TTestShadowText.InkColumns(Background: TColor; out MinX, MaxX: Integer): Boolean;
 var
@@ -207,25 +237,31 @@ end;
 procedure TTestShadowText.TestDrawShadowText_XY_BasicCall;
 var
   Result: Integer;
+  TextBox: TRect;
 begin
+  PrepareCanvas(clWhite);
   Result:= DrawShadowText(FBitmap.Canvas, 'Hello World', 10, 10, clBlack, clGray);
-  Assert.IsTrue(Result > 0, 'DrawShadowText should return height of text drawn');
+
+  Assert.AreEqual(FBitmap.Canvas.TextHeight('Hello World'), Result, 'DrawShadowText must return the height of the one line it drew');
+  TextBox:= ColorBox(clBlack);
+  Assert.IsTrue(TextBox.Right >= 0, 'The text colour must appear on the canvas');
+  Assert.IsTrue(CountPixels(clGray) > 20, 'The shadow colour must appear on the canvas');
+  Assert.IsTrue((TextBox.Left >= 10) AND (TextBox.Left <= 14), 'The text must start at X = 10, it starts at ' + IntToStr(TextBox.Left));
+  Assert.IsTrue(TextBox.Top >= 10, 'The text must start at Y = 10, it starts at ' + IntToStr(TextBox.Top));
 end;
 
 
 procedure TTestShadowText.TestDrawShadowText_XY_EmptyText;
-var
-  Before: TColor;
 begin
   { See TestDrawShadowText_ReturnsZeroForEmptyText: the return of 0 was a guess about Windows.
     Windows 11 gives 1 for an empty string. What must hold is that nothing is painted. }
-  FBitmap.Canvas.Brush.Color:= clWhite;
-  FBitmap.Canvas.FillRect(Rect(0, 0, FBitmap.Width, FBitmap.Height));
-  Before:= FBitmap.Canvas.Pixels[12, 12];
+  PrepareCanvas(clWhite);
+  FBitmap.Canvas.Font.Color:= clLime;
 
   DrawShadowText(FBitmap.Canvas, '', 10, 10, clBlack, clGray);
 
-  Assert.AreEqual(Integer(Before), Integer(FBitmap.Canvas.Pixels[12, 12]), 'Empty text must paint nothing');
+  Assert.AreEqual(FBitmap.Width * FBitmap.Height, CountPixels(clWhite), 'Empty text must paint nothing anywhere on the canvas');
+  Assert.AreEqual(Integer(clLime), Integer(FBitmap.Canvas.Font.Color), 'DrawShadowText must give the canvas its font colour back');
 end;
 
 
@@ -236,35 +272,48 @@ end;
 
 
 procedure TTestShadowText.TestDrawShadowText_XY_NegativeShadowDist;
+var
+  TextBox, ShadowBox: TRect;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      DrawShadowText(FBitmap.Canvas, 'Test', 10, 10, clBlack, clGray, -2);
-    end,
-    'DrawShadowText should handle negative shadow distance');
+  PrepareCanvas(clWhite);
+  DrawShadowText(FBitmap.Canvas, 'Test', 10, 10, clBlack, clGray, -2);
+
+  TextBox  := ColorBox(clBlack);
+  ShadowBox:= ColorBox(clGray);
+  Assert.IsTrue((TextBox.Right >= 0) AND (ShadowBox.Right >= 0), 'Text and shadow must both be painted');
+  { The shadow is the same glyphs moved 2 pixels up and left, so its first column and its first row stick out from under the text }
+  Assert.AreEqual(TextBox.Left - 2, ShadowBox.Left, 'The shadow must start 2 pixels left of the text');
+  Assert.AreEqual(TextBox.Top  - 2, ShadowBox.Top,  'The shadow must start 2 pixels above the text');
 end;
 
 
 procedure TTestShadowText.TestDrawShadowText_XY_ZeroShadowDist;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      DrawShadowText(FBitmap.Canvas, 'Test', 10, 10, clBlack, clGray, 0);
-    end,
-    'DrawShadowText should handle zero shadow distance');
+  PrepareCanvas(clWhite);
+  DrawShadowText(FBitmap.Canvas, 'Test', 10, 10, clBlack, clGray, 0);
+
+  { With no offset the text lands on its shadow pixel for pixel }
+  Assert.IsTrue(CountPixels(clBlack) > 20, 'The text must be painted');
+  Assert.AreEqual(0, CountPixels(clGray), 'With distance 0 the text must hide the whole shadow');
 end;
 
 
 procedure TTestShadowText.TestDrawShadowText_XY_LargeShadowDist;
+var
+  TextBox, ShadowBox: TRect;
 begin
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      DrawShadowText(FBitmap.Canvas, 'Test', 10, 10, clBlack, clGray, 50);
-    end,
-    'DrawShadowText should handle large shadow distance');
+  PrepareCanvas(clWhite);
+  DrawShadowText(FBitmap.Canvas, 'Test', 10, 10, clBlack, clGray, 50);
+
+  TextBox  := ColorBox(clBlack);
+  ShadowBox:= ColorBox(clGray);
+  Assert.IsTrue((TextBox.Right >= 0) AND (ShadowBox.Right >= 0), 'Text and shadow must both be painted');
+  Assert.IsTrue(TextBox.Bottom < ShadowBox.Top, 'Precondition: 50 pixels must move the shadow clear of the text');
+  { Clear of the text, the whole shadow is visible: the same box, moved 50 right and 50 down }
+  Assert.AreEqual(TextBox.Left   + 50, ShadowBox.Left,   'Shadow left');
+  Assert.AreEqual(TextBox.Top    + 50, ShadowBox.Top,    'Shadow top');
+  Assert.AreEqual(TextBox.Right  + 50, ShadowBox.Right,  'Shadow right');
+  Assert.AreEqual(TextBox.Bottom + 50, ShadowBox.Bottom, 'Shadow bottom');
 end;
 
 
@@ -285,29 +334,36 @@ end;
 procedure TTestShadowText.TestDrawShadowText_Rect_BasicCall;
 var
   Result: Integer;
-  TextRect: TRect;
+  TextRect, TextBox: TRect;
 begin
+  PrepareCanvas(clWhite);
   TextRect:= Rect(10, 10, 300, 100);
   Result:= DrawShadowText(FBitmap.Canvas, 'Hello World', TextRect, clBlack, clGray, 2);
-  Assert.IsTrue(Result > 0, 'DrawShadowText should return height of text drawn');
+
+  Assert.AreEqual(FBitmap.Canvas.TextHeight('Hello World'), Result, 'DrawShadowText must return the height of the one line it drew');
+  TextBox:= ColorBox(clBlack);
+  Assert.IsTrue(TextBox.Right >= 0, 'The text colour must appear on the canvas');
+  Assert.IsTrue(CountPixels(clGray) > 20, 'The shadow colour must appear on the canvas');
+  { The default flags are DT_LEFT: the text starts at the left edge of the rect and stays inside it }
+  Assert.IsTrue((TextBox.Left >= 10) AND (TextBox.Left <= 14), 'The text must start at the left edge of the rect (10), it starts at ' + IntToStr(TextBox.Left));
+  Assert.IsTrue((TextBox.Top >= 10) AND (TextBox.Bottom < 100), 'The text must stay inside the rect vertically: rows ' + IntToStr(TextBox.Top) + '..' + IntToStr(TextBox.Bottom));
 end;
 
 
 procedure TTestShadowText.TestDrawShadowText_Rect_EmptyText;
 var
   TextRect: TRect;
-  Before: TColor;
 begin
   { See TestDrawShadowText_ReturnsZeroForEmptyText: the return of 0 was a guess about Windows.
     Windows 11 gives 1 for an empty string. What must hold is that nothing is painted. }
-  FBitmap.Canvas.Brush.Color:= clWhite;
-  FBitmap.Canvas.FillRect(Rect(0, 0, FBitmap.Width, FBitmap.Height));
-  Before:= FBitmap.Canvas.Pixels[12, 12];
+  PrepareCanvas(clWhite);
+  FBitmap.Canvas.Font.Color:= clLime;
 
   TextRect:= Rect(10, 10, 300, 100);
   DrawShadowText(FBitmap.Canvas, '', TextRect, clBlack, clGray, 2);
 
-  Assert.AreEqual(Integer(Before), Integer(FBitmap.Canvas.Pixels[12, 12]), 'Empty text must paint nothing');
+  Assert.AreEqual(FBitmap.Width * FBitmap.Height, CountPixels(clWhite), 'Empty text must paint nothing anywhere on the canvas');
+  Assert.AreEqual(Integer(clLime), Integer(FBitmap.Canvas.Font.Color), 'DrawShadowText must give the canvas its font colour back');
 end;
 
 
@@ -405,25 +461,24 @@ var
   Result: Integer;
 begin
   Result:= DrawShadowText(FBitmap.Canvas, 'Valid Text', 10, 10, clBlack, clGray);
-  Assert.IsTrue(Result > 0, 'DrawShadowText should return non-zero for valid text');
+  Assert.AreEqual(FBitmap.Canvas.TextHeight('Valid Text'), Result, 'DrawShadowText must return the height of one line of text');
 end;
 
 
 procedure TTestShadowText.TestDrawShadowText_ReturnsZeroForEmptyText;
 var
-  Before: TColor;
+  Result: Integer;
 begin
   { The old test demanded a return of 0. That was a guess about Windows, not a LightSaber promise:
     DrawShadowText passes the string to the DrawShadowText in ComCtl32 and returns what that
     returns, and on Windows 11 an empty string gives 1. What an empty string must really do is
-    change nothing on the canvas, so that is what is checked. }
-  FBitmap.Canvas.Brush.Color:= clWhite;
-  FBitmap.Canvas.FillRect(Rect(0, 0, FBitmap.Width, FBitmap.Height));
-  Before:= FBitmap.Canvas.Pixels[10, 10];
+    change nothing on the canvas and measure no line, so that is what is checked. }
+  PrepareCanvas(clWhite);
 
-  DrawShadowText(FBitmap.Canvas, '', 10, 10, clBlack, clGray);
+  Result:= DrawShadowText(FBitmap.Canvas, '', 10, 10, clBlack, clGray);
 
-  Assert.AreEqual(Integer(Before), Integer(FBitmap.Canvas.Pixels[10, 10]), 'Empty text must paint nothing');
+  Assert.IsTrue(Result < FBitmap.Canvas.TextHeight('X'), 'An empty string must not return the height of a line, it returned ' + IntToStr(Result));
+  Assert.AreEqual(FBitmap.Width * FBitmap.Height, CountPixels(clWhite), 'Empty text must paint nothing anywhere on the canvas');
 end;
 
 
@@ -432,28 +487,37 @@ end;
 procedure TTestShadowText.TestDrawShadowText_LongText;
 var
   LongText: string;
+  Result: Integer;
+  TextBox: TRect;
 begin
+  PrepareCanvas(clWhite);
   LongText:= StringOfChar('A', 1000);
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      DrawShadowText(FBitmap.Canvas, LongText, 10, 10, clBlack, clGray);
-    end,
-    'DrawShadowText should handle long text');
+
+  Result:= DrawShadowText(FBitmap.Canvas, LongText, 10, 10, clBlack, clGray);
+
+  Assert.AreEqual(FBitmap.Canvas.TextHeight(LongText), Result, 'Long text is still one line: DrawShadowText must return the height of one line');
+  TextBox:= ColorBox(clBlack);
+  Assert.IsTrue((TextBox.Left >= 10) AND (TextBox.Left <= 14), 'The text must start at X = 10, it starts at ' + IntToStr(TextBox.Left));
+  { 1000 letters are far wider than the 400 pixel canvas, so the text must run on to the right edge }
+  Assert.IsTrue(TextBox.Right >= FBitmap.Width - 3, 'The text must reach the right edge of the canvas, it ends at ' + IntToStr(TextBox.Right));
 end;
 
 
 procedure TTestShadowText.TestDrawShadowText_MultilineText;
 var
-  TextRect: TRect;
+  TextRect, TextBox: TRect;
+  Result, LineHeight: Integer;
 begin
+  PrepareCanvas(clWhite);
+  LineHeight:= FBitmap.Canvas.TextHeight('Line 1');
   TextRect:= Rect(10, 10, 300, 200);
-  Assert.WillNotRaiseAny(
-    procedure
-    begin
-      DrawShadowText(FBitmap.Canvas, 'Line 1'#13#10'Line 2'#13#10'Line 3', TextRect, clBlack, clGray, 2, DT_LEFT);
-    end,
-    'DrawShadowText should handle multiline text');
+
+  Result:= DrawShadowText(FBitmap.Canvas, 'Line 1'#13#10'Line 2'#13#10'Line 3', TextRect, clBlack, clGray, 2, DT_LEFT);
+
+  { Without DT_SINGLELINE every CR LF starts a new line }
+  Assert.AreEqual(3 * LineHeight, Result, 'Three lines: the returned height must be three line heights');
+  TextBox:= ColorBox(clBlack);
+  Assert.IsTrue(TextBox.Bottom - TextBox.Top > 2 * LineHeight, 'The ink must span three lines: rows ' + IntToStr(TextBox.Top) + '..' + IntToStr(TextBox.Bottom) + ', line height ' + IntToStr(LineHeight));
 end;
 
 

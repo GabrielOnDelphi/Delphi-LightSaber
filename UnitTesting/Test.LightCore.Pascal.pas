@@ -392,6 +392,10 @@ end;
 procedure TTestLightCorePascal.TestIsMethod_PointerType;
 begin
   Assert.IsTrue(IsMethod('PMyRecord = ^TMyRecord;'));
+
+  { 'PInt = ^Integer;' holds none of the keywords IsMethod looks for, so only the '^' check can accept it }
+  Assert.IsTrue (IsMethod('PInt = ^Integer;'), 'A pointer type must be accepted because of its ^');
+  Assert.IsFalse(IsMethod('PInt = Integer;'),  'The same line without ^ is not a declaration IsMethod knows');
 end;
 
 
@@ -414,6 +418,13 @@ begin
   FTestLines.Add('uses SysUtils;');
 
   Assert.AreEqual(2, FindSection(FTestLines, True));
+
+  { Real units write the keyword in lower case }
+  FTestLines.Clear;
+  FTestLines.Add('unit Test;');
+  FTestLines.Add('interface');
+  FTestLines.Add('uses SysUtils;');
+  Assert.AreEqual(1, FindSection(FTestLines, True), 'A lower-case "interface" must be found');
 end;
 
 
@@ -426,6 +437,15 @@ begin
   FTestLines.Add('end.');
 
   Assert.AreEqual(3, FindSection(FTestLines, False));
+
+  { Real units write the keyword in lower case }
+  FTestLines.Clear;
+  FTestLines.Add('unit Test;');
+  FTestLines.Add('interface');
+  FTestLines.Add('uses SysUtils;');
+  FTestLines.Add('implementation');
+  FTestLines.Add('end.');
+  Assert.AreEqual(3, FindSection(FTestLines, False), 'A lower-case "implementation" must be found');
 end;
 
 
@@ -545,6 +565,13 @@ end;
 procedure TTestLightCorePascal.TestRelaxedSearch_WithComment;
 begin
   Assert.IsTrue(RelaxedSearch('x:= 5; // comment', 'x:=5;'));
+
+  { RelaxedSearch is a "starts with" match, so a comment AFTER the code proves nothing about the stripping. A comment BEFORE the code does. }
+  Assert.IsTrue(RelaxedSearch('{ note } x:= 5;', 'x:=5;'), 'A curly-brace comment before the code must be stripped');
+  Assert.IsTrue(RelaxedSearch('(* note *) x:= 5;', 'x:=5;'), 'A paren-star comment before the code must be stripped');
+
+  { The stripped comment is no longer part of the line }
+  Assert.IsFalse(RelaxedSearch('x:= 5; // comment', 'x:=5;//comment'), 'The // comment must be gone from the compared line');
 end;
 
 
@@ -558,7 +585,8 @@ end;
 
 procedure TTestLightCorePascal.TestRelaxedSearchI_Found;
 begin
-  Assert.IsTrue(RelaxedSearchI('call SetFocus;', 'setfocus') > 0);
+  { 'SetFocus' starts at character 6 of 'call SetFocus;' }
+  Assert.AreEqual(6, RelaxedSearchI('call SetFocus;', 'setfocus'));
 end;
 
 
@@ -649,8 +677,12 @@ begin
   FTestLines.Add('something else');
   FTestLines.Add('begin code');
   FTestLines.Add('more stuff');
+  FTestLines.Add('the end.');
 
   Assert.AreEqual(1, RelaxedSearchEx('begin[OR]end', FTestLines));
+
+  { From line 2 on only the SECOND alternative ('end', line 3) is present }
+  Assert.AreEqual(3, RelaxedSearchEx('begin[OR]end', FTestLines, 2), 'The second [OR] alternative must be searched too');
 end;
 
 
@@ -727,9 +759,12 @@ begin
   FTestLines.Add('IMPLEMENTATION');
   FTestLines.Add('');
   FTestLines.Add('end.');
+  var Before:= FTestLines.Text;
 
   { Unit already in INTERFACE uses - should return TRUE without adding }
   Assert.IsTrue(AddUnitToUses(FTestLines, 'System.SysUtils'));
+  Assert.AreEqual(10, FTestLines.Count, 'No line may be added for a unit that is already used');
+  Assert.AreEqual(Before, FTestLines.Text, 'The unit body must stay unchanged');
 end;
 
 
@@ -751,8 +786,11 @@ begin
 
   { Should add NewUnit to implementation uses }
   Assert.IsTrue(AddUnitToUses(FTestLines, 'NewUnit'));
-  { Verify it was added }
-  Assert.IsTrue(FTestLines.Text.Contains('NewUnit'));
+
+  { The multi-line IMPLEMENTATION uses clause gets the unit in front of its first unit line (index 10) }
+  Assert.AreEqual(13, FTestLines.Count, 'The unit must be added to an existing line, not on a new one');
+  Assert.AreEqual('  NewUnit, System.Classes;', FTestLines[10], 'NewUnit must land in the IMPLEMENTATION uses clause');
+  Assert.AreEqual('  System.SysUtils;', FTestLines[5], 'The INTERFACE uses clause must stay unchanged');
 end;
 
 

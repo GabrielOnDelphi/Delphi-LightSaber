@@ -143,6 +143,8 @@ begin
 end;
 
 
+{ ShortenString keeps the first (MaxLength div 2 - 2) characters, adds '..', and keeps the last (MaxLength div 2 - 1) characters.
+  The input below has 51 characters; MaxLength 20 keeps 8 + '..' + 9 = 19 characters. }
 procedure TTestEllipsisText.TestShortenString_LongText_Shortened;
 var
   Input, Result: string;
@@ -150,6 +152,7 @@ begin
   Input:= 'This is a very long text that needs to be shortened';
   Result:= ShortenString(Input, 20);
 
+  Assert.AreEqual('This is ..shortened', Result, 'The first 8 characters, the ellipsis, the last 9 characters');
   Assert.IsTrue(Length(Result) <= 20,
     'Result should be at most MaxLength characters');
 end;
@@ -162,8 +165,9 @@ begin
   Input:= 'This is a very long text that needs to be shortened';
   Result:= ShortenString(Input, 20);
 
-  Assert.IsTrue(Pos('..', Result) > 0,
-    'Shortened text should contain ellipsis');
+  Assert.AreEqual(9, Pos('..', Result), 'The ellipsis must follow the first 8 characters');
+  Assert.AreEqual(0, Pos('.', Result, 11), 'No other dot after the ellipsis');
+  Assert.AreEqual(19, Length(Result), '8 + 2 + 9 characters');
 end;
 
 
@@ -174,13 +178,8 @@ begin
   Input:= 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   Result:= ShortenString(Input, 15);
 
-  { Should preserve start }
-  Assert.IsTrue(Result.StartsWith('A'),
-    'Should preserve start of string');
-
-  { Should preserve end }
-  Assert.IsTrue(Result.EndsWith('Z'),
-    'Should preserve end of string');
+  { 26 characters, MaxLength 15: the first 5 and the last 6 }
+  Assert.AreEqual('ABCDE..UVWXYZ', Result, 'Start and end of the alphabet around the ellipsis');
 end;
 
 
@@ -223,10 +222,10 @@ begin
   Input:= StringOfChar('X', 10000);
   Result:= ShortenString(Input, 50);
 
+  { MaxLength 50: the first 23 and the last 24 characters }
+  Assert.AreEqual(StringOfChar('X', 23) + '..' + StringOfChar('X', 24), Result, 'The first 23 characters, the ellipsis, the last 24 characters');
   Assert.IsTrue(Length(Result) <= 50,
     'Very long text should be shortened to MaxLength');
-  Assert.IsTrue(Pos('..', Result) > 0,
-    'Should contain ellipsis');
 end;
 
 
@@ -252,13 +251,21 @@ begin
 end;
 
 
+{ The average is measured over the 52 letters A..Z, a..z. The reference measures them with TCanvas.TextExtent. }
 procedure TTestEllipsisText.TestGetAverageCharSize_NoException;
+CONST
+  Letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+var
+  Size: TPoint;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
-      GetAverageCharSize(FCanvas);
+      Size:= GetAverageCharSize(FCanvas);
     end);
+
+  Assert.AreEqual(FCanvas.TextWidth(Letters) DIV 52, Size.X, 'X = width of the 52 letters div 52');
+  Assert.AreEqual(FCanvas.TextHeight(Letters), Size.Y, 'Y = height of the letters');
 end;
 
 
@@ -275,13 +282,26 @@ begin
 end;
 
 
+{ The rectangle is Rect(1, 1, 100, 50): 99 pixels wide. The text does not fit, so the END is replaced by '...' }
 procedure TTestEllipsisText.TestGetEllipsisText_Canvas_NoException;
+CONST
+  Input = 'This is a test string';
+var
+  Result, Kept: string;
 begin
-  Assert.WillNotRaise(
+  Assert.IsTrue(FCanvas.TextWidth(Input) > 99, 'Precondition: the input is wider than the rectangle');
+
+  Assert.WillNotRaiseAny(
     procedure
     begin
-      GetEllipsisText('This is a test string', FCanvas, 100, 50);
+      Result:= GetEllipsisText(Input, FCanvas, 100, 50);
     end);
+
+  Assert.AreNotEqual(Input, Result, 'A text wider than the rectangle must be shortened');
+  Assert.AreEqual('...', Copy(Result, Length(Result) - 2, 3), 'End ellipsis expected. Got: ' + Result);
+  Kept:= Copy(Result, 1, Length(Result) - 3);
+  Assert.AreEqual(Copy(Input, 1, Length(Kept)), Kept, 'The text before the ellipsis is the start of the input. Got: ' + Result);
+  Assert.IsTrue(FCanvas.TextWidth(Result) <= 99, 'The shortened text must fit in 99 pixels. Got ' + IntToStr(FCanvas.TextWidth(Result)) + ' for ' + Result);
 end;
 
 
@@ -297,13 +317,41 @@ end;
 
 { GetEllipsisText Tests - MaxWidth overload }
 
-procedure TTestEllipsisText.TestGetEllipsisText_MaxWidth_NoException;
+{ The first I and the last I characters of S around '...' - the shape the MaxWidth overload returns }
+function MiddleEllipsis(CONST S: string; I: Integer): string;
 begin
-  Assert.WillNotRaise(
+  Result:= Copy(S, 1, I) + '...' + Copy(S, Length(S) - I + 1, I);
+end;
+
+
+{ The MaxWidth overload keeps the most characters from both ends whose width stays within MaxWidth minus the width of '...'.
+  The test checks the shape, the fit, and that one more character on each side would not fit. }
+procedure TTestEllipsisText.TestGetEllipsisText_MaxWidth_NoException;
+CONST
+  Input = 'This is a test string';
+  MaxWidth = 50;
+var
+  Result: string;
+  I, Kept, Limit: Integer;
+begin
+  Assert.IsTrue(FCanvas.TextWidth(Input) > MaxWidth, 'Precondition: the input is wider than MaxWidth');
+
+  Assert.WillNotRaiseAny(
     procedure
     begin
-      GetEllipsisText('This is a test string', FCanvas, 50);
+      Result:= GetEllipsisText(Input, FCanvas, MaxWidth);
     end);
+
+  Kept:= -1;
+  for I:= 0 to Length(Input) DIV 2 do
+    if Result = MiddleEllipsis(Input, I)
+    then Kept:= I;
+  Assert.IsTrue(Kept >= 0, 'The result must be "start...end" of the input. Got: ' + Result);
+
+  Limit:= MaxWidth - FCanvas.TextWidth('...');
+  if Kept > 0
+  then Assert.IsTrue(FCanvas.TextWidth(Result) <= Limit, 'The result must fit in ' + IntToStr(Limit) + ' pixels. Got: ' + Result);
+  Assert.IsTrue(FCanvas.TextWidth(MiddleEllipsis(Input, Kept + 1)) > Limit, 'One more character on each side would still fit, so the result is too short: ' + Result);
 end;
 
 
@@ -314,22 +362,55 @@ begin
   Result:= GetEllipsisText('', FCanvas, 100);
 
   Assert.AreEqual('', Result, 'Empty string should return empty');
+
+  { The '' above comes from the "it fits" branch, which returns the input unchanged }
+  Assert.IsTrue(FCanvas.TextWidth('Hi') <= 100, 'Precondition: "Hi" fits in 100 pixels');
+  Assert.AreEqual('Hi', GetEllipsisText('Hi', FCanvas, 100), 'A text that fits must come back unchanged');
 end;
 
 
 { DrawStringEllipsis Tests }
 
+{ Number of pixels in R that are not white }
+function CountInk(Canvas: TCanvas; CONST R: TRect): Integer;
+var
+  X, Y: Integer;
+begin
+  Result:= 0;
+  for Y:= R.Top to R.Bottom - 1 do
+    for X:= R.Left to R.Right - 1 do
+      if Canvas.Pixels[X, Y] <> clWhite
+      then Inc(Result);
+end;
+
+
+{ Paints the whole test bitmap white, so that whatever DrawText adds shows up as non-white pixels }
+procedure ClearToWhite(Canvas: TCanvas; Width, Height: Integer);
+begin
+  Canvas.Brush.Color:= clWhite;
+  Canvas.Brush.Style:= bsSolid;
+  Canvas.FillRect(Rect(0, 0, Width, Height));
+end;
+
+
+{ DrawText returns the height of the text it drew: one line of the canvas font }
 procedure TTestEllipsisText.TestDrawStringEllipsis_Rect_NoException;
 var
   R: TRect;
+  Height: Integer;
 begin
-  R:= Rect(0, 0, 200, 50);
+  R:= Rect(100, 100, 300, 150);
+  ClearToWhite(FCanvas, FBitmap.Width, FBitmap.Height);
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
-      DrawStringEllipsis('This is a test string', FCanvas, R);
+      Height:= DrawStringEllipsis('This is a test string', FCanvas, R);
     end);
+
+  Assert.AreEqual(FCanvas.TextHeight('This is a test string'), Height, 'One line of text');
+  Assert.IsTrue(CountInk(FCanvas, R) > 0, 'The text must be drawn inside the rectangle');
+  Assert.AreEqual(0, CountInk(FCanvas, Rect(0, 0, 100, 100)), 'Nothing may be drawn above and left of the rectangle');
 end;
 
 
@@ -345,23 +426,43 @@ begin
 end;
 
 
+{ Without a rectangle the text goes to the canvas ClipRect, which for a bitmap is the whole bitmap: drawn at the top left }
 procedure TTestEllipsisText.TestDrawStringEllipsis_NoRect_NoException;
+var
+  Height, LineHeight: Integer;
 begin
-  Assert.WillNotRaise(
+  ClearToWhite(FCanvas, FBitmap.Width, FBitmap.Height);
+  LineHeight:= FCanvas.TextHeight('This is a test string');
+
+  Assert.WillNotRaiseAny(
     procedure
     begin
-      DrawStringEllipsis('This is a test string', FCanvas);
+      Height:= DrawStringEllipsis('This is a test string', FCanvas);
     end);
+
+  Assert.AreEqual(LineHeight, Height, 'One line of text');
+  Assert.IsTrue(CountInk(FCanvas, Rect(0, 0, FCanvas.TextWidth('This is a test string'), LineHeight)) > 0, 'The text must be drawn at the top left');
+  Assert.AreEqual(0, CountInk(FCanvas, Rect(0, LineHeight, 200, LineHeight + 20)), 'Nothing may be drawn under the first line');
 end;
 
 
 procedure TTestEllipsisText.TestDrawStringEllipsis_EmptyString;
+var
+  Height: Integer;
 begin
-  Assert.WillNotRaise(
+  ClearToWhite(FCanvas, FBitmap.Width, FBitmap.Height);
+
+  Assert.WillNotRaiseAny(
     procedure
     begin
-      DrawStringEllipsis('', FCanvas);
+      Height:= DrawStringEllipsis('', FCanvas);
     end);
+
+  Assert.AreEqual(0, CountInk(FCanvas, Rect(0, 0, 200, 40)), 'An empty string draws nothing');
+
+  { DrawText returns 1 for an empty string on Windows 11, a value its documentation does not give, so the
+    test asserts only that no line of text was laid out }
+  Assert.IsTrue(Height < FCanvas.TextHeight('Wg'), 'An empty string lays out no line of text. Height: ' + IntToStr(Height));
 end;
 
 

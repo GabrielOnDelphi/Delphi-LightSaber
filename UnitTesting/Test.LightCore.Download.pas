@@ -268,22 +268,33 @@ procedure TTestDownload.TestHttpOptions_Reset;
 var
   Options: RHttpOptions;
 begin
-  { Set some values }
-  Options.UserAgent:= 'Custom';
-  Options.ResponseTimeout:= 1000;
+  { Every field holds a value that a caller might set and that differs from its default }
+  Options.UserAgent        := 'Custom';
+  Options.HandleRedirects  := FALSE;
+  Options.MaxRedirects     := 3;
+  Options.AllowCookies     := TRUE;
+  Options.ResponseTimeout  := 1000;
+  Options.ConnectionTimeout:= 2000;
 
   { Reset should restore defaults }
   Options.Reset;
 
-  Assert.AreEqual(USER_AGENT_STRING, Options.UserAgent);
-  Assert.IsTrue(Options.HandleRedirects);
-  Assert.AreEqual(10, Options.MaxRedirects);
+  Assert.AreEqual('DelphiApp/1.0 (MyApp HttpDownloader; +http://www.example.com)', Options.UserAgent);
+  Assert.IsTrue(Options.HandleRedirects, 'HandleRedirects');
+  Assert.AreEqual(10, Options.MaxRedirects, 'MaxRedirects');
+  Assert.IsFalse(Options.AllowCookies, 'AllowCookies');
+  Assert.AreEqual(60000, Options.ResponseTimeout, 'ResponseTimeout');
+  Assert.AreEqual(60000, Options.ConnectionTimeout, 'ConnectionTimeout');
 end;
 
 procedure TTestDownload.TestHttpOptions_DefaultValues;
 var
   Options: RHttpOptions;
 begin
+  { A zeroed record: '', FALSE and 0 everywhere. AllowCookies defaults to FALSE, so it starts at TRUE. }
+  Options:= Default(RHttpOptions);
+  Options.AllowCookies:= TRUE;
+
   Options.Reset;
 
   Assert.AreEqual(USER_AGENT_STRING, Options.UserAgent);

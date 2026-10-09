@@ -133,6 +133,19 @@ begin
 end;
 
 
+{ The label is a private field; it is the only TLabel on the panel }
+function VerbosityLabel(Trackbar: TWinControl): TLabel;
+var
+  i: Integer;
+begin
+  Result:= NIL;
+  for i:= 0 to Trackbar.ControlCount - 1 do
+    if Trackbar.Controls[i] is TLabel
+    then EXIT(TLabel(Trackbar.Controls[i]));
+  Assert.IsNotNull(Result, 'The panel must hold a TLabel');
+end;
+
+
 { Creation Tests }
 
 procedure TTestRichLogTrack.TestCreate_HasTrackBar;
@@ -145,6 +158,14 @@ begin
   Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
   Assert.IsNotNull(Trackbar.TrackBar, 'Should have internal TrackBar component');
+  Assert.AreSame(TObject(Trackbar), TObject(Trackbar.TrackBar.Parent), 'The trackbar must sit on the panel');
+  Assert.AreSame(TObject(Trackbar), TObject(Trackbar.TrackBar.Owner), 'The panel must own (and free) the trackbar');
+  Assert.AreEqual('VerbosityTrackbar', Trackbar.TrackBar.Name, 'The trackbar needs its name so its position can be saved to the INI file');
+  Assert.AreEqual(Ord(alRight), Ord(Trackbar.TrackBar.Align), 'Trackbar alignment');
+
+  { Moving the inner trackbar itself must reach the label: its OnChange is wired to the panel }
+  Trackbar.TrackBar.Position:= Ord(lvrErrors);
+  Assert.AreEqual('Log verbosity: Errors', VerbosityLabel(Trackbar).Caption, 'The label must follow the trackbar');
 end;
 
 
@@ -238,7 +259,12 @@ begin
   FTrackbar:= Trackbar;
   Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
-  Assert.AreEqual(TLogVerb(Trackbar.TrackBar.Position), Trackbar.Verbosity, 'Verbosity should match TrackBar position');
+  { Move the inner trackbar directly, away from DefaultVerbosity (lvrInfos), and read Verbosity back }
+  Trackbar.TrackBar.Position:= Ord(lvrErrors);
+  Assert.AreEqual(lvrErrors, Trackbar.Verbosity, 'Verbosity must follow TrackBar.Position (lvrErrors)');
+
+  Trackbar.TrackBar.Position:= Ord(lvrHints);
+  Assert.AreEqual(lvrHints, Trackbar.Verbosity, 'Verbosity must follow TrackBar.Position (lvrHints)');
 end;
 
 

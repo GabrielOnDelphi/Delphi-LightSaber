@@ -26,6 +26,8 @@ type
     FTempFile: string;
     procedure CreateTempImageFile;
     procedure DeleteTempImageFile;
+    procedure Blacken(Thumb: TObject);
+    procedure CheckBlank(Thumb: TObject; Size: Integer);
   public
     [Setup]
     procedure Setup;
@@ -138,6 +140,30 @@ begin
 end;
 
 
+{ Shrinks and blackens the bitmap behind the setter's back, so only a Generate call can make it blank and full-sized again }
+procedure TTestGraphResizeWinThumb.Blacken(Thumb: TObject);
+var
+  Bmp: TBitmap;
+begin
+  Bmp:= TFileThumb(Thumb).ThumbBmp;
+  Bmp.SetSize(10, 10);
+  Bmp.Canvas.Brush.Color:= clBlack;
+  Bmp.Canvas.FillRect(Rect(0, 0, 10, 10));
+end;
+
+
+{ A blank thumbnail: Size x Size, filled with the window colour, no icon in the centre }
+procedure TTestGraphResizeWinThumb.CheckBlank(Thumb: TObject; Size: Integer);
+var
+  Bmp: TBitmap;
+begin
+  Bmp:= TFileThumb(Thumb).ThumbBmp;
+  Assert.AreEqual(Size, Bmp.Width,  'Blank thumbnail width');
+  Assert.AreEqual(Size, Bmp.Height, 'Blank thumbnail height');
+  Assert.AreEqual(Integer(ColorToRGB(clWindow)), Integer(Bmp.Canvas.Pixels[Size DIV 2, Size DIV 2]), 'The centre of a blank thumbnail must be the window colour');
+end;
+
+
 { Constructor/Destructor Tests }
 
 procedure TTestGraphResizeWinThumb.TestCreate_BitmapNotNil;
@@ -147,6 +173,8 @@ begin
   Thumb:= TFileThumb.Create;
   TRY
     Assert.IsNotNull(Thumb.ThumbBmp, 'ThumbBmp should not be nil after creation');
+    { The constructor sizes the bitmap to the default width 100 and fills it with the window colour }
+    CheckBlank(Thumb, 100);
   FINALLY
     FreeAndNil(Thumb);
   END;
@@ -173,6 +201,10 @@ begin
   Thumb:= TFileThumb.Create;
   TRY
     Assert.AreEqual('', Thumb.FilePath, 'Default FilePath should be empty');
+    { With the default path GenerateThumbnail has no file to show, so it must leave a blank thumbnail }
+    Blacken(Thumb);
+    Thumb.GenerateThumbnail;
+    CheckBlank(Thumb, 100);
   FINALLY
     FreeAndNil(Thumb);
   END;
@@ -280,16 +312,19 @@ procedure TTestGraphResizeWinThumb.TestGenerateThumbnail_EmptyFilePath;
 var
   Thumb: TFileThumb;
 begin
+  CreateTempImageFile;
+
   Thumb:= TFileThumb.Create;
   TRY
+    { First a real (red) image, then clear the path: a setter that ignored '' would show the red image }
+    Thumb.FilePath:= FTempFile;
     Thumb.FilePath:= '';
+    Blacken(Thumb);
 
-    Assert.WillNotRaiseAny(
-      procedure
-      begin
-        Thumb.GenerateThumbnail;
-      end,
-      'Thumb.GenerateThumbnail must not raise');
+    Thumb.GenerateThumbnail;
+
+    Assert.AreEqual('', Thumb.FilePath, 'FilePath must be empty');
+    CheckBlank(Thumb, 100);
   FINALLY
     FreeAndNil(Thumb);
   END;
@@ -303,13 +338,11 @@ begin
   Thumb:= TFileThumb.Create;
   TRY
     Thumb.FilePath:= 'C:\NonExistent\File\That\Does\Not\Exist.jpg';
+    Blacken(Thumb);
 
-    Assert.WillNotRaiseAny(
-      procedure
-      begin
-        Thumb.GenerateThumbnail;
-      end,
-      'Thumb.GenerateThumbnail must not raise');
+    Thumb.GenerateThumbnail;
+
+    CheckBlank(Thumb, 100);
   FINALLY
     FreeAndNil(Thumb);
   END;
@@ -373,16 +406,19 @@ procedure TTestGraphResizeWinThumb.TestGenerateThumbnail2_EmptyFilePath;
 var
   Thumb: TFileThumb;
 begin
+  CreateTempImageFile;
+
   Thumb:= TFileThumb.Create;
   TRY
+    { First a real image, then clear the path: a setter that ignored '' would draw the file's icon or thumbnail }
+    Thumb.FilePath:= FTempFile;
     Thumb.FilePath:= '';
+    Blacken(Thumb);
 
-    Assert.WillNotRaiseAny(
-      procedure
-      begin
-        Thumb.GenerateThumbnail2;
-      end,
-      'Thumb.GenerateThumbnail2 must not raise');
+    Thumb.GenerateThumbnail2;
+
+    Assert.AreEqual('', Thumb.FilePath, 'FilePath must be empty');
+    CheckBlank(Thumb, 100);
   FINALLY
     FreeAndNil(Thumb);
   END;
@@ -396,13 +432,12 @@ begin
   Thumb:= TFileThumb.Create;
   TRY
     Thumb.FilePath:= 'C:\NonExistent\File\That\Does\Not\Exist.jpg';
+    Blacken(Thumb);
 
-    Assert.WillNotRaiseAny(
-      procedure
-      begin
-        Thumb.GenerateThumbnail2;
-      end,
-      'Thumb.GenerateThumbnail2 must not raise');
+    Thumb.GenerateThumbnail2;
+
+    { A missing file gets no icon either: the centre, where the icon would go, stays the window colour }
+    CheckBlank(Thumb, 100);
   FINALLY
     FreeAndNil(Thumb);
   END;
@@ -437,10 +472,22 @@ end;
 procedure TTestGraphResizeWinThumb.TestThumbBmp_NotNil;
 var
   Thumb: TFileThumb;
+  Bmp: TBitmap;
 begin
+  CreateTempImageFile;
+
   Thumb:= TFileThumb.Create;
   TRY
-    Assert.IsNotNull(Thumb.ThumbBmp, 'ThumbBmp should never be nil');
+    Bmp:= Thumb.ThumbBmp;
+    Assert.IsNotNull(Bmp, 'ThumbBmp should never be nil');
+
+    Thumb.Width:= 64;
+    Thumb.FilePath:= FTempFile;
+    Thumb.GenerateThumbnail;
+
+    Assert.AreSame(Bmp, Thumb.ThumbBmp, 'ThumbBmp must stay the same object: GenerateThumbnail replaces its handle, not the bitmap');
+    { The source is solid red, the blank fill is clWindow: a red centre proves ThumbBmp holds the shell thumbnail }
+    Assert.AreEqual(Integer(clRed), Integer(Thumb.ThumbBmp.Canvas.Pixels[32, 32]), 'ThumbBmp must hold the generated thumbnail (red centre)');
   FINALLY
     FreeAndNil(Thumb);
   END;
