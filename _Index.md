@@ -608,8 +608,8 @@ function MergeFiles (CONST Folder, FileType, OutputFile, Separator: string; DigS
 function BytesToFile (CONST FileName: string; CONST Data: TBytes; CONST Overwrite: Boolean= TRUE): Boolean;
 function CopyFile (CONST SourceName, DestName: string): Boolean;
 function FileCopyQuick (CONST From_FullPath, To_DestFolder: string): boolean; { in this function you don't have to provide the full path for the second parameter but only the destination folder }
-function FileMoveTo (CONST From_FullPath, To_FullPath : string): Boolean;
-function FileMoveToDir (CONST From_FullPath, To_DestFolder: string): Boolean;
+function FileMoveTo (CONST From_FullPath, To_FullPath : string; Overwrite: Boolean= FALSE): Boolean; { Overwrite=FALSE: an existing target is not touched and the result is FALSE }
+function FileMoveToDir (CONST From_FullPath, To_DestFolder: string; Overwrite: Boolean= FALSE): Boolean;
 function AtomicReplaceFile (CONST TempName, FinalName: string): Boolean; { Atomically swap an already-written TempName into FinalName — for crash-safe "write to temp then rename" saves. See body. }
 function CopyFolder (CONST FromFolder, ToFolder : String; Overwrite: Boolean= True; CONST FileType: string= '*.*'): integer; { copy a folder and all its files and subfolders }
 function MoveFolderRel (CONST FromFolder, ToRelFolder: string; Overwrite: Boolean= True): string;
@@ -1474,6 +1474,17 @@ function SetEnvironmentVars(CONST Name, Value: string; User: Boolean = True): Bo
 function GetEnvironmentVars(CONST Name: string; User: Boolean = True): string; overload;
 ```
 
+## LightCore.Win.Internet (6)
+
+```pascal
+function IE_EnableProxy(const Server: String): Boolean;
+function IE_DisableProxy: Boolean;
+function IE_GetProxySettings(OUT ProxyAdr, ProxyPort: string; OUT IsEnabled: boolean): Boolean;
+procedure IE_DeleteCache;
+procedure IE_EndSession;
+procedure IE_SetProxy(CONST Proxy: string); { Change IE proxy settings globally }
+```
+
 ## LightCore.Win.IO (20)
 
 ```pascal
@@ -2333,8 +2344,8 @@ function GetSaveDialog (CONST FileName, Filter, DefaultExt: string; CONST Captio
 function GetOpenDialog (CONST FileName, Filter, DefaultExt: string; CONST Caption: string= ''): TOpenDialog;
 function RecycleItem (CONST ItemName: string; CONST DeleteToRecycle: Boolean= TRUE; CONST ShowConfirm: Boolean= TRUE; CONST TotalSilence: Boolean= FALSE): Boolean;
 function FileOperation (CONST Source, Dest: string; Op, Flags: Integer): Boolean; { Performs: Copy, Move, Delete, Rename on files + folders via WinAPI}
-function FileMoveTo (CONST From_FullPath, To_FullPath: string): Boolean; { Moves a file to a new location, overwriting if exists }
-function FileMoveToDir (CONST From_FullPath, To_DestFolder: string; Overwrite: Boolean): Boolean; { Moves a file to a destination folder }
+function FileMoveTo (CONST From_FullPath, To_FullPath: string): Boolean; { TO BE DELETED - use LightCore.IO.FileMoveTo(From, To, TRUE). Moves a file to a new location, overwriting if exists }
+function FileMoveToDir (CONST From_FullPath, To_DestFolder: string; Overwrite: Boolean): Boolean; { TO BE DELETED - use LightCore.IO.FileMoveToDir. Moves a file to a destination folder }
 function FileAge (CONST FileName: string): TDateTime;
 function FileTimeToDateTimeStr (FTime: TFileTime; CONST DFormat, TFormat: string): string;
 function GetFileSizeEx (hFile: THandle; VAR FileSize: Int64): BOOL; stdcall; external kernel32;
@@ -3027,19 +3038,10 @@ procedure Fail(Outcome: TPageOutcome; CONST Info: string);
 procedure ReadPage(CONST Url, JavaScript: string);
 ```
 
-## LightVcl.Internet.Common (12)
+## LightVcl.Internet.Common (3)
 
 ```pascal
-function PathIsURLA(pszPath: PAnsiChar): BOOL; stdcall; {$EXTERNALSYM PathIsURLW} { $HPPEMIT '#include <shlwapi.h>'}
-function PathIsURLW(pszPath: PWideChar): BOOL; stdcall; { from here: https://msdn.microsoft.com/en-us/library/windows/desktop/bb773724(v=vs.85).aspx. But it is not good at all because it only checks if path starts with http and if it contains space. Otherwise it accepts all other characters. So I use it in conjunction with my own function }
 function CheckURLStartMsg (CONST URL: string): Boolean; { Check if the URL starts with HTTP or with www }
-function CoCreateGuid(var guid: TGUID): HResult; stdcall; far external 'ole32.dll';
-function IE_EnableProxy(const Server: String): Boolean;
-function IE_DisableProxy: Boolean;
-function IE_GetProxySettings(OUT ProxyAdr, ProxyPort: string; OUT IsEnabled: boolean): Boolean;
-procedure IE_DeleteCache;
-procedure IE_EndSession;
-procedure IE_SetProxy(CONST Proxy: string); { Change IE proxy settings globally }
 function TestProgramConnectionMsg(ShowMsgOnSuccess: Boolean= FALSE): Integer; { The Msg suffix means: this one puts a modal box on screen. For a silent verdict call LightCore.Internet.ProgramConnect2Internet }
 Procedure CreateUrlOnDesktop (CONST ShortFileName, sFullURL: string);
 ```
@@ -4108,4 +4110,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2949 public routines across 230 units._
+_2946 public routines across 231 units._
