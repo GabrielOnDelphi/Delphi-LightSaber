@@ -1204,7 +1204,7 @@ FINALIZATION
   Case 2 is what TAppData.Destroy saves the forms for, and what the AppDataCore:= NIL below protects against.
 
   Both cases were MEASURED, not reasoned about, with a test program that creates a hidden form owned by
-  Application and traces the order (c:\AI\Claude Code\Temp\ShutdownOrder\, 2026-09-04). Case 1: the form
+  Application and traces the order (c:\AI\Temp\ShutdownOrder\, 2026-09-04). Case 1: the form
   is destroyed before this finalization and sees AppData alive. Case 2: it is destroyed after, and sees
   AppData = NIL.
 

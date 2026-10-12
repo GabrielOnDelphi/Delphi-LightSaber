@@ -80,7 +80,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  LightVcl.Internet.Common,
+  LightCore.Win.Internet,
   LightVcl.Common.IO,
   LightVcl.Common.ExecuteShell;
 
@@ -136,7 +136,7 @@ var
   ProxyPort: string;
   UseProxy: Boolean;
 begin
-  if LightVcl.Internet.Common.IE_GetProxySettings(ProxyAddress, ProxyPort, UseProxy) then
+  if LightCore.Win.Internet.IE_GetProxySettings(ProxyAddress, ProxyPort, UseProxy) then
     begin
       radGateway.Checked:= UseProxy;
       radDirect.Checked:= NOT UseProxy;

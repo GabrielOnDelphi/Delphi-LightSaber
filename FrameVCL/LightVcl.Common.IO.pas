@@ -58,8 +58,8 @@ USES
 --------------------------------------------------------------------------------------------------}
  function RecycleItem           (CONST ItemName: string; CONST DeleteToRecycle: Boolean= TRUE; CONST ShowConfirm: Boolean= TRUE; CONST TotalSilence: Boolean= FALSE): Boolean;
  function FileOperation         (CONST Source, Dest: string; Op, Flags: Integer): Boolean;                     { Performs: Copy, Move, Delete, Rename on files + folders via WinAPI}
- function FileMoveTo            (CONST From_FullPath, To_FullPath: string): Boolean;                           { Moves a file to a new location, overwriting if exists }
- function FileMoveToDir         (CONST From_FullPath, To_DestFolder: string; Overwrite: Boolean): Boolean;     { Moves a file to a destination folder }
+ function FileMoveTo            (CONST From_FullPath, To_FullPath: string): Boolean;                           { TO BE DELETED - use LightCore.IO.FileMoveTo(From, To, TRUE). Moves a file to a new location, overwriting if exists }
+ function FileMoveToDir         (CONST From_FullPath, To_DestFolder: string; Overwrite: Boolean): Boolean;     { TO BE DELETED - use LightCore.IO.FileMoveToDir. Moves a file to a destination folder }
 
  function FileAge               (CONST FileName: string): TDateTime;
  function FileTimeToDateTimeStr (FTime: TFileTime; CONST DFormat, TFormat: string): string;
@@ -686,52 +686,31 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    FILE MOVE OPERATIONS
-   Using Windows API MoveFileEx for reliable cross-volume moves with overwrite support.
 --------------------------------------------------------------------------------------------------}
 
-{ Moves a file to a new full path, overwriting the destination if it exists.
-  Uses MoveFileEx with MOVEFILE_REPLACE_EXISTING flag.
-  Returns True if successful, False otherwise. }
+{=============================================================================================================
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!   TO BE DELETED - use LightCore.IO.FileMoveTo
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   This routine only calls LightCore.IO.FileMoveTo with Overwrite = TRUE: the destination is replaced if it exists.
+   Call LightCore.IO.FileMoveTo(From_FullPath, To_FullPath, TRUE) instead.
+=============================================================================================================}
 function FileMoveTo(CONST From_FullPath, To_FullPath: string): Boolean;
 begin
- if From_FullPath = ''
- then raise Exception.Create('FileMoveTo: From_FullPath parameter cannot be empty');
-
- if To_FullPath = ''
- then raise Exception.Create('FileMoveTo: To_FullPath parameter cannot be empty');
-
- Result:= MoveFileEx(PChar(From_FullPath), PChar(To_FullPath), MOVEFILE_REPLACE_EXISTING);
+  Result:= LightCore.IO.FileMoveTo(From_FullPath, To_FullPath, TRUE);
 end;
 
 
-{ Moves a file to a destination folder, keeping the original filename.
-  Creates the destination folder if it doesn't exist.
-
-  Parameters:
-    From_FullPath  - Full path to the source file.
-    To_DestFolder  - Destination folder (not full path). Trailing slash optional.
-    Overwrite      - If True, overwrites existing file at destination.
-
-  Returns: True if successful, False otherwise.
-  Raises Exception if parameters are empty or folder cannot be created. }
+{=============================================================================================================
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!   TO BE DELETED - use LightCore.IO.FileMoveToDir
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   This routine only calls LightCore.IO.FileMoveToDir with the same three parameters.
+   Call LightCore.IO.FileMoveToDir(From_FullPath, To_DestFolder, Overwrite) instead.
+=============================================================================================================}
 function FileMoveToDir(CONST From_FullPath, To_DestFolder: string; Overwrite: Boolean): Boolean;
-VAR
-  Flags: Cardinal;
 begin
- if From_FullPath = ''
- then raise Exception.Create('FileMoveToDir: From_FullPath parameter cannot be empty');
-
- if To_DestFolder = ''
- then raise Exception.Create('FileMoveToDir: To_DestFolder parameter cannot be empty');
-
- if Overwrite
- then Flags:= MOVEFILE_REPLACE_EXISTING
- else Flags:= 0;
-
- if NOT LightCore.IO.ForceDirectoriesB(To_DestFolder)
- then raise Exception.Create('FileMoveToDir: Cannot create destination folder: ' + To_DestFolder);
-
- Result:= MoveFileEx(PChar(From_FullPath), PChar(Trail(To_DestFolder) + ExtractFileName(From_FullPath)), Flags);
+  Result:= LightCore.IO.FileMoveToDir(From_FullPath, To_DestFolder, Overwrite);
 end;
 
 

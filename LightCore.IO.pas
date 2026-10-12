@@ -362,8 +362,8 @@ CONST
  function  FileCopyQuick      (CONST From_FullPath, To_DestFolder: string): boolean;     { in this function you don't have to provide the full path for the second parameter but only the destination folder }
 
  {MOVE FILES}
- function  FileMoveTo         (CONST From_FullPath, To_FullPath  : string): Boolean;
- function  FileMoveToDir      (CONST From_FullPath, To_DestFolder: string): Boolean;
+ function  FileMoveTo         (CONST From_FullPath, To_FullPath  : string; Overwrite: Boolean= FALSE): Boolean;     { Overwrite=FALSE: an existing target is not touched and the result is FALSE }
+ function  FileMoveToDir      (CONST From_FullPath, To_DestFolder: string; Overwrite: Boolean= FALSE): Boolean;
  function  AtomicReplaceFile  (CONST TempName, FinalName: string): Boolean;     { Atomically swap an already-written TempName into FinalName — for crash-safe "write to temp then rename" saves. See body. }
 
  {FOLDERS}
@@ -2075,10 +2075,26 @@ end;
 
 
 { Moves a file from one location to another.
-  Returns True on success, False on failure. }
-function FileMoveTo(CONST From_FullPath, To_FullPath: string): boolean;
+  Returns True on success, False on failure.
+
+  Overwrite = FALSE: TFile.Move refuses an existing To_FullPath (System.IOUtils.pas, TFile.CheckMoveParameters), so the target is not touched and the result is FALSE.
+  Overwrite = TRUE:  an existing To_FullPath is replaced.
+    Windows - MoveFileEx with MOVEFILE_REPLACE_EXISTING and MOVEFILE_COPY_ALLOWED. COPY_ALLOWED is what lets the move cross drives:
+              "If the destination is on another drive, you must set the MOVEFILE_COPY_ALLOWED flag"
+              https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefileexw
+    Other   - the existing target is deleted, then TFile.Move. }
+function FileMoveTo(CONST From_FullPath, To_FullPath: string; Overwrite: Boolean= FALSE): boolean;
 begin
+  {$IFDEF MSWINDOWS}
+  if Overwrite
+  then EXIT(Winapi.Windows.MoveFileEx(PChar(From_FullPath), PChar(To_FullPath), MOVEFILE_REPLACE_EXISTING OR MOVEFILE_COPY_ALLOWED));
+  {$ENDIF}
+
   TRY
+    {$IFNDEF MSWINDOWS}
+    if Overwrite AND TFile.Exists(To_FullPath)
+    then TFile.Delete(To_FullPath);
+    {$ENDIF}
     TFile.Move(From_FullPath, To_FullPath);
     Result:= TFile.Exists(To_FullPath);
   EXCEPT
@@ -2089,14 +2105,20 @@ end;
 
 { Same as FileMoveTo but the user provides a folder for the second parameter instead of a full path.
   The filename is preserved from the source.
-  If destination folder does not exist, it is created.
+  If destination folder does not exist, it is created. The trailing slash of To_DestFolder is optional.
+  Overwrite: the same as in FileMoveTo.
   Returns True on success, False on failure. }
-function FileMoveToDir(CONST From_FullPath, To_DestFolder: string): boolean;
+function FileMoveToDir(CONST From_FullPath, To_DestFolder: string; Overwrite: Boolean= FALSE): boolean;
 begin
   TRY
     ForceDirectoriesE(To_DestFolder);
-    TFile.Move(From_FullPath, Trail(To_DestFolder) + ExtractFileName(From_FullPath));
-    Result:= NOT TFile.Exists(From_FullPath);  { Success if source no longer exists }
+    if Overwrite
+    then Result:= FileMoveTo(From_FullPath, Trail(To_DestFolder) + ExtractFileName(From_FullPath), TRUE)
+    else
+     begin
+      TFile.Move(From_FullPath, Trail(To_DestFolder) + ExtractFileName(From_FullPath));
+      Result:= NOT TFile.Exists(From_FullPath);  { Success if source no longer exists }
+     end;
   EXCEPT
     Result:= FALSE;
   END;
