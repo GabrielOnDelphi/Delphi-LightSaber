@@ -702,7 +702,7 @@ FINALIZATION
   Case 2 is what TAppData.Destroy saves the forms for, and what the AppDataCore:= NIL below protects against.
 
   Do NOT try to repair case 2 by calling Application.DestroyComponents here to kill the forms early.
-  It was tried and measured on the VCL twin (c:\AI\Claude Code\Temp\ShutdownOrder\, 2026-09-04): it does destroy them at the right moment, but the program then dies at the end of shutdown with runtime error 217.
+  It was tried and measured on the VCL twin (c:\AI\Temp\ShutdownOrder\, 2026-09-04): it does destroy them at the right moment, but the program then dies at the end of shutdown with runtime error 217.
   In a case-1 app it does nothing at all, because Application owns nothing by the time we get here.
   On the VCL side the cause is a second free of the THintWindow that Application owns: DestroyComponents frees it while TApplication.FHintWindow still points at it, and DoneApplication frees it again through ShowHint:= FALSE.
   FMX has no such hint window, but the shape of the trap - an owned component whose owner keeps a raw field pointing at it - is the same, so do not assume FMX is safe either. }
