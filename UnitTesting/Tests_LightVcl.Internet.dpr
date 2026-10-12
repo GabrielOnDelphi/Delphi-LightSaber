@@ -43,7 +43,6 @@ uses
   { Test units - add here as tests are created }
   Test.LightCore.Internet.Ftp in 'Test.LightCore.Internet.Ftp.pas',
   Test.LightVcl.Internet.Download.Indy in 'Test.LightVcl.Internet.Download.Indy.pas';
-  // Test.LightVcl.Internet.Common in 'Test.LightVcl.Internet.Common.pas';
 
 {$IFNDEF TESTINSIGHT}
 var

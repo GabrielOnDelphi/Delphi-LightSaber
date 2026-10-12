@@ -269,6 +269,36 @@ type
     procedure TestFileMoveToDir;
 
     [Test]
+    procedure TestFileMoveTo_Overwrite;
+
+    [Test]
+    procedure TestFileMoveToDir_Overwrite;
+
+    [Test]
+    procedure TestFileMoveTo_EmptyFrom_ReturnsFalse;
+
+    [Test]
+    procedure TestFileMoveTo_EmptyTo_ReturnsFalse;
+
+    [Test]
+    procedure TestFileMoveToDir_EmptyFrom_ReturnsFalse;
+
+    [Test]
+    procedure TestFileMoveToDir_EmptyTo_ReturnsFalse;
+
+    [Test]
+    procedure TestFileMoveTo_ExistingTarget_NoOverwrite;
+
+    [Test]
+    procedure TestFileMoveTo_ExistingTarget_Overwrite;
+
+    [Test]
+    procedure TestFileMoveToDir_ExistingTarget_NoOverwrite;
+
+    [Test]
+    procedure TestFileMoveToDir_ExistingTarget_Overwrite;
+
+    [Test]
     procedure TestGetFileSize;
 
     [Test]
@@ -992,6 +1022,140 @@ begin
   Assert.IsTrue(FileMoveToDir(SrcFile, DestDir));
   Assert.IsFalse(FileExists(SrcFile));
   Assert.IsTrue(TDirectory.Exists(DestDir));
+end;
+
+procedure TTestLightCoreIO.TestFileMoveTo_Overwrite;
+var
+  SourceFile, DestFile: string;
+  Result: Boolean;
+begin
+  SourceFile := TPath.Combine(FTestDir, 'MoveSource.txt');
+  DestFile := TPath.Combine(FTestDir, 'MoveDest.txt');
+
+  TFile.WriteAllText(SourceFile, 'Move test');
+
+  Result := LightCore.IO.FileMoveTo(SourceFile, DestFile, TRUE);
+
+  Assert.IsTrue(Result, 'FileMoveTo should succeed');
+  Assert.IsFalse(FileExists(SourceFile), 'Source should not exist after move');
+  Assert.IsTrue(FileExists(DestFile), 'Destination should exist after move');
+
+  { Cleanup }
+  LightCore.IO.TryDeleteFile(DestFile);
+end;
+
+procedure TTestLightCoreIO.TestFileMoveToDir_Overwrite;
+var
+  SourceFile, DestFolder, DestFile: string;
+  Result: Boolean;
+begin
+  SourceFile := TPath.Combine(FTestDir, 'MoveToDirSource.txt');
+  DestFolder := TPath.Combine(FTestDir, 'DestSubFolder');
+  DestFile := TPath.Combine(DestFolder, 'MoveToDirSource.txt');
+
+  TFile.WriteAllText(SourceFile, 'Move to dir test');
+  ForceDirectoriesE(DestFolder);
+
+  Result := LightCore.IO.FileMoveToDir(SourceFile, DestFolder, True);
+
+  Assert.IsTrue(Result, 'FileMoveToDir should succeed');
+  Assert.IsFalse(FileExists(SourceFile), 'Source should not exist after move');
+  Assert.IsTrue(FileExists(DestFile), 'Destination should exist after move');
+
+  { Cleanup }
+  LightCore.IO.TryDeleteFile(DestFile);
+  if DirectoryExists(DestFolder) then RemoveDir(DestFolder);
+end;
+
+{ FileMoveTo and FileMoveToDir report an empty parameter by returning False; they do not raise. }
+procedure TTestLightCoreIO.TestFileMoveTo_EmptyFrom_ReturnsFalse;
+var
+  DestFile: string;
+begin
+  DestFile:= TPath.Combine(FTestDir, 'EmptyFromTarget.txt');   { Not 'Test.txt': Setup creates 'test.txt' (FTestFile), and Windows file names are case-insensitive }
+  Assert.IsFalse(FileExists(DestFile), 'Precondition: the target must not exist yet');
+
+  Assert.IsFalse(LightCore.IO.FileMoveTo('', DestFile, TRUE));
+  Assert.IsFalse(FileExists(DestFile), 'No target may appear');
+end;
+
+procedure TTestLightCoreIO.TestFileMoveTo_EmptyTo_ReturnsFalse;
+begin
+  Assert.IsFalse(LightCore.IO.FileMoveTo(FTestFile, '', TRUE));
+  Assert.IsTrue(FileExists(FTestFile), 'The source must stay where it was');
+end;
+
+procedure TTestLightCoreIO.TestFileMoveToDir_EmptyFrom_ReturnsFalse;
+begin
+  Assert.IsFalse(LightCore.IO.FileMoveToDir('', FTestDir, True));
+end;
+
+procedure TTestLightCoreIO.TestFileMoveToDir_EmptyTo_ReturnsFalse;
+begin
+  Assert.IsFalse(LightCore.IO.FileMoveToDir(FTestFile, '', True));
+  Assert.IsTrue(FileExists(FTestFile), 'The source must stay where it was');
+end;
+
+{ Overwrite = FALSE: an existing target is not touched, the source stays, the result is False }
+procedure TTestLightCoreIO.TestFileMoveTo_ExistingTarget_NoOverwrite;
+var
+  SrcFile, DestFile: string;
+begin
+  SrcFile:= TPath.Combine(FTestDir, 'exist_src.txt');
+  DestFile:= TPath.Combine(FTestDir, 'exist_dest.txt');
+  TFile.WriteAllText(SrcFile, 'new content');
+  TFile.WriteAllText(DestFile, 'old content');
+
+  Assert.IsFalse(FileMoveTo(SrcFile, DestFile, FALSE));
+  Assert.IsTrue(FileExists(SrcFile), 'The source must stay where it was');
+  Assert.AreEqual('old content', TFile.ReadAllText(DestFile), 'The existing target must not change');
+end;
+
+{ Overwrite = TRUE: an existing target is replaced by the source }
+procedure TTestLightCoreIO.TestFileMoveTo_ExistingTarget_Overwrite;
+var
+  SrcFile, DestFile: string;
+begin
+  SrcFile:= TPath.Combine(FTestDir, 'exist_src.txt');
+  DestFile:= TPath.Combine(FTestDir, 'exist_dest.txt');
+  TFile.WriteAllText(SrcFile, 'new content');
+  TFile.WriteAllText(DestFile, 'old content');
+
+  Assert.IsTrue(FileMoveTo(SrcFile, DestFile, TRUE));
+  Assert.IsFalse(FileExists(SrcFile), 'The source must be gone');
+  Assert.AreEqual('new content', TFile.ReadAllText(DestFile), 'The target must hold the content of the source');
+end;
+
+procedure TTestLightCoreIO.TestFileMoveToDir_ExistingTarget_NoOverwrite;
+var
+  SrcFile, DestDir, DestFile: string;
+begin
+  SrcFile:= TPath.Combine(FTestDir, 'existdir_src.txt');
+  DestDir:= TPath.Combine(FTestDir, 'existdir_dest');
+  DestFile:= TPath.Combine(DestDir, 'existdir_src.txt');
+  TDirectory.CreateDirectory(DestDir);
+  TFile.WriteAllText(SrcFile, 'new content');
+  TFile.WriteAllText(DestFile, 'old content');
+
+  Assert.IsFalse(FileMoveToDir(SrcFile, DestDir, FALSE));
+  Assert.IsTrue(FileExists(SrcFile), 'The source must stay where it was');
+  Assert.AreEqual('old content', TFile.ReadAllText(DestFile), 'The existing target must not change');
+end;
+
+procedure TTestLightCoreIO.TestFileMoveToDir_ExistingTarget_Overwrite;
+var
+  SrcFile, DestDir, DestFile: string;
+begin
+  SrcFile:= TPath.Combine(FTestDir, 'existdir_src.txt');
+  DestDir:= TPath.Combine(FTestDir, 'existdir_dest');
+  DestFile:= TPath.Combine(DestDir, 'existdir_src.txt');
+  TDirectory.CreateDirectory(DestDir);
+  TFile.WriteAllText(SrcFile, 'new content');
+  TFile.WriteAllText(DestFile, 'old content');
+
+  Assert.IsTrue(FileMoveToDir(SrcFile, DestDir, TRUE));
+  Assert.IsFalse(FileExists(SrcFile), 'The source must be gone');
+  Assert.AreEqual('new content', TFile.ReadAllText(DestFile), 'The target must hold the content of the source');
 end;
 
 procedure TTestLightCoreIO.TestCompareFiles;
