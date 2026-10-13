@@ -260,10 +260,10 @@ end;
 
   This is why the placement runs AFTER the show, at the end of RunPostInitialize, and not earlier.
   Measured 2026-10-06: the same placement done in DoShow, while the window was still hidden, did work at that moment, but the show then raised the window again - it landed two positions ABOVE the user's window on 6 of 6 launches.
-  Evidence: c:\Projects\Projects AI\Autopilot for Delphi\_Local info\Issues\No focus steal\COUNTER-ANALYSIS - z-order fix 2026-10-06.md
+  Evidence: c:\Projects\Projects AI\Autopilot for Delphi\Issues\No focus steal\COUNTER-ANALYSIS - z-order fix 2026-10-06.md
 
   Measured 2026-09-01 on Demo\VCL\Template App Full, with charmap.exe freshly launched and holding the foreground: the window landed TWO positions ABOVE the active window on 5 of 5 launches, with the foreground correctly left alone every time.
-  Harness: Autopilot for Delphi\_Local info\Issues\No focus steal\Measure-LaunchPlacement.ps1.
+  Harness: Autopilot for Delphi\Issues\No focus steal\Measure-LaunchPlacement.ps1.
 
   That is the whole reported complaint, and it also explains the "and it STAYS on top" half: clicking a window that is ALREADY active moves nothing in the z-order, so the user cannot get their own window back above ours without first clicking ours and then clicking back.
 
