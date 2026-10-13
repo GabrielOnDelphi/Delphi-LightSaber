@@ -1383,6 +1383,15 @@ function IsUserAdmin: Boolean; { UNUSED - TO BE DELETED. Same answer as AppHasAd
 function CurrentUserHasAdminRights: Boolean; { UNUSED - TO BE DELETED. Same answer as AppHasAdminRights. }
 ```
 
+## LightCore.SystemTime (4)
+
+```pascal
+function GetSysFileTime: TDateTime; { gets current date from system file - prevents cracking}
+function SystemTimeIsInvalid: Boolean; { returns true if the system time is bigger than current clock time }
+function WindowsUpTime: TDateTime;
+function UserIdleTime: Cardinal;
+```
+
 ## LightCore.TextFile (21)
 
 ```pascal
@@ -1581,6 +1590,13 @@ function GetWin32ErrorString(ErrorCode: DWORD): string;
 ```pascal
 function AppElevationLevel: Integer;
 function SetPrivilege(CONST PrivilegeName: string; bEnabled : Boolean): Boolean;
+```
+
+## LightCore.Win.SystemTime (2)
+
+```pascal
+procedure CurrentSysTimeStore(CONST SecretKey: string); { Stores current system clock time to a hidden registry key }
+function CurrentSysTimeValid(CONST SecretKey: string): Boolean; { Read the last saved system time and compares it with current clock. If current value is smaller than the stored value it means that the clock time was set back }
 ```
 
 ## LightCore.Win.Window (16)
@@ -2477,16 +2493,10 @@ procedure Hack_DisableSystemKeys(Disable: Boolean);
 function CalculatePasswordStrength(const Password: string): Integer;
 ```
 
-## LightVcl.Common.SystemTime (7)
+## LightVcl.Common.SystemTime (1)
 
 ```pascal
 procedure DelayEx(CONST ms : cardinal);
-function GetSysFileTime: TDateTime; { gets current date from system file - prevents cracking}
-function SystemTimeIsInvalid: Boolean; { returns true if the system time is bigger than current clock time }
-procedure CurrentSysTimeStore(CONST SecretKey: string); { Stores current system clock time to a hidden registry key }
-function CurrentSysTimeValid(CONST SecretKey: string): Boolean; { Read the last saved system time and compares it with current clock. If current value is smaller than the stored value it means that the clock time was set back }
-function WindowsUpTime: TDateTime;
-function UserIdleTime: Cardinal;
 ```
 
 ## LightVcl.Common.Translate (17)
@@ -4110,4 +4120,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2946 public routines across 231 units._
+_2946 public routines across 233 units._
