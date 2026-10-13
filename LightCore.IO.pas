@@ -437,7 +437,7 @@ CONST
 IMPLEMENTATION
 
 USES
-  LightCore;
+  LightCore, LightCore.AppData;
 
 
 {--------------------------------------------------------------------------------------------------
@@ -2098,7 +2098,21 @@ begin
     TFile.Move(From_FullPath, To_FullPath);
     Result:= TFile.Exists(To_FullPath);
   EXCEPT
-    Result:= FALSE;
+    on E: EInOutError do                                                                            { Includes EFileNotFoundException, EDirectoryNotFoundException, EPathTooLongException }
+      begin
+        AppDataCore.LogWarn('FileMoveTo: cannot move "'+ From_FullPath+ '" to "'+ To_FullPath+ '". '+ E.Message);
+        Result:= FALSE;
+      end;
+    on E: EArgumentException do                                                                     { Empty path, or invalid characters in it }
+      begin
+        AppDataCore.LogWarn('FileMoveTo: invalid path "'+ From_FullPath+ '" or "'+ To_FullPath+ '". '+ E.Message);
+        Result:= FALSE;
+      end;
+    on E: ENotSupportedException do                                                                 { A colon in the wrong place of the path }
+      begin
+        AppDataCore.LogWarn('FileMoveTo: invalid path "'+ From_FullPath+ '" or "'+ To_FullPath+ '". '+ E.Message);
+        Result:= FALSE;
+      end;
   END;
 end;
 
@@ -2120,7 +2134,21 @@ begin
       Result:= NOT TFile.Exists(From_FullPath);  { Success if source no longer exists }
      end;
   EXCEPT
-    Result:= FALSE;
+    on E: EInOutError do                                                                            { Includes EFileNotFoundException, EDirectoryNotFoundException, EPathTooLongException }
+      begin
+        AppDataCore.LogWarn('FileMoveToDir: cannot move "'+ From_FullPath+ '" to folder "'+ To_DestFolder+ '". '+ E.Message);
+        Result:= FALSE;
+      end;
+    on E: EArgumentException do                                                                     { Empty path, or invalid characters in it }
+      begin
+        AppDataCore.LogWarn('FileMoveToDir: invalid path "'+ From_FullPath+ '" or "'+ To_DestFolder+ '". '+ E.Message);
+        Result:= FALSE;
+      end;
+    on E: ENotSupportedException do                                                                 { A colon in the wrong place of the path }
+      begin
+        AppDataCore.LogWarn('FileMoveToDir: invalid path "'+ From_FullPath+ '" or "'+ To_DestFolder+ '". '+ E.Message);
+        Result:= FALSE;
+      end;
   END;
 end;
 

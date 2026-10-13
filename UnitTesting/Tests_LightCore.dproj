@@ -281,6 +281,10 @@
         <DCCReference Include="..\LightCore.Shell.pas"/>
         <DCCReference Include="Test.LightCore.Win.Shell.pas"/>
         <DCCReference Include="..\LightCore.Win.Shell.pas"/>
+        <DCCReference Include="Test.LightCore.SystemTime.pas"/>
+        <DCCReference Include="..\LightCore.SystemTime.pas"/>
+        <DCCReference Include="Test.LightCore.Win.SystemTime.pas"/>
+        <DCCReference Include="..\LightCore.Win.SystemTime.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

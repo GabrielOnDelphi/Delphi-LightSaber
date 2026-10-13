@@ -37,7 +37,7 @@ IMPLEMENTATION
 USES
    MonitorHelper,
    LightCore, LightCore.Reports, LightCore.Time, LightCore.Platform,
-   LightVcl.Common.SystemTime, LightCore.System, LightCore.Win.System, LightVcl.Common.IO, LightCore.Win.IO, LightCore.WinVersion, LightCore.SystemPermissions;
+   LightCore.SystemTime, LightCore.System, LightCore.Win.System, LightVcl.Common.IO, LightCore.Win.IO, LightCore.WinVersion, LightCore.SystemPermissions;
 
 
 

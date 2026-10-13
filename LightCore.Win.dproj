@@ -105,6 +105,7 @@
         <DCCReference Include="LightCore.Win.IO.pas"/>
         <DCCReference Include="LightCore.Win.Shell.pas"/>
         <DCCReference Include="LightCore.Win.Internet.pas"/>
+        <DCCReference Include="LightCore.Win.SystemTime.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

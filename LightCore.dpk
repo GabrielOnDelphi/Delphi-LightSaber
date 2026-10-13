@@ -105,7 +105,8 @@ contains
   LightCore.WinVersion in 'LightCore.WinVersion.pas',
   LightCore.ExceptionLogger in 'LightCore.ExceptionLogger.pas',
   LightCore.SystemPermissions in 'LightCore.SystemPermissions.pas',
-  LightCore.Shell in 'LightCore.Shell.pas';
+  LightCore.Shell in 'LightCore.Shell.pas',
+  LightCore.SystemTime in 'LightCore.SystemTime.pas';
 
 end.
 

@@ -92,17 +92,24 @@ begin
   TRY
    TRY
     Reg.RootKey:= HKEY_CURRENT_USER;
-    Reg.OpenKey('Software\Microsoft\Windows\CurrentVersion\Internet Settings', FALSE);
-    Reg.WriteString('ProxyServer', Server);
-    Reg.WriteBool('ProxyEnable', True);
-    Reg.CloseKey;
-    Result:= TRUE;
+    Result:= Reg.OpenKey('Software\Microsoft\Windows\CurrentVersion\Internet Settings', FALSE);
+    if Result then
+     begin
+      Reg.WriteString('ProxyServer', Server);
+      Reg.WriteBool('ProxyEnable', True);
+      Reg.CloseKey;
+     end
+    else
+      AppDataCore.LogWarn('IE_EnableProxy: cannot open the Internet Settings key in HKEY_CURRENT_USER.');
   FINALLY
    FreeAndNil(Reg);
   END;
- except                                                                                            { On some systems this key cannot be opened and an exception is raised, hence the try..except }
-  //todo 1: trap only specific exceptions
-  Result:= FALSE;
+ except
+  on E: ERegistryException do                                                                      { A write was refused }
+   begin
+    AppDataCore.LogWarn('IE_EnableProxy: '+ E.Message);
+    Result:= FALSE;
+   end;
  END;
 
  { InternetSetOption(NIL, INTERNET_OPTION_SETTINGS_CHANGED, NIL, 0);           <--  this is how it was originally, but it seems... }
@@ -116,16 +123,23 @@ begin
   Reg:= TRegistry.Create;
   TRY
    TRY
-    Reg.OpenKey('Software\Microsoft\Windows\CurrentVersion\Internet Settings', False);
-    Reg.WriteBool('ProxyEnable', False);
-    Reg.CloseKey;
-    Result:= TRUE;
+    Result:= Reg.OpenKey('Software\Microsoft\Windows\CurrentVersion\Internet Settings', False);   { RootKey is HKEY_CURRENT_USER by default }
+    if Result then
+     begin
+      Reg.WriteBool('ProxyEnable', False);
+      Reg.CloseKey;
+     end
+    else
+      AppDataCore.LogWarn('IE_DisableProxy: cannot open the Internet Settings key in HKEY_CURRENT_USER.');
   FINALLY
    FreeAndNil(Reg);
   END;
- except                                                                                            { On some systems this key cannot be opened and an exception is raised, hence the try..except }
-  //todo 1: trap only specific exceptions
-  Result:= FALSE;
+ except
+  on E: ERegistryException do                                                                      { A write was refused }
+   begin
+    AppDataCore.LogWarn('IE_DisableProxy: '+ E.Message);
+    Result:= FALSE;
+   end;
  END;
 
  { InternetSetOption(NIL, INTERNET_OPTION_SETTINGS_CHANGED, NIL, 0);            <-- this is how it was originally, but it seems... }
@@ -188,10 +202,13 @@ begin
   FINALLY
    FreeAndNil(Reg);
   END;
- except                                                                                            { On some systems this key cannot be opened and an exception is raised, hence the try..except }
-  //todo 1: trap only specific exceptions
-  ProxyAdr:= 'Cannot auto-detect proxy settings.';
-  Result:= FALSE;
+ except
+  on E: ERegistryException do                                                                      { A value of the wrong type, for example a ProxyEnable that is not a DWORD }
+   begin
+    AppDataCore.LogWarn('IE_GetProxySettings: '+ E.Message);
+    ProxyAdr:= 'Cannot auto-detect proxy settings.';
+    Result:= FALSE;
+   end;
  END;
 end;
 

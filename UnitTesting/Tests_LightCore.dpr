@@ -96,6 +96,8 @@ uses
   Test.LightCore.Win.IO in 'Test.LightCore.Win.IO.pas',
   Test.LightCore.Shell in 'Test.LightCore.Shell.pas',
   Test.LightCore.Win.Shell in 'Test.LightCore.Win.Shell.pas',
+  Test.LightCore.SystemTime in 'Test.LightCore.SystemTime.pas',
+  Test.LightCore.Win.SystemTime in 'Test.LightCore.Win.SystemTime.pas',
   {$ENDIF}
   { Source units }
   LightCore in '..\LightCore.pas',
@@ -156,6 +158,8 @@ uses
   LightCore.Win.System in '..\LightCore.Win.System.pas',
   LightCore.Win.IO in '..\LightCore.Win.IO.pas',
   LightCore.Win.Shell in '..\LightCore.Win.Shell.pas',
+  LightCore.SystemTime in '..\LightCore.SystemTime.pas',
+  LightCore.Win.SystemTime in '..\LightCore.Win.SystemTime.pas',
   {$ENDIF}
   LightCore.Process in '..\LightCore.Process.pas',
   LightCore.ExeVersion in '..\LightCore.ExeVersion.pas',

@@ -45,7 +45,8 @@ contains
   LightCore.Win.System in 'LightCore.Win.System.pas',
   LightCore.Win.IO in 'LightCore.Win.IO.pas',
   LightCore.Win.Shell in 'LightCore.Win.Shell.pas',
-  LightCore.Win.Internet in 'LightCore.Win.Internet.pas';
+  LightCore.Win.Internet in 'LightCore.Win.Internet.pas',
+  LightCore.Win.SystemTime in 'LightCore.Win.SystemTime.pas';
 
 end.
 

@@ -237,6 +237,7 @@
         <DCCReference Include="LightCore.ExceptionLogger.pas"/>
         <DCCReference Include="LightCore.SystemPermissions.pas"/>
         <DCCReference Include="LightCore.Shell.pas"/>
+        <DCCReference Include="LightCore.SystemTime.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
