@@ -4,6 +4,7 @@
 **/Win32_*
 **/*_Android64_Debug
 
+
 ClaudeBuild.cmd
 Build.cmd
 build.cmd
@@ -42,6 +43,12 @@ CLAUDE.md
 *.~*
 *.~dsk
 
+.claude/goals-fix-fake-tests.md
+.claude/session-executeshell-focus-fix.md
+.claude/session-fmx-orphan-tests.md
+.claude/session-layering-3c.md
+.claude/session-review-root-fmx.md
+/.claude/compact-summaries
 /Demo/FMX/Demo AutoHeightRectangle/37.0_Android64_Debug
 /Demo/FMX/Demo AutoHeightRectangle/Android64
 /Demo/FMX/Demo Styles3 Skin Selector/37.0_Android64_Debug
@@ -57,7 +64,12 @@ CLAUDE.md
 /External/_out
 /HardwareID
 /UnitTesting/Test.cpProteusIO.pas
+/_Crash in IDE
 /_Frozen Streams
+/_MoveDown
+/_ReLayering
+/_Reviews
+/_Unit testing conclusiosn
 AndroidManifest.template.xml
 AutoTranslator/DeepL library.url
 AutoTranslator/Demo/cheie
@@ -75,6 +87,7 @@ Demo/FMX/Demo ScreenCapture/ClaudeBuild.cmd
 Demo/FMX/Demos/Build.cmd
 Demo/FMX/Template - Minimal app + External log/Build.cmd
 Demo/FMX/Template - Minimal app + Internal log/FMX_MinimalApp_WithLog1.res
+Demo/FMX/Template - Minimal app/FMX_MinimalApp.res
 Demo/Template - madShi.lnk
 Demo/Template App/TemplateApp.delphilsp.json
 Demo/Template Universal Uninstaller/BUG REPORTS.LNK
@@ -83,6 +96,9 @@ Demo/Tester AutoTranslator/competition.url
 Demo/Tester LightCore ccStreamBuff.pas/TCubicBuffStream.bin
 Demo/Tester LightCore ccWinVersion.pas/Tester_WinVers.drc
 Demo/VCL/Demo Custom component creation order/Build.cmd
+Demo/VCL/Template Updater/System/betatester
+Docs/Complete build - one build at the end of a batch.md
+ExceptionAudit 2026-09-04.md
 External/Exif/ bug report
 External/Exif/ last update 2025.11
 External/Exif/Documentation/ FROM EXILON REPOSITORY.URL
@@ -90,6 +106,7 @@ External/Exif/Documentation/dummzeuch_ccr-exif Automatically exported from code.
 External/GifParser original.pas
 External/GifParser_original_.pas
 External/GifProperties (orig).pas
+Findings - LightCore cross-platform build 2026-09-13/LightCore cross-platform build report 2026-09-13 - second run.md
 FrameFMX/AI
 FrameFMX/BuildPackages.cmd
 FrameFMX/LightFmx.Common.SysTray.pas - ALTERNATIVE.url
@@ -98,25 +115,24 @@ FrameVCL/AutoTranslator/DeepL library.url
 FrameVCL/AutoTranslator/Demo/cheie
 FrameVCL/AutoTranslator/Demo/competition.url
 FrameVCL/Vcl.WinXCtrls.pas
+HandOver*.md
+NEXT PROMPT - judge the 38 disputed tests.md
+NEXT PROMPT - layering open decisions.md
+OpenQuestions.md
+ReviewHistory.md
+ReviewHistory.md - after review-log trim, before restore 2026-10-06.md
 System/Credits.lnk
 System/Eula.txt
+ToDo DCU folder - MSBuild ProductVersion (plan).md
+ToDo IF AppDataCore NIL (plan).txt
+ToDo Layering - move framework-free code to LightCore (plan).md
 ToDo Log (plan).md
 ToDo Log Selected row (plan).md
-Demo/VCL/Template Updater/System/betatester
+ToDo Log window - overlapping bottom bar.md
+ToDo Log window - overlapping bottom bar.png
 Updater/Demo/System/betatester
-ReviewHistory.md
-.claude/session-review-root-fmx.md
-HandOver.md
-Demo/FMX/Template - Minimal app/FMX_MinimalApp.res
-.claude/session-fmx-orphan-tests.md
-.claude/session-executeshell-focus-fix.md
-/_Unit testing conclusiosn
-/_Crash in IDE
-/_MoveDown
-/_ReLayering
-OpenQuestions.md
-ExceptionAudit 2026-09-04.md
-ToDo IF AppDataCore NIL (plan).txt
+_BPL size/BPL size - what it does and does not prove.md
+_BPL size/DONE - EXECUTED 2026-09-16 - do not run again - explain the small LightCore BPL.md
 
 # Temporary files of Claude Code sessions
 Temp/
@@ -125,18 +141,5 @@ Work in progress/
 
 # Total Commander file comments
 descript.ion
-ToDo Layering - move framework-free code to LightCore (plan).md
-ToDo DCU folder - MSBuild ProductVersion (plan).md
-_BPL size/DONE - EXECUTED 2026-09-16 - do not run again - explain the small LightCore BPL.md
-_BPL size/BPL size - what it does and does not prove.md
-ToDo Log window - overlapping bottom bar.md
-ToDo Log window - overlapping bottom bar.png
-/.claude/compact-summaries
-.claude/session-layering-3c.md
-Docs/Complete build - one build at the end of a batch.md
-NEXT PROMPT - layering open decisions.md
-ReviewHistory.md - after review-log trim, before restore 2026-10-06.md
-Findings - LightCore cross-platform build 2026-09-13/LightCore cross-platform build report 2026-09-13 - second run.md
-/_Reviews
-NEXT PROMPT - judge the 38 disputed tests.md
-.claude/goals-fix-fake-tests.md
+
+
