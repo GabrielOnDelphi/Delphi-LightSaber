@@ -412,9 +412,12 @@ end;
 {--------------------------------------------------------------------------------------------------
    Returns the last modification time of a file.
 
-   This function uses FindFirst/FindData instead of System.SysUtils.FileAge because
-   the standard FileAge fails on system files like 'c:\pagefile.sys' that cannot be opened.
-   FindFirst works because it reads file metadata without opening the file.
+   Reads the time with FindFirst, which works on a file in use such as 'c:\pagefile.sys'.
+   System.SysUtils.FileAge(FileName, DateTime, FollowLink= FALSE) gives the same answer for a file, including a file in use
+   (on a sharing violation it falls back to FindFirstFile - System.SysUtils.pas, FileAgeInternal).
+   The two differ for a folder (this one returns its time, the RTL returns FALSE), for a wildcard name (this one returns the
+   first match) and for a symbolic link when FollowLink is TRUE (the RTL then returns the target's time).
+   Same name and parameter list as the deprecated RTL FileAge(string): LongInt - the unit named last in the USES clause wins.
 
    Parameters:
      FileName - Full path to the file.
