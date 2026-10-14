@@ -205,6 +205,7 @@
         <DCCReference Include="LightCore.Internet.CommonWebDown.pas"/>
         <DCCReference Include="LightCore.Internet.Email.pas"/>
         <DCCReference Include="LightCore.Internet.EmailSender.pas"/>
+        <DCCReference Include="LightCore.Internet.Ftp.pas"/>
         <DCCReference Include="LightCore.Internet.HTMLImg.pas"/>
         <DCCReference Include="LightCore.Internet.HtmlWriter.pas"/>
         <DCCReference Include="LightCore.Types.pas"/>
