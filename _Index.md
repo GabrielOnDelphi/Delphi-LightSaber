@@ -439,7 +439,7 @@ procedure AddBodyLineB(CONST s: string); { add 's' in a new line to the current 
 procedure Register;
 ```
 
-## LightCore.Internet (58)
+## LightCore.Internet (59)
 
 ```pascal
 function UrlEncode (CONST URL: string): string; { Convert unsafe characters. For example space is converted to %20 } { Prepare text to be used in 'a href' link }
@@ -490,6 +490,7 @@ function ExtractProxiesFrom(CONST Text: string): string; { Tries to extract mult
 function GetExternalIp(CONST ScriptAddress: string= 'http://checkip.dyndns.org'): string;
 function GetLocalIP: string; overload;
 function GetLocalIP(OUT HostName, IpAddress, ErrorMsg: string): Boolean; overload;
+function GetLocalIPv4List(OUT IpAddresses: TStringArray; OUT ErrorMsg: string): Boolean; { Every IPv4 address of this PC, unfiltered (may include 127.* and 169.254.*) }
 function ResolveAddress (CONST HostName: String; out Address: DWORD): Boolean;
 function GenerateInternetRep: string;
 function ParseURL(CONST lpszUrl: string): TStringArray; { Breaks an URL in all its subcomponents. Example: ParseURL('http://login:password@somehost.somedomain.com/some_path/something_else.html?param1=val&param2=val') }
@@ -4122,4 +4123,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2948 public routines across 233 units._
+_2949 public routines across 233 units._
