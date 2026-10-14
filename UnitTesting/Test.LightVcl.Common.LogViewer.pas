@@ -42,6 +42,9 @@ type
     [Test]
     procedure TestAssignExternalRamLog_ValidLog_Assigns;
 
+    [Test]
+    procedure TestAssignExternalRamLog_SecondViewerOnSameLog;
+
     { SaveAsRtf Tests }
     [Test]
     procedure TestSaveAsRtf_EmptyPath_ShouldRaise;
@@ -155,6 +158,36 @@ begin
     Assert.AreSame(ExternalLog, LogViewer.RamLog, 'RamLog should be assigned to external log');
   finally
     FreeAndNil(LogViewer);
+    FreeAndNil(ExternalLog);
+  end;
+end;
+
+
+{ The case of TAppData.CreateMainForm: the hidden log window already shows AppData.RamLog, then a viewer on the main form attaches to the same log.
+  Then the first viewer is freed: its destructor must detach only itself. If it stayed attached, the AddInfo below would call Populate on the freed viewer. }
+procedure TTestLogViewer.TestAssignExternalRamLog_SecondViewerOnSameLog;
+var
+  First, Second: TLogViewer;
+  ExternalLog: TRamLog;
+begin
+  ExternalLog:= TRamLog.Create(FALSE, NIL);   { ShowOnError FALSE: no window may pop up during a test run }
+  First := TLogViewer.Create(FTestForm);
+  Second:= TLogViewer.Create(FTestForm);
+  try
+    First.Parent := FTestForm;
+    Second.Parent:= FTestForm;
+
+    First.AssignExternalRamLog(ExternalLog);
+    Second.AssignExternalRamLog(ExternalLog);
+    Assert.AreSame(ExternalLog, First.RamLog,  'The first viewer must still show the shared log');
+    Assert.AreSame(ExternalLog, Second.RamLog, 'The second viewer must show the shared log');
+
+    FreeAndNil(First);
+    ExternalLog.AddInfo('After the first viewer is gone');
+    Assert.AreEqual(1, Second.Count, 'The second viewer must still read the shared log');
+  finally
+    FreeAndNil(Second);
+    FreeAndNil(First);
     FreeAndNil(ExternalLog);
   end;
 end;

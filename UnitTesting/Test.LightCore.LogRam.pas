@@ -1,7 +1,7 @@
 unit Test.LightCore.LogRam;
 
 {=============================================================================================================
-   2026.01.30
+   2026.10.13
    Unit tests for LightCore.LogRam.pas
    Tests TRamLog - the non-visual log class
 =============================================================================================================}
@@ -113,6 +113,24 @@ type
     [Test]
     procedure TestUnregisterObserver;
 
+    [Test]
+    procedure TestTwoObservers_BothNotified;
+
+    [Test]
+    procedure TestUnregisterOneObserver_OtherStaysAttached;
+
+    [Test]
+    procedure TestUnregisterAll_DetachesEveryObserver;
+
+    [Test]
+    procedure TestRegisterSameObserverTwice_NotifiedOnce;
+
+    [Test]
+    procedure TestPopUpWindow_OnlyNewestObserver;
+
+    [Test]
+    procedure TestOverflow_PopulatesEveryObserver;
+
     { Timestamp Tests }
     [Test]
     procedure TestTimestampRecorded;
@@ -128,6 +146,15 @@ type
 
   { Mock observer for testing }
   TMockLogObserver = class(TInterfacedObject, ILogObserver)
+  public
+    PopulateCallCount: Integer;
+    PopUpWindowCallCount: Integer;
+    procedure Populate;
+    procedure PopUpWindow;
+  end;
+
+  { Mock observer whose lifetime its interface references do NOT manage (TComponent._AddRef/_Release do not count), like the real TLogViewer. }
+  TMockComponentObserver = class(TComponent, ILogObserver)
   public
     PopulateCallCount: Integer;
     PopUpWindowCallCount: Integer;
@@ -453,6 +480,17 @@ begin
 end;
 
 
+procedure TMockComponentObserver.Populate;
+begin
+  Inc(PopulateCallCount);
+end;
+
+procedure TMockComponentObserver.PopUpWindow;
+begin
+  Inc(PopUpWindowCallCount);
+end;
+
+
 { Observer Tests }
 
 procedure TTestLogRam.TestRegisterObserver;
@@ -480,7 +518,7 @@ var
   CallCountBefore: Integer;
 begin
   Observer:= TMockLogObserver.Create;
-  ObserverRef:= Observer;  { This prevents the observer from being freed when UnregisterLogObserver sets FLogObserver:= NIL }
+  ObserverRef:= Observer;  { This prevents the observer from being freed when UnregisterLogObserver drops the log's reference to it }
   LogWithObserver:= TRamLog.Create(False, Observer, False);
   try
     LogWithObserver.AddMsg('Before unregister');
@@ -494,6 +532,199 @@ begin
       'Observer should not be notified after unregistering');
   finally
     FreeAndNil(LogWithObserver);
+  end;
+end;
+
+
+{ Two viewers on one log: the case of TAppData.CreateMainForm (the hidden log form observes AppData.RamLog) plus a TLogViewer on the main form that calls AssignExternalRamLog(AppData.RamLog).
+  Both must receive every change. }
+procedure TTestLogRam.TestTwoObservers_BothNotified;
+var
+  ObserverA, ObserverB: TMockLogObserver;
+  RefA, RefB: ILogObserver;   { Strong references, so the log is never the last owner of a mock }
+  LogTwo: TRamLog;
+begin
+  ObserverA:= TMockLogObserver.Create;
+  RefA:= ObserverA;
+  ObserverB:= TMockLogObserver.Create;
+  RefB:= ObserverB;
+
+  LogTwo:= TRamLog.Create(False, RefA, False);
+  try
+    LogTwo.RegisterLogObserver(RefB);
+    ObserverA.PopulateCallCount:= 0;
+    ObserverB.PopulateCallCount:= 0;
+
+    LogTwo.AddInfo('Seen by both');
+
+    Assert.AreEqual(1, ObserverA.PopulateCallCount, 'The first observer must still be notified after a second one registered');
+    Assert.AreEqual(1, ObserverB.PopulateCallCount, 'The second observer must be notified too');
+  finally
+    FreeAndNil(LogTwo);
+  end;
+end;
+
+
+{ What a TLogViewer does in its destructor: detach itself and leave the other viewers of the log attached.
+  The observer is registered through the implicit class -> interface conversion (as Demo LightLog does) and unregistered through "as ILogObserver" (as TLogViewer does), so the test also proves that both give the same reference. }
+procedure TTestLogRam.TestUnregisterOneObserver_OtherStaysAttached;
+var
+  Leaving, Staying: TMockComponentObserver;
+
+  { The hidden interface temporaries made here (the implicit conversion, the "as" casts) are released when THIS routine returns, while both mocks are still alive.
+    Released after FreeAndNil of a mock, TComponent._Release would read the freed object. }
+  procedure RegisterBothThenUnregisterOne;
+  var LogOne: TRamLog;
+  begin
+    LogOne:= TRamLog.Create(False, NIL, False);
+    try
+      LogOne.RegisterLogObserver(Leaving);
+      LogOne.RegisterLogObserver(Staying as ILogObserver);
+
+      LogOne.UnregisterLogObserver(Leaving as ILogObserver);
+      LogOne.AddInfo('After one observer left');
+    finally
+      FreeAndNil(LogOne);
+    end;
+  end;
+
+begin
+  Leaving:= TMockComponentObserver.Create(NIL);
+  Staying:= TMockComponentObserver.Create(NIL);
+  try
+    RegisterBothThenUnregisterOne;
+
+    Assert.AreEqual(0, Leaving.PopulateCallCount, 'The unregistered observer must not be notified');
+    Assert.AreEqual(1, Staying.PopulateCallCount, 'The other observer must stay attached');
+  finally
+    FreeAndNil(Staying);
+    FreeAndNil(Leaving);
+  end;
+end;
+
+
+{ The parameterless UnregisterLogObserver detaches every observer (Demo LightLog relies on it to add 1 million lines without repaints). }
+procedure TTestLogRam.TestUnregisterAll_DetachesEveryObserver;
+var
+  ObserverA, ObserverB: TMockLogObserver;
+  RefA, RefB: ILogObserver;
+  LogAll: TRamLog;
+begin
+  ObserverA:= TMockLogObserver.Create;
+  RefA:= ObserverA;
+  ObserverB:= TMockLogObserver.Create;
+  RefB:= ObserverB;
+
+  LogAll:= TRamLog.Create(False, RefA, False);
+  try
+    LogAll.RegisterLogObserver(RefB);
+    LogAll.UnregisterLogObserver;
+    ObserverA.PopulateCallCount:= 0;
+    ObserverB.PopulateCallCount:= 0;
+
+    LogAll.AddInfo('Nobody listens');
+
+    Assert.AreEqual(0, ObserverA.PopulateCallCount, 'The first observer must be detached');
+    Assert.AreEqual(0, ObserverB.PopulateCallCount, 'The second observer must be detached');
+  finally
+    FreeAndNil(LogAll);
+  end;
+end;
+
+
+{ Registering the same observer twice must not create a second entry: it would Populate twice per change, and one UnregisterLogObserver(Observer) would leave it attached. }
+procedure TTestLogRam.TestRegisterSameObserverTwice_NotifiedOnce;
+var
+  Observer: TMockLogObserver;
+  ObserverRef: ILogObserver;
+  LogSame: TRamLog;
+begin
+  Observer:= TMockLogObserver.Create;
+  ObserverRef:= Observer;
+
+  LogSame:= TRamLog.Create(False, ObserverRef, False);
+  try
+    LogSame.RegisterLogObserver(ObserverRef);
+    Observer.PopulateCallCount:= 0;
+
+    LogSame.AddInfo('Once');
+    Assert.AreEqual(1, Observer.PopulateCallCount, 'An observer registered twice must be notified once per change');
+
+    LogSame.UnregisterLogObserver(ObserverRef);
+    LogSame.AddInfo('After unregister');
+    Assert.AreEqual(1, Observer.PopulateCallCount, 'One UnregisterLogObserver must detach an observer that was registered twice');
+  finally
+    FreeAndNil(LogSame);
+  end;
+end;
+
+
+{ ShowOnError pops up the window of the NEWEST observer only. When it leaves, the older one gets the pop-ups again. }
+procedure TTestLogRam.TestPopUpWindow_OnlyNewestObserver;
+var
+  Older, Newer: TMockLogObserver;
+  RefOlder, RefNewer: ILogObserver;
+  LogPop: TRamLog;
+begin
+  Older:= TMockLogObserver.Create;
+  RefOlder:= Older;
+  Newer:= TMockLogObserver.Create;
+  RefNewer:= Newer;
+
+  LogPop:= TRamLog.Create(True, RefOlder, False);   { ShowOnError = True }
+  try
+    LogPop.RegisterLogObserver(RefNewer);
+
+    LogPop.AddError('First error');
+    Assert.AreEqual(0, Older.PopUpWindowCallCount, 'Only the newest observer may pop up its window');
+    Assert.AreEqual(1, Newer.PopUpWindowCallCount, 'The newest observer must pop up its window');
+
+    LogPop.UnregisterLogObserver(RefNewer);
+    LogPop.AddError('Second error');
+    Assert.AreEqual(1, Older.PopUpWindowCallCount, 'With the newest observer gone, the older one must pop up its window');
+    Assert.AreEqual(1, Newer.PopUpWindowCallCount, 'An unregistered observer must not pop up');
+  finally
+    FreeAndNil(LogPop);
+  end;
+end;
+
+
+{ The overflow path frees the old lines right after it refreshes the observers, so EVERY observer must be refreshed there (each one caches pointers to those lines).
+  The save writes LargeLogSave.logbin into the AppData folder of the test EXE; the test removes it again if it was not there before. }
+procedure TTestLogRam.TestOverflow_PopulatesEveryObserver;
+var
+  ObserverA, ObserverB: TMockLogObserver;
+  RefA, RefB: ILogObserver;
+  LogFull: TRamLog;
+  SaveFile: string;
+  FileWasThere: Boolean;
+begin
+  SaveFile:= TAppDataCore.AppDataFolder + 'LargeLogSave.logbin';
+  FileWasThere:= FileExists(SaveFile);
+
+  ObserverA:= TMockLogObserver.Create;
+  RefA:= ObserverA;
+  ObserverB:= TMockLogObserver.Create;
+  RefB:= ObserverB;
+
+  LogFull:= TRamLog.Create(False, RefA, False);
+  try
+    LogFull.RegisterLogObserver(RefB);
+    LogFull.MaxEntries:= 2;
+    LogFull.AddInfo('Line 1');
+    LogFull.AddInfo('Line 2');
+    ObserverA.PopulateCallCount:= 0;
+    ObserverB.PopulateCallCount:= 0;
+
+    LogFull.AddInfo('Line 3');   { 3 lines > MaxEntries: the overflow path moves the lines to a snapshot, refreshes the observers, frees the snapshot; then AddInfo notifies the observers again }
+
+    Assert.AreEqual(0, LogFull.Lines.Count, 'The overflow path must have moved every line out of RAM');
+    Assert.AreEqual(2, ObserverA.PopulateCallCount, 'The first observer must be refreshed by the overflow path and by the notification');
+    Assert.AreEqual(2, ObserverB.PopulateCallCount, 'The second observer must be refreshed by the overflow path and by the notification');
+  finally
+    FreeAndNil(LogFull);
+    if NOT FileWasThere AND FileExists(SaveFile)
+    then System.SysUtils.DeleteFile(SaveFile);
   end;
 end;
 
