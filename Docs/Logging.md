@@ -18,7 +18,16 @@ TRamLog                         (LightCore.LogRam.pas)        - non-visual log
         +-- TLogViewer (FMX)    (FrameFMX/LightFmx.Common.LogViewer.pas)
 ```
 
-`TRamLog` holds the messages and broadcasts changes to one observer. The visual viewers implement `ILogObserver` and render the data on demand.
+`TRamLog` holds the messages and broadcasts changes to every registered observer. The visual viewers implement `ILogObserver` and render the data on demand.
+
+## Several observers on one log
+
+One `TRamLog` can have several observers. The usual case: VCL `TAppData.CreateMainForm` attaches its hidden log window (`TfrmRamLog`) to `AppData.RamLog`, and a `TLogViewer` on the main form then calls `AssignExternalRamLog(AppData.RamLog)` too.
+
+- `Populate` goes to EVERY observer, so each viewer shows the current lines.
+- `PopUpWindow` (warnings/errors with `ShowOnError=TRUE`) goes to the NEWEST observer only: one window popping up is enough. When the newest one unregisters, the one before it gets the pop-ups again.
+- `RegisterLogObserver` adds an observer; registering the same observer twice changes nothing.
+- `UnregisterLogObserver(Observer)` detaches that observer only. The parameterless `UnregisterLogObserver` detaches EVERY observer (for example to add a million lines without repaints, as `Demo\VCL\Demo LightLog` does).
 
 ## Quick start
 
@@ -61,7 +70,7 @@ In MT mode every individual operation (`Add`, `Count`, filtered iteration) is in
 
 `ILogObserver` is typically implemented by a `TComponent` descendant (`TLogViewer`). `TComponent._AddRef` returns -1 — interface references do **not** keep the observer alive. The observer **must**:
 
-1. Call `RamLog.UnregisterLogObserver` before its destructor returns, **and**
+1. Call `RamLog.UnregisterLogObserver(Self)` before its destructor returns - the overload with a parameter, because the parameterless one would also detach the other observers of the log, **and**
 2. Set a destruction-guard flag (e.g. `FFormDestroying`) and check it in `Populate` / `PopUpWindow` so any `TThread.Queue` closures still in flight bail out instead of touching freed memory.
 
 `TLogViewer` already does both. If you write a custom observer, you must too — otherwise a worker thread emitting a log message during shutdown will dereference a freed object.
@@ -153,9 +162,10 @@ procedure SaveAsText  (CONST FullPath: string);
 function  LoadFromFile(CONST FullPath: string): Boolean;
 procedure SaveToFile  (CONST FullPath: string);
 
-// Observer
-procedure RegisterLogObserver(Observer: ILogObserver);
-procedure UnregisterLogObserver;
+// Observer (several allowed; see "Several observers on one log")
+procedure RegisterLogObserver  (Observer: ILogObserver);
+procedure UnregisterLogObserver(Observer: ILogObserver); overload;   // this observer only
+procedure UnregisterLogObserver; overload;                           // every observer
 procedure NotifyLogObserver;
 procedure NotifyLogObserverAndShow;
 procedure PopUpWindow;
@@ -211,7 +221,7 @@ Consequence for callers: a log entry is not always byte-identical to the string 
 
 ### Observer "Populate" can fire after the observer is freed
 
-If you implement a custom `ILogObserver` and forget the destruction guard described above, expect a hard-to-reproduce AV during shutdown. The framework provides hooks (`UnregisterLogObserver`, `FormDestroying`); use them.
+If you implement a custom `ILogObserver` and forget the destruction guard described above, expect a hard-to-reproduce AV during shutdown. The framework provides hooks (`UnregisterLogObserver(Self)`, `FormDestroying`); use them.
 
 ### MaxEntries silently clears RAM
 
@@ -226,7 +236,7 @@ When the in-memory log crosses `MaxEntries` (default 1M), `TRamLog` saves the sn
 ## Related units
 
 - `LightCore.LogTypes.pas` — `TLogVerbLvl` enum, `Verbosity2String`, `DefaultVerbosity`
-- `LightCore.LogRam.pas` — `TRamLog`, `ILogObserver`, `INotifyCoalesceFlag`
+- `LightCore.LogRam.pas` — `TRamLog`, `ILogObserver`, `TLogObservers`, `INotifyCoalesceFlag`
 - `LightCore.LogLinesAbstract.pas` — `TAbstractLogLines`, `RLogLine`
 - `LightCore.LogLinesS.pas` — single-threaded storage
 - `LightCore.LogLinesM.pas` — multi-threaded storage (MREWS)
