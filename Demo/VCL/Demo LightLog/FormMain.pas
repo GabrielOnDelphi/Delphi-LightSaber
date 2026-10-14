@@ -199,8 +199,8 @@ end;
 
 procedure TMainForm.btnLoopTestClick(Sender: TObject);
 begin
-  // Detach the observer so the grid is not refreshed for every single AddInfo call.
-  // We re-attach after the loop and trigger one Populate.
+  // Detach every observer (this grid and the hidden log window that AppData attached) so no viewer is refreshed for every single AddInfo call.
+  // We re-attach the grid after the loop and trigger one Populate.
   AppData.RamLog.UnregisterLogObserver;
 
   VAR Count:= AppData.RamLog.Lines.Count;
