@@ -53,6 +53,10 @@ type
     [Test]
     [Category('Network')]
     procedure TestGetLocalIP_Overload_Success;
+
+    [Test]
+    [Category('Network')]
+    procedure TestGetLocalIPv4List_EveryEntryIsDottedQuad;
   end;
   {$ENDIF}
 
@@ -617,6 +621,39 @@ begin
     begin
       Assert.IsNotEmpty(ErrorMsg, 'ErrorMsg should contain reason for failure');
     end;
+end;
+
+
+procedure TTestInternetWin.TestGetLocalIPv4List_EveryEntryIsDottedQuad;
+VAR
+  Addresses: TStringArray;
+  Octets: TArray<string>;
+  ErrorMsg, HostName, FirstIP, FirstError: string;
+  Octet: Integer;
+begin
+  if NOT GetLocalIPv4List(Addresses, ErrorMsg) then
+    begin
+      Assert.IsNotEmpty(ErrorMsg, 'ErrorMsg should contain reason for failure');
+      Assert.AreEqual(0, Integer(Length(Addresses)), 'No addresses on failure');
+      EXIT;
+    end;
+
+  Assert.IsEmpty(ErrorMsg, 'ErrorMsg should be empty on success');
+  Assert.IsTrue(Length(Addresses) > 0, 'A resolved host name has at least one address');
+  for VAR Address in Addresses do
+    begin
+      Octets:= Address.Split(['.']);
+      Assert.AreEqual(4, Integer(Length(Octets)), 'Not a dotted quad: '+ Address);
+      for VAR S in Octets do
+        begin
+          Assert.IsTrue(TryStrToInt(S, Octet), 'Not a number: '+ Address);
+          Assert.IsTrue((Octet >= 0) AND (Octet <= 255), 'Octet out of range: '+ Address);
+        end;
+    end;
+
+  { GetLocalIP reports only the first address of the same list }
+  if GetLocalIP(HostName, FirstIP, FirstError)
+  then Assert.AreEqual(FirstIP, Addresses[0]);
 end;
 {$ENDIF}
 
