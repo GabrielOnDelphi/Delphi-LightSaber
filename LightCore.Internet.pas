@@ -121,6 +121,7 @@ CONST
  {$IFDEF MSWINDOWS}
  function  GetLocalIP: string;                                              overload;
  function  GetLocalIP(OUT HostName, IpAddress, ErrorMsg: string): Boolean;  overload;
+ function  GetLocalIPv4List(OUT IpAddresses: TStringArray; OUT ErrorMsg: string): Boolean;   { Every IPv4 address of this PC, unfiltered (may include 127.* and 169.254.*) }
  function  ResolveAddress (CONST HostName: String; out Address: DWORD): Boolean;
  function  GenerateInternetRep: string;
 
@@ -1383,6 +1384,68 @@ begin
 
       SetLength(IpAddress, Length(IpAddress) - 1); // Remove trailing dot
       Break; // Only take the first IP address
+    end;
+
+    Result:= True;
+  finally
+    WSACleanup;
+  end;
+end;
+
+
+{ Returns every IPv4 address the local host name resolves to (one per network card that is up), unfiltered: it may hold 127.* or 169.254.* addresses. }
+function GetLocalIPv4List(OUT IpAddresses: TStringArray; OUT ErrorMsg: string): Boolean;
+VAR
+  Addr: MarshaledAString;
+  WSAData: TWSAData;
+  RemoteHost: PHostEnt;
+  HostNameArr: array[0..255] of AnsiChar;
+  Count: Integer;
+  IpAddress: string;
+begin
+  Result     := False;
+  IpAddresses:= NIL;
+  ErrorMsg   := '';
+
+  if WSAStartup($0202, WSAData) <> 0 then
+  begin
+    ErrorMsg:= 'WinSock initialization failed!';
+    EXIT;
+  end;
+
+  try
+    if gethostname(HostNameArr, SizeOf(HostNameArr)) = SOCKET_ERROR then
+    begin
+      ErrorMsg:= 'Unable to retrieve the host name. WinSock error '+ IntToStr(WSAGetLastError);
+      EXIT;
+    end;
+
+    RemoteHost:= gethostbyname(HostNameArr);
+    if RemoteHost = NIL then
+    begin
+      ErrorMsg:= 'Unable to resolve the host name. WinSock error '+ IntToStr(WSAGetLastError);
+      EXIT;
+    end;
+
+    if RemoteHost^.h_addrtype <> AF_INET then
+    begin
+      ErrorMsg:= 'The host name did not resolve to IPv4 addresses.';
+      EXIT;
+    end;
+
+    { h_addr_list is a NIL-terminated list; each entry holds h_length (4) address bytes }
+    Count:= 0;
+    while RemoteHost^.h_addr_list[Count] <> NIL do
+    begin
+      Addr:= RemoteHost^.h_addr_list[Count];
+      IpAddress:= '';
+      for VAR I:= 0 to RemoteHost^.h_length - 1 do
+        IpAddress:= IpAddress + IntToStr(Byte(Addr[I])) + '.';
+      SetLength(IpAddress, Length(IpAddress) - 1);   { Remove the trailing dot }
+
+      SetLength(IpAddresses, Count + 1);
+      IpAddresses[Count]:= IpAddress;
+      Inc(Count);
     end;
 
     Result:= True;
