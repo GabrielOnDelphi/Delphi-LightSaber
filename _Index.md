@@ -724,7 +724,7 @@ function Add (Value: PLogLine): Integer; override;
 function SnapshotAndClear: TAbstractLogLines; override;
 ```
 
-## LightCore.LogRam (35)
+## LightCore.LogRam (37)
 
 ```pascal
 procedure Populate;
@@ -737,7 +737,8 @@ function prepareString(CONST Msg: string): string;
 procedure CheckAndSaveToDisk;
 procedure tryOverflowSave; { Helper for CheckAndSaveToDisk; assumes FAutoSaveLock is held. }
 procedure tryPeriodicSave; { Helper for CheckAndSaveToDisk; assumes FAutoSaveLock is held. }
-function GetObserver: ILogObserver; { Thread-safe FLogObserver read }
+function GetObserver: ILogObserver; { Thread-safe read of the NEWEST observer (the one PopUpWindow shows). NIL if none. }
+function GetObservers: TLogObservers; { Thread-safe copy of every observer, oldest first. Empty if none. }
 procedure Clear;
 function Count(Filtered: Boolean; Filter: TLogVerbLvl): Integer;
 procedure AddBold (CONST Msg: string);
@@ -757,8 +758,9 @@ function LoadFromStream(Stream: TLightStream): Boolean;
 procedure SaveToStream (Stream: TLightStream);
 procedure SaveToFile (CONST FullPath: string);
 function LoadFromFile(CONST FullPath: string): Boolean;
-procedure RegisterLogObserver(Observer: ILogObserver);
-procedure UnregisterLogObserver;
+procedure RegisterLogObserver (Observer: ILogObserver);
+procedure UnregisterLogObserver(Observer: ILogObserver); overload; { Detaches this observer only. The one a viewer calls for itself. }
+procedure UnregisterLogObserver; overload; { Detaches EVERY observer, e.g. to stop all repaints during a burst of Add calls. }
 procedure NotifyLogObserver;
 procedure NotifyLogObserverAndShow;
 procedure PopUpWindow;
@@ -4120,4 +4122,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2946 public routines across 233 units._
+_2948 public routines across 233 units._
