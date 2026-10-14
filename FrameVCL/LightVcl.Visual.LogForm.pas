@@ -116,10 +116,10 @@ begin
 
   // Order matters:
   //   1. FormDestroying:=TRUE so any closures already in TThread.Queue bail out cleanly
-  //   2. UnregisterLogObserver so no NEW notifications get queued
+  //   2. UnregisterLogObserver(Log) so no NEW notifications get queued. Only this viewer: a viewer on the main form may observe the same AppData.RamLog
   // Together these close the late-callback window for background-thread log appends.
   Log.FormDestroying:= TRUE;
-  Log.RamLog.UnregisterLogObserver;
+  Log.RamLog.UnregisterLogObserver(Log as ILogObserver);
   SaveSettings;
 end;
 
