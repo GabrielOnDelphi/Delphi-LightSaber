@@ -4,8 +4,7 @@ UNIT LightCore.Internet.Ftp;
    FTP support (platform-agnostic).
    Date: 2026-07-26
 
-   This unit is deliberately NOT part of any LightSaber package: it pulls in Indy (IdFTP), and LightSaber stays
-   Indy-free. It lives in the LightSaber folder only so projects on the LightSaber search path can reach it.
+   Uses Indy (IdFTP). LightCore.dpk already requires IndySystem, IndyCore and IndyProtocols, so this unit adds no new package dependency.
    Don't forget to let the program through the firewall.
 --------------------------------------------------------------------------------------------------------------
    TFTPDetails - FTP account configuration record
