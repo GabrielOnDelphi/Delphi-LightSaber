@@ -1,12 +1,13 @@
 UNIT LightCore.LogRam;
 
 {=============================================================================================================
-   2026.07.07
+   2026.10.13
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
    A simple but effective log (non-visual).
-   Its data can be displayed by an observer (such as TLogViewer in LightVcl.Common.LogViewer.pas or LightFmx.Common.LogViewer.pas), but it can also work alone without being connected to an observer.
+   Its data can be displayed by observers (such as TLogViewer in LightVcl.Common.LogViewer.pas or LightFmx.Common.LogViewer.pas), but it can also work alone without being connected to an observer.
+   Several observers can show the same log: TAppData (VCL) attaches the hidden log window to AppData.RamLog, and a TLogViewer on the main form can attach to it too.
    It can easily hold up to 1 million entries. Being a good citizen, when it reaches this number it saves existing data to disk and then clears it from RAM.
 
    Verbosity:
@@ -39,7 +40,7 @@ TYPE
       ILogObserver is typically implemented by a TComponent descendant (e.g., TLogViewer).
       TComponent's _AddRef/_Release return -1 — interface references do NOT keep the observer alive.
       The observer MUST:
-        1. Call UnregisterLogObserver before its destructor returns, AND
+        1. Call UnregisterLogObserver(Self) before its destructor returns (the overload with a parameter: the parameterless one would also detach the other observers of the log), AND
         2. Set a guard flag (e.g., FFormDestroying) and check it in Populate/PopUpWindow so any TThread.Queue closures already posted bail out instead of touching a freed object.
       See FFormDestroying in LightFmx.Common.LogViewer / LightVcl.Common.LogViewer.
 
@@ -53,6 +54,10 @@ TYPE
     procedure Populate;
     procedure PopUpWindow;
   end;
+
+  { A copy of the observer list, oldest first, taken under FObserverLock (see TRamLog.GetObservers).
+    A copy and not the field itself: a closure queued to the main thread walks it after Register/Unregister may have changed the field, and possibly after TRamLog is gone. }
+  TLogObservers = array of ILogObserver;
 
   { Coalescing flag for cross-thread observer notifications.
 
@@ -74,8 +79,8 @@ TYPE
   TRamLog = class(TObject)
    private
      FLines        : TAbstractLogLines;  // Backing storage exposed via the read-only Lines property below. Allocated in Create; freed in Destroy.
-     FLogObserver  : ILogObserver;       // GUI element that observes this log
-     FObserverLock : TCriticalSection;   // Serializes FLogObserver register/unregister/read in MT mode
+     FLogObservers : TLogObservers;      // GUI elements that observe this log, oldest first. Never holds the same observer twice.
+     FObserverLock : TCriticalSection;   // Serializes FLogObservers register/unregister/read in MT mode
      FAutoSaveLock : TCriticalSection;   // Serializes overflow+periodic disk saves (prevents file sharing violations)
      FLastSaveTime : TDateTime;
      FSaveInterval : Integer;            // Interval in seconds between periodic disk saves. Default 60s. Tunable via SaveInterval property.
@@ -90,7 +95,8 @@ TYPE
      procedure CheckAndSaveToDisk;
      procedure tryOverflowSave;     { Helper for CheckAndSaveToDisk; assumes FAutoSaveLock is held. }
      procedure tryPeriodicSave;     { Helper for CheckAndSaveToDisk; assumes FAutoSaveLock is held. }
-     function GetObserver: ILogObserver;  { Thread-safe FLogObserver read }
+     function GetObserver: ILogObserver;    { Thread-safe read of the NEWEST observer (the one PopUpWindow shows). NIL if none. }
+     function GetObservers: TLogObservers;  { Thread-safe copy of every observer, oldest first. Empty if none. }
    public
      const
        DefaultMaxEntries  = 1000000;     // Default value for FMaxEntries — used in constructor and exposed for callers that want to compare/restore.
@@ -126,8 +132,9 @@ TYPE
      function  LoadFromFile(CONST FullPath: string): Boolean;
 
     // OBSERVER
-    procedure RegisterLogObserver(Observer: ILogObserver);
-    procedure UnregisterLogObserver;
+    procedure RegisterLogObserver  (Observer: ILogObserver);
+    procedure UnregisterLogObserver(Observer: ILogObserver); overload;   { Detaches this observer only. The one a viewer calls for itself. }
+    procedure UnregisterLogObserver; overload;                           { Detaches EVERY observer, e.g. to stop all repaints during a burst of Add calls. }
     procedure NotifyLogObserver;
     procedure NotifyLogObserverAndShow;
 
@@ -228,6 +235,21 @@ begin
 end;
 
 
+{ Calls Populate on Observers[From] .. Observers[High].
+  Each call runs in the FINALLY of the one before it, so every observer is refreshed even when an earlier Populate raises; the exception still reaches the caller.
+  The overflow path depends on this: it frees the snapshot right after, and an observer skipped here would keep PLogLine pointers into freed memory.
+  A plain routine, not a TRamLog method: queued closures call it after TRamLog may be gone. }
+procedure PopulateEach(CONST Observers: TLogObservers; From: Integer);
+begin
+  if From > High(Observers) then EXIT;
+  TRY
+    Observers[From].Populate;
+  FINALLY
+    PopulateEach(Observers, From + 1);
+  END;
+end;
+
+
 { Saves a snapshot list (typically from SnapshotAndClear) to disk.
   Used by the overflow path so we save the snapshot — not the live list — and avoid the data-loss window between SaveToFile and a subsequent Clear.
   The snapshot is owned by the caller; this routine only reads from it. }
@@ -238,8 +260,8 @@ procedure SaveSnapshotToFile(Snapshot: TAbstractLogLines; const FullPath: string
    CONSTRUCTOR / DESTRUCTOR
 
    Parameters:
-     aShowOnError  - When TRUE, automatically shows the observer window (if registered) when warnings/errors are logged
-     Observer      - Optional GUI observer (like TLogViewer) that displays log entries. Can be NIL.
+     aShowOnError  - When TRUE, automatically shows the window of the newest observer (if one is registered) when warnings/errors are logged
+     Observer      - Optional GUI observer (like TLogViewer) that displays log entries. Can be NIL. More can be added later with RegisterLogObserver.
      MultiThreaded - When TRUE, uses TLogLinesMultiThreaded with MREWS locking for thread-safe operations.
                      When FALSE (default), uses TLogLinesSingleThreaded without locking overhead.
 -------------------------------------------------------------------------------------------------------------}
@@ -273,7 +295,7 @@ begin
     begin
       FObserverLock.Enter;
       try
-        FLogObserver:= NIL;
+        FLogObservers:= NIL;
       finally
         FObserverLock.Leave;
       end;
@@ -326,78 +348,119 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    OBSERVER METHODS
 
+   Several observers can watch one log (the hidden log window of TAppData plus a TLogViewer on the main form, for example).
+     - Populate goes to EVERY observer, so each viewer shows the current lines.
+     - PopUpWindow goes to the NEWEST observer only: one window popping up is enough to inform the user.
+       The newest one is the viewer the program attached last, typically a viewer on the main form, attached after TAppData attached its hidden log window.
+       When the newest one unregisters, the one before it gets the pop-ups again.
+
    Thread safety:
-     FLogObserver is an interface field.
-     Assigning/reading it in MT mode without a lock can tear (especially on platforms where interface assignment is not a single atomic instruction) and can race with concurrent _AddRef/_Release.
-     FObserverLock serializes all access.
+     FLogObservers is a dynamic array of interfaces.
+     Changing/reading it in MT mode without a lock can race with concurrent _AddRef/_Release and with the reallocation done by SetLength.
+     FObserverLock serializes all access. Code that walks the list outside the lock walks a copy (GetObservers), never the field.
 -------------------------------------------------------------------------------------------------------------}
 
-{ Thread-safe read of FLogObserver.
-  Returns NIL if no observer is registered.
+{ Thread-safe read of the newest observer. Returns NIL if no observer is registered.
   The returned interface holds an _AddRef on the observer's iface slot, but for a TComponent that is a no-op — the observer's true lifetime is owned by its parent. }
 function TRamLog.GetObserver: ILogObserver;
 begin
   FObserverLock.Enter;
   try
-    Result:= FLogObserver;
+    if Length(FLogObservers) = 0
+    then Result:= NIL
+    else Result:= FLogObservers[High(FLogObservers)];
   finally
     FObserverLock.Leave;
   end;
 end;
 
 
-{ Registers a GUI observer (like TLogViewer) to receive log updates.
-  Only one observer can be registered at a time.
+{ Thread-safe copy of every registered observer, oldest first. Empty if none.
+  Copy, not a second reference to the same array: UnregisterLogObserver(Observer) shifts the elements of the field in place, and that must not change an array a caller (or a queued closure) is walking. }
+function TRamLog.GetObservers: TLogObservers;
+begin
+  FObserverLock.Enter;
+  try
+    Result:= Copy(FLogObservers);
+  finally
+    FObserverLock.Leave;
+  end;
+end;
 
-  Double-register guard:
-    Assert fires in DEBUG builds if a second observer registers without the first having called UnregisterLogObserver.
-    Silently overwriting is dangerous: the previous observer keeps thinking it is attached but receives no notifications, and worse, its destructor's UnregisterLogObserver call may then nil out the NEW (legitimate) observer.
-    In RELEASE builds the assertion is compiled out and the new observer wins.
 
-  IMPORTANT: The caller (typically a TComponent) is responsible for calling UnregisterLogObserver in its destructor — interface refcounting does NOT manage the observer's lifetime. }
+{ Adds a GUI observer (like TLogViewer) to the observers of this log.
+  Registering an observer that is already registered changes nothing: a second entry would make it Populate twice per change.
+
+  IMPORTANT: The caller (typically a TComponent) is responsible for calling UnregisterLogObserver(Self) in its destructor — interface refcounting does NOT manage the observer's lifetime. }
 procedure TRamLog.RegisterLogObserver(Observer: ILogObserver);
+VAR i: Integer;
 begin
   Assert(Observer <> NIL, 'RegisterLogObserver: Observer cannot be nil. Call UnregisterLogObserver to detach.');
   FObserverLock.Enter;
   try
-    Assert((FLogObserver = NIL) or (FLogObserver = Observer),
-           'RegisterLogObserver: an observer is already registered. Call UnregisterLogObserver on the previous one first.');
-    FLogObserver:= Observer;
+    for i:= 0 to High(FLogObservers) do
+      if FLogObservers[i] = Observer
+      then EXIT;
+
+    SetLength(FLogObservers, Length(FLogObservers) + 1);
+    FLogObservers[High(FLogObservers)]:= Observer;
   finally
     FObserverLock.Leave;
   end;
 end;
 
 
+{ Detaches one observer and leaves the others attached.
+  Does nothing if the observer is not registered: a viewer whose entry was already removed by the parameterless overload still calls this from its destructor. }
+procedure TRamLog.UnregisterLogObserver(Observer: ILogObserver);
+VAR i, j: Integer;
+begin
+  FObserverLock.Enter;
+  try
+    for i:= 0 to High(FLogObservers) do
+      if FLogObservers[i] = Observer then
+        begin
+          for j:= i to High(FLogObservers) - 1 do
+            FLogObservers[j]:= FLogObservers[j + 1];
+          SetLength(FLogObservers, Length(FLogObservers) - 1);
+          EXIT;   { RegisterLogObserver never adds the same observer twice }
+        end;
+  finally
+    FObserverLock.Leave;
+  end;
+end;
+
+
+{ Detaches EVERY observer. }
 procedure TRamLog.UnregisterLogObserver;
 begin
   FObserverLock.Enter;
   try
-    FLogObserver:= NIL;
+    FLogObservers:= NIL;
   finally
     FObserverLock.Leave;
   end;
 end;
 
 
-{ Notify the registered observer that the log has changed.
+{ Notify every registered observer that the log has changed.
   From the main thread this calls Populate directly.
   From a background thread it posts a closure to the main thread via TThread.Queue, and a burst of messages collapses into a single repaint via INotifyCoalesceFlag.
-  The captured ILogObserver does NOT extend the observer's lifetime: the observer is typically a TComponent (TLogViewer) whose _AddRef is a no-op, so it must guard itself against late callbacks - see "Observer lifetime contract" above the ILogObserver declaration. }
+  The captured ILogObserver references do NOT extend the observers' lifetime: an observer is typically a TComponent (TLogViewer) whose _AddRef is a no-op, so it must guard itself against late callbacks - see "Observer lifetime contract" above the ILogObserver declaration. }
 procedure TRamLog.NotifyLogObserver;
 VAR
-  LObserver: ILogObserver;
-  LFlag    : INotifyCoalesceFlag;
+  LObservers: TLogObservers;
+  LFlag     : INotifyCoalesceFlag;
 begin
-  LObserver:= GetObserver;
-  if NOT Assigned(LObserver) then EXIT;
+  LObservers:= GetObservers;
+  if Length(LObservers) = 0 then EXIT;
 
   if TThread.CurrentThread.ThreadID = MainThreadID
-  then LObserver.Populate                            { Direct call: no queue, no closure, no coalescing needed }
+  then PopulateEach(LObservers, 0)                   { Direct call: no queue, no closure, no coalescing needed }
   else
     begin
       { Cross-thread path.
-        Both LObserver and LFlag are captured by the closure.
+        Both LObservers and LFlag are captured by the closure.
         Critically, the closure references ONLY these locals — it does NOT touch any field of Self.
         That keeps the closure safe to run after TRamLog is destroyed (see INotifyCoalesceFlag declaration for full rationale). }
       LFlag:= FNotifyFlag;
@@ -407,14 +470,14 @@ begin
           { Release BEFORE Populate so any Add() that fires while Populate is running will see state=0, win its own TryAcquire, and schedule a follow-up repaint that captures the new entries.
             Releasing AFTER Populate would silently drop those mid-paint entries from the visual. }
           LFlag.Release;
-          LObserver.Populate;
+          PopulateEach(LObservers, 0);
         end);
     end;
 end;
 
 
 { Convenience for the warning/error paths.
-  No early-out via GetObserver here — both NotifyLogObserver and PopUpWindow already guard themselves with their own GetObserver/Assigned check, so a pre-check would just acquire FObserverLock a redundant third time. }
+  No early-out via GetObservers here — both NotifyLogObserver and PopUpWindow already guard themselves with their own read of the observer list, so a pre-check would just acquire FObserverLock a redundant third time. }
 procedure TRamLog.NotifyLogObserverAndShow;
 begin
   NotifyLogObserver;
@@ -423,6 +486,7 @@ begin
 end;
 
 
+{ Shows the window of the NEWEST observer only - see "OBSERVER METHODS" above for why not all of them. }
 procedure TRamLog.PopUpWindow;
 VAR LObserver: ILogObserver;
 begin
@@ -572,15 +636,16 @@ end;
     Those pointers are owned by Self.Lines until SnapshotAndClear transfers them to Snapshot.
     If we freed Snapshot before the queued Populate ran, a paint between Free and Populate would dereference disposed memory.
     We hand Snapshot ownership to the queued closure so disposal happens AFTER Populate has refreshed the observer's pointer cache with fresh pointers from the (now empty / refilled) live list.
+    EVERY observer caches its own pointers, so every one of them is refreshed (PopulateEach) before the snapshot is freed.
 
-  Closure capture rules: capture LObserver and LFlag as locals; never reference Self from inside the closure (TRamLog may be destroyed before the closure fires).
+  Closure capture rules: capture LObservers and LFlag as locals; never reference Self from inside the closure (TRamLog may be destroyed before the closure fires).
   See INotifyCoalesceFlag declaration for full rationale. }
 procedure TRamLog.tryOverflowSave;
 VAR
-  Snapshot: TAbstractLogLines;
-  HandedOff: Boolean;
-  LObserver: ILogObserver;
-  LFlag    : INotifyCoalesceFlag;
+  Snapshot  : TAbstractLogLines;
+  HandedOff : Boolean;
+  LObservers: TLogObservers;
+  LFlag     : INotifyCoalesceFlag;
 begin
   if Lines.Count <= FMaxEntries then EXIT;
 
@@ -600,13 +665,13 @@ begin
         end;
     END;
 
-    LObserver:= GetObserver;
-    if NOT Assigned(LObserver)
+    LObservers:= GetObservers;
+    if Length(LObservers) = 0
     then begin
       { No observer to refresh — safe to free the snapshot in the FINALLY below; nobody is caching its pointers. }
     end
     else if TThread.CurrentThread.ThreadID = MainThreadID
-    then LObserver.Populate                            { Synchronous — refresh is done before we return; safe to free in FINALLY. }
+    then PopulateEach(LObservers, 0)                   { Synchronous — refresh is done before we return; safe to free in FINALLY. }
     else
       begin
         LFlag:= FNotifyFlag;
@@ -615,15 +680,15 @@ begin
         if LFlag.TryAcquire
         then begin
           { Hand ownership of Snapshot to the closure.
-            The closure runs Populate (refreshes the cache via GetFilteredSlice) and then frees the snapshot. }
+            The closure runs Populate on every observer (refreshes each cache via GetFilteredSlice) and then frees the snapshot. }
           HandedOff:= TRUE;
           TThread.Queue(NIL, procedure
             begin
               LFlag.Release;
               TRY
-                LObserver.Populate;
+                PopulateEach(LObservers, 0);
               FINALLY
-                FreeAndNil(Snapshot);   { Free AFTER Populate has refreshed the observer's pointer cache. }
+                FreeAndNil(Snapshot);   { Free AFTER Populate has refreshed the pointer cache of every observer. }
               END;
             end);
         end
@@ -633,15 +698,15 @@ begin
               The winner sets the flag and only then calls TThread.Queue (two separate steps in NotifyLogObserver); it can be preempted between them for the entire duration of our SnapshotAndClear + disk save.
               A bare "free the snapshot" closure queued now could therefore run BEFORE the winner's Populate lands, disposing records the observer still caches (FGrid.Objects / FVisibleLines) — use-after-free on the next paint.
 
-              So this closure refreshes the observer's pointer cache ITSELF, then frees — same pattern as the winning branch, minus the flag Release (we do not own the flag; the winner will Release it).
+              So this closure refreshes the pointer cache of every observer ITSELF, then frees — same pattern as the winning branch, minus the flag Release (we do not own the flag; the winner will Release it).
               The extra Populate is harmless: overflow fires once per MaxEntries adds, so coalescing it buys nothing. }
             HandedOff:= TRUE;
             TThread.Queue(NIL, procedure
               begin
                 TRY
-                  LObserver.Populate;
+                  PopulateEach(LObservers, 0);
                 FINALLY
-                  FreeAndNil(Snapshot);   { Free AFTER our own Populate refreshed the observer's pointer cache. }
+                  FreeAndNil(Snapshot);   { Free AFTER our own Populate refreshed the pointer cache of every observer. }
                 END;
               end);
           end;
