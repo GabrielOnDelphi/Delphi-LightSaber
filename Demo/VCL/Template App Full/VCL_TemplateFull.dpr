@@ -19,8 +19,8 @@ uses
   FormTranslEditor in '..\..\..\FrameVCL\AutoTranslator\FormTranslEditor.pas',
   LightVcl.TranslatorAPI in '..\..\..\FrameVCL\AutoTranslator\LightVcl.TranslatorAPI.pas',
   FormTranslDeepL in '..\..\..\FrameVCL\AutoTranslator\FormTranslDeepL.pas',
-  FormTranslatorIniEditor in '..\..\..\FrameVCL\AutoTranslator\FormTranslatorIniEditor.pas',
-  Autopilot.Bridge.Vcl in 'c:\Projects\Projects AI\Autopilot for Delphi\Source\Bridge\Autopilot.Bridge.Vcl.pas';
+  {$IFDEF AUTOPILOT}Autopilot.Bridge.Vcl in 'c:\Projects\Projects AI\Autopilot for Delphi\Source\Bridge\Autopilot.Bridge.Vcl.pas',{$ENDIF}{Optional}
+  FormTranslatorIniEditor in '..\..\..\FrameVCL\AutoTranslator\FormTranslatorIniEditor.pas';
 
 {$R *.res}
 
@@ -45,7 +45,11 @@ begin
   Application.MainFormOnTaskbar:= FALSE;   { Explicit: this app must NOT own a taskbar button }
   AppData.CreateMainForm(TMainForm, MainForm, asFull);
 
-  Autopilot.Bridge.Vcl.StartBridge;   // Lets Claude drive this app over MCP. No-op unless AUTOPILOT is defined (Debug only).
+  { Optional: Via Autopilot, Claude can run/debug/test this program for you. For example, <press a button of this program and check the result>.
+    Don't have AUTOPILOT? Undefine $AUTOPILOT or get it from www.GabrielMoraru.com }
+  {$IFDEF AUTOPILOT}
+   Autopilot.Bridge.Vcl.StartBridge;
+  {$ENDIF}
 
   AppData.Run;
 end.
