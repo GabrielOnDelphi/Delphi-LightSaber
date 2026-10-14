@@ -50,6 +50,19 @@ type
     [Test]
     procedure TestGetJpgSize_MalformedSegmentLength;     { Regression: bad segment length used to seek backward, infinite loop }
 
+    { Hand-built JPEG marker streams. Marker codes and segment syntax: ITU-T T.81, Annex B. }
+    [Test]
+    procedure TestGetJpgSize_EveryFrameMarker;           { SOF0..SOF15 give the size; DHT, JPG, DAC ($C4, $C8, $CC) are skipped by their length }
+
+    [Test]
+    procedure TestGetJpgSize_DHP_GivesSizeOfCompletedImage;
+
+    [Test]
+    procedure TestGetJpgSize_StandAloneMarkerBeforeFrame; { RST0..RST7 and TEM have no length field }
+
+    [Test]
+    procedure TestGetJpgSize_FillBytesBeforeMarker;
+
     { GetGifSize Tests }
     [Test]
     procedure TestGetGifSize_InvalidSignature;
@@ -90,6 +103,29 @@ implementation
 
 uses
   LightCore.Graph.Loader.Resolution;
+
+
+procedure WriteBytes(Stream: TStream; CONST Bytes: array of Byte);
+begin
+  if Length(Bytes) > 0
+  then Stream.WriteBuffer(Bytes[0], Length(Bytes));
+end;
+
+
+{ A marker segment with the frame-header syntax of ITU-T T.81 B.2.2 (Figure B.3):
+  FF Marker, Lf = 11 (8 + 3 * Nf), P = 8, Y = Height, X = Width, Nf = 1, one component (C = 1, H|V = $11, Tq = 0).
+  The DHP segment has the same syntax (T.81 B.3.2). }
+procedure WriteFrameSegment(Stream: TStream; Marker: Byte; Width, Height: Word);
+begin
+  WriteBytes(Stream, [$FF, Marker, 0, 11, 8, Hi(Height), Lo(Height), Hi(Width), Lo(Width), 1, 1, $11, 0]);
+end;
+
+
+{ GetJpgSize stops scanning 8 bytes before the end of the stream, so a hand-built stream ends with zeros. }
+procedure WritePadding(Stream: TStream);
+begin
+  WriteBytes(Stream, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+end;
 
 
 procedure TTestCoreGraphLoaderResolution.Setup;
@@ -231,6 +267,135 @@ begin
   FINALLY
     FreeAndNil(Stream);
   END;
+end;
+
+
+{ T.81 table B.1: $C0..$CF are SOF0..SOF15, except $C4 (DHT), $C8 (JPG) and $CC (DAC), which are not frames.
+  Each stream holds the tested marker with the frame-header syntax (22 x 11), then a real SOF0 (44 x 33).
+  A frame marker must give 22 x 11. A non-frame marker must be skipped by its length, so SOF0 gives 44 x 33. }
+procedure TTestCoreGraphLoaderResolution.TestGetJpgSize_EveryFrameMarker;
+var
+  Width, Height: Integer;
+  Stream: TMemoryStream;
+  Success: Boolean;
+  Marker: Byte;
+  MarkerName: string;
+begin
+  for Marker:= $C0 to $CF do
+    begin
+      MarkerName:= 'marker $FF' + IntToHex(Marker, 2);
+      Stream:= TMemoryStream.Create;
+      TRY
+        WriteBytes(Stream, [$FF, $D8]);                       { SOI }
+        WriteFrameSegment(Stream, Marker, 22, 11);
+        WriteFrameSegment(Stream, $C0, 44, 33);
+        WritePadding(Stream);
+
+        Success:= GetJpgSize(Stream, Width, Height);
+
+        Assert.IsTrue(Success, 'GetJpgSize must find a frame, ' + MarkerName);
+        if Marker in [$C4, $C8, $CC] then
+          begin
+            Assert.AreEqual(44, Width,  'Not a frame, must be skipped: Width, '  + MarkerName);
+            Assert.AreEqual(33, Height, 'Not a frame, must be skipped: Height, ' + MarkerName);
+          end
+        else
+          begin
+            Assert.AreEqual(22, Width,  'Frame marker: Width, '  + MarkerName);
+            Assert.AreEqual(11, Height, 'Frame marker: Height, ' + MarkerName);
+          end;
+      FINALLY
+        FreeAndNil(Stream);
+      END;
+    end;
+end;
+
+
+{ T.81 B.3.2: the DHP segment ($FFDE) precedes the first frame of a hierarchical JPEG and holds the size of the completed image.
+  B.3.1: the frames must not exceed that size, so the first frame (here 150 x 100) can be smaller. }
+procedure TTestCoreGraphLoaderResolution.TestGetJpgSize_DHP_GivesSizeOfCompletedImage;
+var
+  Width, Height: Integer;
+  Stream: TMemoryStream;
+  Success: Boolean;
+begin
+  Stream:= TMemoryStream.Create;
+  TRY
+    WriteBytes(Stream, [$FF, $D8]);                           { SOI }
+    WriteFrameSegment(Stream, $DE, 300, 200);                 { DHP }
+    WriteFrameSegment(Stream, $C0, 150, 100);                 { First frame, at half resolution }
+    WritePadding(Stream);
+
+    Success:= GetJpgSize(Stream, Width, Height);
+
+    Assert.IsTrue(Success, 'GetJpgSize must succeed on a hierarchical JPEG');
+    Assert.AreEqual(300, Width,  'Width must come from DHP, not from the first frame');
+    Assert.AreEqual(200, Height, 'Height must come from DHP, not from the first frame');
+  FINALLY
+    FreeAndNil(Stream);
+  END;
+end;
+
+
+{ T.81 B.1.1.3: RST0..RST7 ($D0..$D7) and TEM ($01) stand alone - no length field follows them.
+  The byte right after such a marker is the $FF of the next marker. }
+procedure TTestCoreGraphLoaderResolution.TestGetJpgSize_StandAloneMarkerBeforeFrame;
+CONST
+  StandAloneMarkers: array[0..8] of Byte = ($D0, $D1, $D2, $D3, $D4, $D5, $D6, $D7, $01);
+var
+  Width, Height: Integer;
+  Stream: TMemoryStream;
+  Success: Boolean;
+  Marker: Byte;
+begin
+  for Marker in StandAloneMarkers do
+    begin
+      Stream:= TMemoryStream.Create;
+      TRY
+        WriteBytes(Stream, [$FF, $D8]);                       { SOI }
+        WriteBytes(Stream, [$FF, Marker]);
+        WriteFrameSegment(Stream, $C0, 64, 48);
+        WritePadding(Stream);
+
+        Success:= GetJpgSize(Stream, Width, Height);
+
+        Assert.IsTrue(Success, 'Stand-alone marker $FF' + IntToHex(Marker, 2) + ' before SOF0: GetJpgSize must succeed');
+        Assert.AreEqual(64, Width,  'Width after stand-alone marker $FF'  + IntToHex(Marker, 2));
+        Assert.AreEqual(48, Height, 'Height after stand-alone marker $FF' + IntToHex(Marker, 2));
+      FINALLY
+        FreeAndNil(Stream);
+      END;
+    end;
+end;
+
+
+{ T.81 B.1.1.2: any marker may be preceded by any number of $FF fill bytes. }
+procedure TTestCoreGraphLoaderResolution.TestGetJpgSize_FillBytesBeforeMarker;
+var
+  Width, Height: Integer;
+  Stream: TMemoryStream;
+  Success: Boolean;
+  FillCount, i: Integer;
+begin
+  for FillCount:= 0 to 3 do
+    begin
+      Stream:= TMemoryStream.Create;
+      TRY
+        WriteBytes(Stream, [$FF, $D8]);                       { SOI }
+        for i:= 1 to FillCount do
+          WriteBytes(Stream, [$FF]);
+        WriteFrameSegment(Stream, $C0, 64, 48);
+        WritePadding(Stream);
+
+        Success:= GetJpgSize(Stream, Width, Height);
+
+        Assert.IsTrue(Success, IntToStr(FillCount) + ' fill byte(s) before SOF0: GetJpgSize must succeed');
+        Assert.AreEqual(64, Width,  'Width after '  + IntToStr(FillCount) + ' fill byte(s)');
+        Assert.AreEqual(48, Height, 'Height after ' + IntToStr(FillCount) + ' fill byte(s)');
+      FINALLY
+        FreeAndNil(Stream);
+      END;
+    end;
 end;
 
 
