@@ -159,9 +159,9 @@ begin
   if FOwnRamLog
   then FreeAndNil(FRamLog)
   else
-    // External log: unregister observer so the log doesn't callback into freed memory
+    // External log: unregister observer so the log doesn't callback into freed memory. Only this viewer: other viewers may observe the same log.
     if Assigned(FRamLog)
-    then FRamLog.UnregisterLogObserver;
+    then FRamLog.UnregisterLogObserver(Self as ILogObserver);
 
   inherited;
 end;
@@ -323,7 +323,7 @@ begin
     begin
       if FOwnRamLog
       then FreeAndNil(FRamLog)
-      else FRamLog.UnregisterLogObserver;
+      else FRamLog.UnregisterLogObserver(Self as ILogObserver);   // This viewer only: other viewers may observe the same log
     end;
 
   FRamLog:= TRamLog.Create(TRUE, Self as ILogObserver);
@@ -344,12 +344,12 @@ begin
     begin
       if FOwnRamLog
       then FreeAndNil(FRamLog)
-      else FRamLog.UnregisterLogObserver;  // External log: just unregister, caller owns it
+      else FRamLog.UnregisterLogObserver(Self as ILogObserver);  // External log: just unregister (this viewer only), caller owns it
     end;
 
   FOwnRamLog:= FALSE;
   FRamLog:= ExternalLog;
-  FRamLog.RegisterLogObserver(Self as ILogObserver);
+  FRamLog.RegisterLogObserver(Self as ILogObserver);   { Added next to any viewer already observing this log (e.g. the log form of AppData) }
 
   Populate;
 end;
