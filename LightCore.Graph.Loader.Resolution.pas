@@ -2,7 +2,7 @@
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.09.10
+   2026.10.14
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -144,9 +144,14 @@ end;
 {--------------------------------------------------------------------------------------------------
    JPG
    Parses JPEG stream to find dimensions in SOF (Start Of Frame) marker.
+   Marker codes and segment syntax: ITU-T T.81 Annex B (https://www.w3.org/Graphics/JPEG/itu-t81.pdf).
    JPEG structure: SOI marker ($FFD8) followed by segments.
    Each segment: $FF + marker type + 2-byte length + data.
-   SOF markers ($FFC0..$FFC3) contain frame dimensions.
+   RST0..RST7, SOI, EOI and TEM stand alone: no length, no data (B.1.1.3).
+   Any marker may be preceded by any number of $FF fill bytes (B.1.1.2).
+   SOF0..SOF15 ($FFC0..$FFCF, except DHT $FFC4, JPG $FFC8, DAC $FFCC; table B.1) contain frame dimensions (B.2.2).
+   A hierarchical JPEG starts with a DHP segment ($FFDE): frame-header syntax, size of the completed image (B.3.2).
+   Its frames may be smaller than that (B.3.1), so DHP is the one to read.
 --------------------------------------------------------------------------------------------------}
 
 function GetJpgSize(Stream: TStream; OUT Width, Height: Integer): Boolean;
@@ -174,7 +179,7 @@ begin
   begin
     Stream.Read(b, 1);
     case b of
-      $C0..$C3:
+      $C0..$C3, $C5..$C7, $C9..$CB, $CD..$CF, $DE:                                                { SOF0..SOF15, DHP }
        begin
          Stream.Seek(3, soFromCurrent);
 
@@ -189,12 +194,8 @@ begin
          { Success }
          EXIT(TRUE);
        end;
-      $D0..$D9, $01:
-       begin
-         Stream.Seek(1, soFromCurrent);
-         Stream.Read(b, 1);
-       end;
-      $FF: Stream.Read(b, 1);                                                                     { Keep reading }
+      $D0..$D9, $01: Stream.Read(b, 1);                                                           { Stand-alone marker: the next byte is the $FF of the next marker }
+      $FF: ;                                                                                      { Fill byte: b stays $FF, so the next pass reads the marker code }
       else
        begin
          Stream.Read(w, 2);
