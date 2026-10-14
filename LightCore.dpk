@@ -74,6 +74,7 @@ contains
   LightCore.Internet.CommonWebDown in 'LightCore.Internet.CommonWebDown.pas',
   LightCore.Internet.Email in 'LightCore.Internet.Email.pas',
   LightCore.Internet.EmailSender in 'LightCore.Internet.EmailSender.pas',
+  LightCore.Internet.Ftp in 'LightCore.Internet.Ftp.pas',
   LightCore.Internet.HTMLImg in 'LightCore.Internet.HTMLImg.pas',
   LightCore.Internet.HtmlWriter in 'LightCore.Internet.HtmlWriter.pas',
   LightCore.Types in 'LightCore.Types.pas',
