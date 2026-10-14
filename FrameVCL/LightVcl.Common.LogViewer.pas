@@ -177,9 +177,9 @@ begin
   if FOwnRamLog
   then FreeAndNil(FRamLog)
   else
-    // External log: unregister observer so the log doesn't callback into freed memory
+    // External log: unregister observer so the log doesn't callback into freed memory. Only this viewer: other viewers may observe the same log.
     if Assigned(FRamLog)
-    then FRamLog.UnregisterLogObserver;
+    then FRamLog.UnregisterLogObserver(Self as ILogObserver);
 
   FreeAndNil(Fgrid);
   FreeAndNil(FScrollBar);
@@ -309,12 +309,12 @@ begin
     begin
       if FOwnRamLog
       then FreeAndNil(FRamLog)
-      else FRamLog.UnregisterLogObserver;  // External log: just unregister, caller owns it
+      else FRamLog.UnregisterLogObserver(Self as ILogObserver);  // External log: just unregister (this viewer only), caller owns it
     end;
 
   FOwnRamLog:= FALSE;  { We received the log from an external source - don't auto-release it }
   FRamLog:= ExternalLog;
-  FRamLog.RegisterLogObserver(Self as ILogObserver);
+  FRamLog.RegisterLogObserver(Self as ILogObserver);   { Added next to any viewer already observing this log (e.g. the hidden log window of TAppData) }
 
   { Populate the grid with the data from the newly assigned log }
   Populate;
