@@ -119,7 +119,7 @@ begin
   // not by us — Application will run our destructor and then free the
   // component memory. The flag closes the race window.
   LogViewer.FormDestroying:= TRUE;
-  LogViewer.RamLog.UnregisterLogObserver;  // Prevent NEW notifications.
+  LogViewer.RamLog.UnregisterLogObserver(LogViewer as ILogObserver);  // Prevent NEW notifications. Only this viewer: a viewer on the main form may observe the same AppData.RamLog.
   SaveSettings;
   AppData.LogFormDestroyed(Self);          // SaveSettings asserted AppData <> NIL
 end;
