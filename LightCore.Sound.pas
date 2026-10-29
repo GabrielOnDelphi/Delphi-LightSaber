@@ -1,7 +1,7 @@
 UNIT LightCore.Sound;
 
 {=============================================================================================================
-   2026.09.15
+   2026.10.14
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Sound and audio utilities.
@@ -12,7 +12,7 @@ UNIT LightCore.Sound;
      - Programmatic tone generation
      - Various beep patterns for user feedback
 
-   All 13 routines are declared on every platform. They produce sound only on Windows. Off Windows each body is empty, so the call still compiles and simply does nothing.
+   All 14 routines are declared on every platform. They produce sound only on Windows. Off Windows each body is empty, so the call still compiles and simply does nothing.
 
    PlayWinSound, which plays a Windows system sound by its name, is in LightCore.Win.Sound, a Windows-only unit of the package LightCore.Win.
 =============================================================================================================}
@@ -44,6 +44,7 @@ USES
  procedure Bip100;
  procedure Bip300;
  procedure BipCoconuts;
+ procedure BipSequenceAsync(CONST Frequencies: array of Integer; DurationMs: Integer);
 
 
 
@@ -265,6 +266,28 @@ begin
  Bip(890,  25); Bip(760,  40);
 end;
 
+
+{ Plays the tones one after another, each DurationMs long, in a worker thread. Returns at once.
+  Winapi Beep blocks for the whole duration, so a sequence played on the main thread freezes the GUI. }
+procedure BipSequenceAsync(CONST Frequencies: array of Integer; DurationMs: Integer);
+VAR
+  Tones: TArray<Integer>;
+  i: Integer;
+begin
+  { An open array cannot be captured by an anonymous method - copy it. }
+  SetLength(Tones, Length(Frequencies));
+  for i:= 0 to High(Frequencies) do
+    Tones[i]:= Frequencies[i];
+
+  TThread.CreateAnonymousThread(
+    procedure
+    VAR Freq: Integer;
+    begin
+      for Freq in Tones do
+        WinApi.Windows.Beep(Freq, DurationMs);
+    end).Start;
+end;
+
 {$ELSE}
 
 { Stubs for the platforms that are not Windows. Every routine is declared on every platform, so the call compiles everywhere; here it does nothing. }
@@ -282,6 +305,7 @@ procedure Bip50;                                                  begin end;
 procedure Bip100;                                                 begin end;
 procedure Bip300;                                                 begin end;
 procedure BipCoconuts;                                            begin end;
+procedure BipSequenceAsync(CONST Frequencies: array of Integer; DurationMs: Integer); begin end;
 
 {$ENDIF}
 

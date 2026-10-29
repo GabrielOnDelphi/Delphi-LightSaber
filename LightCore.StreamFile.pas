@@ -88,8 +88,6 @@ UNIT LightCore.StreamFile;
 
 =============================================================================================================}
 
-{$WARN DUPLICATE_CTOR_DTOR OFF}   { W1029: CreateRead and CreateWrite have identical parameters, so a C++Builder HPP could not tell them apart (both map to the class name). We ship no C++ code. Same directive the RTL uses in System.Rtti.pas:18. }
-
 INTERFACE
 
 USES
@@ -103,7 +101,7 @@ TYPE
      CONST FrozenPaddingSize = 64;                // NEVER-EVER MODIFY THIS CONSTANT! All files saved with this constant will not work anymore. Enough for 16 Integer variables.
      function ReadSignature: AnsiString;          // The LiSa string for "Light Saber'.
    public
-     constructor CreateRead (CONST FileName: string);
+     constructor CreateRead (CONST FileName: string; ShareMode: Word = fmShareDenyWrite);   // ShareMode also makes the parameter list differ from CreateWrite's (else W1029 in every unit that uses this class)
      constructor CreateWrite(CONST FileName: string);
 
      { Header }
@@ -221,12 +219,12 @@ USES
 {--------------------------------------------------------------------------------------------------
    CTOR
 --------------------------------------------------------------------------------------------------}
-constructor TLightFileStream.CreateRead(CONST FileName: string);
+constructor TLightFileStream.CreateRead(CONST FileName: string; ShareMode: Word = fmShareDenyWrite);
 begin
   // fmShareDenyWrite: allow other handles to READ the same file while ours is open. The default
   // fmShareCompat maps to an exclusive open on Windows, so any concurrent open (even read-only)
   // fails with ERROR_SHARING_VIOLATION. Same rationale as TLightStream.CreateRead (StreamBuff).
-  inherited Create(FileName, fmOpenRead OR fmShareDenyWrite);
+  inherited Create(FileName, fmOpenRead OR ShareMode);
 end;
 
 

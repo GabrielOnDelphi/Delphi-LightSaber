@@ -86,7 +86,6 @@ UNIT LightCore.StreamBuff;
       LightSaber\Demo\Core\Demo LightCore StreamBuffer\Demo_FileStream.dpr
 
 =============================================================================================================}
-{$WARN DUPLICATE_CTOR_DTOR OFF}   { W1029: CreateRead and CreateWrite have identical parameters, so a C++Builder HPP could not tell them apart (both map to the class name). We ship no C++ code. Same directive the RTL uses at the top of System.Rtti.pas. }
 
 INTERFACE
 
@@ -102,7 +101,7 @@ TYPE
      function readSignature: AnsiString;
      procedure checkSafetyLimit(Count: Cardinal);
    public
-     constructor CreateRead (CONST FileName: string);
+     constructor CreateRead (CONST FileName: string; BufferSize: Integer = 1*MB);   // BufferSize also makes the parameter list differ from CreateWrite's (else W1029 in every unit that uses this class)
      constructor CreateWrite(CONST FileName: string);
 
      { Header }
@@ -223,13 +222,13 @@ USES
 {--------------------------------------------------------------------------------------------------
    CTOR
 --------------------------------------------------------------------------------------------------}
-constructor TLightStream.CreateRead(CONST FileName: string);
+constructor TLightStream.CreateRead(CONST FileName: string; BufferSize: Integer = 1*MB);
 begin
   { fmShareDenyWrite — let other handles READ the same file while ours is open.
     Without this, the default fmShareCompat acts as fmShareExclusive on Windows and any concurrent open (even a deny-none read) fails with ERROR_SHARING_VIOLATION.
     Real-world hit: lazy-loaded input files in LearnAssist (TChatPartEx.ReadBytesOnDemand) opens its own TFileStream on the same .LSN file that an outer TLightStream is still reading the metadata from.
     Writes are still blocked, so atomic-rename saves are unaffected. }
-  inherited Create(FileName, fmOpenRead OR fmShareDenyWrite, 1*MB);
+  inherited Create(FileName, fmOpenRead OR fmShareDenyWrite, BufferSize);
 end;
 
 

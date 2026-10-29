@@ -120,7 +120,7 @@ CONST
    JPG           = '*.jpg;*.jpeg;*.jpe;*.jp;*.jfif';
    JPGFtl        = 'JPEG|'+ JPG;
 
-   JPG2k         = '*.J2K;*JPC;*.JP2';
+   JPG2k         = '*.J2K;*.JPC;*.JP2';
    JPG2kFtl      = 'JPEG 2000|'+ JPG2k;
 
    JPGAll        = JPG+ ';'+ JPG2k;
@@ -135,15 +135,18 @@ CONST
    GIF           = '*.GIF';
    GIFFtl        = 'GIF|'+ GIF;
 
+   WebP          = '*.WEBP';
+   WebPFtl       = 'WebP|'+ WebP;
+
    RainDrop      = '.RainDrop';
 
    XMF           = '*.EMF;*.WMF';
    XMFFtl        = 'Microsoft EMF/WMF|'+ XMF;
 
-   AllImg        = JPG+ ';'+ JPG2k+ ';'+ BmpType+ ';'+ PNG+ ';'+ GIF;
+   AllImg        = JPG+ ';'+ JPG2k+ ';'+ BmpType+ ';'+ PNG+ ';'+ GIF+ ';'+ WebP;   { Must match every extension IsImage accepts }
    AllImgFlt     = 'Images|'+ AllImg;
 
-   AllImgFltLong =  AllImgFlt+ '|'+ JPGFtl+ '|'+ JPG2kFtl+ '|'+ BMPFtl+ '|'+ PNGFtl+ '|'+ GIFFtl+ '|'+ XMFFtl;
+   AllImgFltLong =  AllImgFlt+ '|'+ JPGFtl+ '|'+ JPG2kFtl+ '|'+ BMPFtl+ '|'+ PNGFtl+ '|'+ GIFFtl+ '|'+ WebPFtl+ '|'+ XMFFtl;
 
 
 

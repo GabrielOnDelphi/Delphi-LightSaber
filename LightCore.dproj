@@ -239,6 +239,7 @@
         <DCCReference Include="LightCore.SystemPermissions.pas"/>
         <DCCReference Include="LightCore.Shell.pas"/>
         <DCCReference Include="LightCore.SystemTime.pas"/>
+        <DCCReference Include="LightCore.SvgShapes.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

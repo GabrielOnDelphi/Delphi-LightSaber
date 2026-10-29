@@ -107,7 +107,8 @@ contains
   LightCore.ExceptionLogger in 'LightCore.ExceptionLogger.pas',
   LightCore.SystemPermissions in 'LightCore.SystemPermissions.pas',
   LightCore.Shell in 'LightCore.Shell.pas',
-  LightCore.SystemTime in 'LightCore.SystemTime.pas';
+  LightCore.SystemTime in 'LightCore.SystemTime.pas',
+  LightCore.SvgShapes in 'LightCore.SvgShapes.pas';
 
 end.
 

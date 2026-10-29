@@ -150,6 +150,7 @@
         <DCCReference Include="LightVcl.Visual.StringGridBase.pas"/>
         <DCCReference Include="LightVcl.Visual.StringGridScrollFix.pas"/>
         <DCCReference Include="LightVcl.Visual.StrongPasswordEdit.pas"/>
+        <DCCReference Include="LightVcl.Visual.SvgSpeedButton.pas"/>
         <DCCReference Include="LightVcl.Visual.ThumbViewerM.pas"/>
         <DCCReference Include="LightVcl.Visual.TimeLine.pas"/>
         <DCCReference Include="LightVcl.Visual.Timer.pas"/>

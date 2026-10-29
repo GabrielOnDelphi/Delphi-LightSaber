@@ -82,6 +82,7 @@ contains
   LightVcl.Visual.StringGridBase in 'LightVcl.Visual.StringGridBase.pas',
   LightVcl.Visual.StringGridScrollFix in 'LightVcl.Visual.StringGridScrollFix.pas',
   LightVcl.Visual.StrongPasswordEdit in 'LightVcl.Visual.StrongPasswordEdit.pas',
+  LightVcl.Visual.SvgSpeedButton in 'LightVcl.Visual.SvgSpeedButton.pas',
   LightVcl.Visual.ThumbViewerM in 'LightVcl.Visual.ThumbViewerM.pas',
   LightVcl.Visual.TimeLine in 'LightVcl.Visual.TimeLine.pas',
   LightVcl.Visual.Timer in 'LightVcl.Visual.Timer.pas',
