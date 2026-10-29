@@ -36,6 +36,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
+        <DCC_DcuOutput>$(ProductVersion)_$(Platform)_$(Config)</DCC_DcuOutput>
         <SanitizedProjectName>VCL_Demo_CreationOrder</SanitizedProjectName>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>

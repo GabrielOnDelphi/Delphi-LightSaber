@@ -1057,7 +1057,7 @@ function IsTaskbarAutoHideOn : Boolean;
 function IsApiFunctionAvailable(const DLLname, FuncName: string; VAR p: pointer): Boolean; { Returns True if FuncName exists in DLLname }
 ```
 
-## LightCore.Sound (13)
+## LightCore.Sound (14)
 
 ```pascal
 procedure PlaySoundFile(CONST FileName: string);
@@ -1073,6 +1073,7 @@ procedure Bip50;
 procedure Bip100;
 procedure Bip300;
 procedure BipCoconuts;
+procedure BipSequenceAsync(CONST Frequencies: array of Integer; DurationMs: Integer);
 ```
 
 ## LightCore.StrBuilder (5)
@@ -1344,6 +1345,16 @@ function FindLine (CONST Needle, Haystack: string): string;
 ```pascal
 function GetTextStr: AnsiString;
 procedure SetTextStr(const Value: AnsiString);
+```
+
+## LightCore.SvgShapes (5)
+
+```pascal
+function IsIdentity: Boolean;
+function Transform(CONST P: TSvgPoint): TSvgPoint;
+function Multiply(CONST Right: TSvgMatrix): TSvgMatrix; { Self * Right: Right is applied first }
+function ParseSvg (CONST SvgText : string): TSvgImage;
+function ParseSvgPathData(CONST PathData: string): TSvgSegments;
 ```
 
 ## LightCore.System (21)
@@ -4039,6 +4050,28 @@ procedure Change; override;
 procedure Register;
 ```
 
+## LightVcl.Visual.SvgSpeedButton (17)
+
+```pascal
+procedure SetSvgText(CONST Value: string);
+procedure SetGlyphColor(Value: TColor);
+procedure SetHotColor(Value: TColor);
+procedure SetPressedColor(Value: TColor);
+procedure SetGlyphSize(Value: Integer);
+procedure SetDisabledOpacity(Value: Byte);
+procedure ClearCache;
+function CurrentState: TSvgGlyphState;
+function StateColor(State: TSvgGlyphState): TColor;
+procedure Paint; override;
+procedure PickColorsFromStyle;
+function ActualGlyphSize: Integer;
+function GlyphBitmap(State: TSvgGlyphState): TBitmap; { The cached glyph of State, owned by the button. NIL when SvgText is empty or the size is 0. }
+function RenderSvgGlyph(CONST Img: TSvgImage; Size: Integer; Color: TColor): TBitmap;
+function ContrastRatio(C1, C2: TColor): Double; { WCAG 2 contrast ratio, 1 to 21 }
+function BestContrastColor(Background: TColor): TColor; { White or #202020, whichever has the higher ContrastRatio on Background }
+procedure Register;
+```
+
 ## LightVcl.Visual.ThumbViewerM (32)
 
 ```pascal
@@ -4123,4 +4156,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2949 public routines across 233 units._
+_2972 public routines across 235 units._
