@@ -196,6 +196,8 @@
         <DCCReference Include="..\LightCore.SearchResult.pas"/>
         <DCCReference Include="..\LightCore.StringListA.pas"/>
         <DCCReference Include="..\LightCore.WrapString.pas"/>
+        <DCCReference Include="Test.LightCore.SvgShapes.pas"/>
+        <DCCReference Include="..\LightCore.SvgShapes.pas"/>
         <DCCReference Include="..\Updater\ciUpdaterRec.pas"/>
         <DCCReference Include="..\LightCore.pas"/>
         <DCCReference Include="..\LightCore.Types.pas"/>

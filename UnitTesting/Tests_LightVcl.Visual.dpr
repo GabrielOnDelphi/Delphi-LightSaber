@@ -73,7 +73,10 @@ uses
   LightVcl.Visual.Timer in '..\FrameVCL\LightVcl.Visual.Timer.pas',
   Test.LightVcl.Visual.Timer in 'Test.LightVcl.Visual.Timer.pas',
   LightVcl.Visual.ThumbViewerM in '..\FrameVCL\LightVcl.Visual.ThumbViewerM.pas',
-  Test.LightVcl.Visual.ThumbViewerM in 'Test.LightVcl.Visual.ThumbViewerM.pas';
+  Test.LightVcl.Visual.ThumbViewerM in 'Test.LightVcl.Visual.ThumbViewerM.pas',
+  LightCore.SvgShapes in '..\LightCore.SvgShapes.pas',
+  LightVcl.Visual.SvgSpeedButton in '..\FrameVCL\LightVcl.Visual.SvgSpeedButton.pas',
+  Test.LightVcl.Visual.SvgSpeedButton in 'Test.LightVcl.Visual.SvgSpeedButton.pas';
 
 {$R *.res}   { The version resource that MSBuild builds from VerInfo_* in the .dproj; Test.LightVcl.Visual.AppData reads it }
 

@@ -171,6 +171,9 @@ type
     procedure TestIsImage;
 
     [Test]
+    procedure TestAllImg_MatchesEveryIsImageExtension;
+
+    [Test]
     procedure TestIsText;
 
     [Test]
@@ -377,6 +380,11 @@ type
   end;
 
 implementation
+
+uses
+  System.Masks,
+  System.StrUtils,
+  System.Types;
 
 
 procedure TTestLightCoreIO.Setup;
@@ -792,6 +800,38 @@ begin
   Assert.IsTrue(IsImage('photo.gif'));
   Assert.IsTrue(IsImage('photo.webp'));
   Assert.IsFalse(IsImage('document.pdf'));
+end;
+
+{ A folder scan (ListFilesOf with AllImg) must find every file that IsImage accepts one by one, and nothing else }
+procedure TTestLightCoreIO.TestAllImg_MatchesEveryIsImageExtension;
+CONST
+  Extensions: array[0..11] of string = ('.jpg', '.jpeg', '.jpe', '.jfif', '.jp', '.j2k', '.jpc', '.jp2', '.bmp', '.png', '.gif', '.webp');
+VAR
+  Masks: TStringDynArray;
+  FileName, NoExtName: string;
+  Matched: Boolean;
+begin
+  Masks:= SplitString(AllImg, ';');
+  for VAR Ext in Extensions do
+   begin
+    FileName:= 'photo'+ Ext;
+    Assert.IsTrue(IsImage(FileName), FileName+ ' is not accepted by IsImage');
+
+    Matched:= FALSE;
+    for VAR Mask in Masks do
+      if MatchesMask(FileName, Mask) then
+       begin
+        Matched:= TRUE;
+        Break;
+       end;
+    Assert.IsTrue(Matched, FileName+ ' is not matched by any mask in AllImg');
+
+    { 'photojpc' has no extension, so it is not an image }
+    NoExtName:= 'photo'+ Copy(Ext, 2, MaxInt);
+    Assert.IsFalse(IsImage(NoExtName), NoExtName+ ' is accepted by IsImage');
+    for VAR Mask in Masks do
+      Assert.IsFalse(MatchesMask(NoExtName, Mask), NoExtName+ ' is matched by the mask '+ Mask+ ' in AllImg');
+   end;
 end;
 
 procedure TTestLightCoreIO.TestIsDocument;

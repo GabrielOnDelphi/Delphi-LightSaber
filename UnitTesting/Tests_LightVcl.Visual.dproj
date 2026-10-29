@@ -149,6 +149,9 @@
         <DCCReference Include="Test.LightVcl.Visual.ListBox.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Visual.Memo.pas"/>
         <DCCReference Include="Test.LightVcl.Visual.Memo.pas"/>
+        <DCCReference Include="..\LightCore.SvgShapes.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Visual.SvgSpeedButton.pas"/>
+        <DCCReference Include="Test.LightVcl.Visual.SvgSpeedButton.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

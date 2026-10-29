@@ -77,6 +77,7 @@ uses
   Test.LightCore.Graph.BkgColorParams in 'Test.LightCore.Graph.BkgColorParams.pas',
   Test.LightCore.Graph.RainDropParams in 'Test.LightCore.Graph.RainDropParams.pas',
   Test.LightCore.WinVersion in 'Test.LightCore.WinVersion.pas',
+  Test.LightCore.SvgShapes in 'Test.LightCore.SvgShapes.pas',
   {$IFDEF MSWINDOWS}
   Test.LightCore.Process in 'Test.LightCore.Process.pas',
   Test.LightCore.ExeVersion in 'Test.LightCore.ExeVersion.pas',
@@ -152,6 +153,7 @@ uses
   LightCore.WinVersion in '..\LightCore.WinVersion.pas',
   LightCore.System in '..\LightCore.System.pas',
   LightCore.Shell in '..\LightCore.Shell.pas',
+  LightCore.SvgShapes in '..\LightCore.SvgShapes.pas',
   {$IFDEF MSWINDOWS}
   LightCore.Win.WinVersionApi in '..\LightCore.Win.WinVersionApi.pas',
   LightCore.Win.Window in '..\LightCore.Win.Window.pas',

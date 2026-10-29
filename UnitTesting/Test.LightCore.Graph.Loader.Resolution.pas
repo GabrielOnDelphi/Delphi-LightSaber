@@ -1,4 +1,4 @@
-unit Test.LightCore.Graph.Loader.Resolution;
+﻿unit Test.LightCore.Graph.Loader.Resolution;
 
 {=============================================================================================================
    Unit tests for LightCore.Graph.Loader.Resolution.pas

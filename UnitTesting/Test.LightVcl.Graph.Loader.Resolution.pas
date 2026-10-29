@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.Loader.Resolution;
+﻿unit Test.LightVcl.Graph.Loader.Resolution;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.Loader.Resolution.pas
