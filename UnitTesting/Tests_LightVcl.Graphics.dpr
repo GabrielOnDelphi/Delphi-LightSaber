@@ -60,6 +60,8 @@ uses
   Test.LightVcl.Graph.Convert in 'Test.LightVcl.Graph.Convert.pas',
   LightVcl.Graph.Gif in '..\FrameVCL\LightVcl.Graph.Gif.pas',
   Test.LightVcl.Graph.Gif in 'Test.LightVcl.Graph.Gif.pas',
+  GifProperties in '..\External\GifProperties.pas',
+  Test.GifProperties in 'Test.GifProperties.pas',
   LightVcl.Graph.GrabAviFrame in '..\FrameVCL\LightVcl.Graph.GrabAviFrame.pas',
   Test.LightVcl.Graph.GrabAviFrame in 'Test.LightVcl.Graph.GrabAviFrame.pas',
   LightVcl.Graph.Loader.Thread in '..\FrameVCL\LightVcl.Graph.Loader.Thread.pas',
