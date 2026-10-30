@@ -467,6 +467,8 @@ This library will be expanded if it gets enough stars:
  - Click the 'Star' button (top-right corner) if you like this library.
  - More than 100 files are waiting to be cured and added.
 
+![Stars keep it alive](Docs/star_bringer.jpg)
+
 Details in System\Copyright.txt
 
 _________________
