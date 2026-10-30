@@ -11,10 +11,12 @@ UNIT GifProperties;
     Original code: http://www.raysoftware.cn/?p=559
     (from: https://stackoverflow.com/questions/45285599/how-to-use-animated-gif-in-firemonkey)
 
-  Updated by Gabriel Moraru 2026.02
+  Updated by Gabriel Moraru 2026.10.30
 
   Tester:
     Project Testers\gr GIF frame counter\
+  Unit tests:
+    UnitTesting\Test.GifProperties.pas
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
@@ -54,6 +56,7 @@ CONST
 
 { Returns True if the GIF file contains more than one frame (animated).
   Parses only headers and skips compressed data — does not decode any pixels.
+  A file that ends too early (an interrupted download or copy) ends the scan: the frames found until then decide.
   Tested with 100MB GIF: ~4.1s }
 function IsAnimatedGif(CONST FileName: string): Boolean;
 VAR
@@ -61,8 +64,15 @@ VAR
   Header: TGIFHeaderX;
   Descriptor: TGifImageDescriptor;
   Introducer: Byte;
+  Skipped: Byte;
   ColorTableSize: Integer;
   FrameIndex: Integer;
+
+  // Reads one byte into B. FALSE at the end of the file; B is then not set.
+  function ReadByte(OUT B: Byte): Boolean;
+  begin
+    Result:= fs.Read(B, 1) = 1;
+  end;
 
   // Skip a color table (each entry is 3 bytes: RGB)
   procedure SkipPalette(EntryCount: Integer);
@@ -70,37 +80,17 @@ VAR
     fs.Position:= fs.Position + (EntryCount * 3);
   end;
 
-  // Read and skip extension blocks. Returns the block introducer byte ($2C=image, $3B=trailer, $21=extension).
-  function ReadAndSkipBlock: Byte;
-  VAR
-    Labels, SkipByte: Byte;
+  // Skip a chain of sub-blocks: a length byte, that many data bytes, again, until a length of 0.
+  // Extensions and the LZW-compressed image data are both stored this way.
+  // FALSE when the file ends before the chain does.
+  function SkipSubBlocks: Boolean;
+  VAR BlockSize: Byte;
   begin
-    fs.Read(Result, 1);
-    if Result = $21 then
-    begin
-      fs.Read(Labels, 1);
-      // All extension types use sub-blocks terminated by a zero-length block.
-      // $F9 (Graphics Control) is a single 4-byte sub-block + terminator.
-      // $FE (Comment), $FF (Application), $01 (Plain Text) use variable-length sub-blocks.
-      // The same skip loop handles all of them correctly.
-      REPEAT
-        fs.Read(SkipByte, 1);
-        if SkipByte > 0
-        then fs.Position:= fs.Position + SkipByte;
-      UNTIL SkipByte = 0;
-    end;
-  end;
-
-  // Skip LZW-compressed image data sub-blocks without decompressing
-  procedure SkipImageData;
-  VAR B: Byte;
-  begin
-    fs.Read(B, 1);  // LZW minimum code size byte
     REPEAT
-      fs.Read(B, 1);
-      if B > 0
-      then fs.Position:= fs.Position + B;
-    UNTIL B = 0;
+      if NOT ReadByte(BlockSize) then EXIT(FALSE);
+      fs.Position:= fs.Position + BlockSize;
+    UNTIL BlockSize = 0;
+    Result:= TRUE;
   end;
 
 begin
@@ -124,34 +114,44 @@ begin
         SkipPalette(ColorTableSize);
       end;
 
-      // Count frames
+      // Count frames. The scan ends at the trailer, or at the end of a file that is cut off.
+      // $3B = trailer, $21 = extension, $2C = image. Any other byte is skipped, one at a time.
       FrameIndex:= 0;
-      WHILE True DO
-      begin
-        REPEAT
-          Introducer:= ReadAndSkipBlock;
-        UNTIL (Introducer in [$2C, $3B]);
+      WHILE ReadByte(Introducer) DO
+        case Introducer of
+          $3B: Break;  // GIF trailer - end of file
 
-        if Introducer = $3B then Break;  // GIF trailer - end of file
+          $21: // Extension: a label byte, then sub-blocks
+            begin
+              // All extension types use sub-blocks terminated by a zero-length block.
+              // $F9 (Graphics Control) is a single 4-byte sub-block + terminator.
+              // $FE (Comment), $FF (Application), $01 (Plain Text) use variable-length sub-blocks.
+              // The same skip loop handles all of them correctly.
+              if NOT ReadByte(Skipped) OR NOT SkipSubBlocks then Break;
+            end;
 
-        // Read image descriptor
-        fs.Read(Descriptor, SizeOf(Descriptor));
+          $2C: // Image: descriptor, optional local color table, LZW minimum code size byte, sub-blocks
+            begin
+              // A frame counts as soon as its separator byte is read, so a GIF whose second frame is cut off still counts as animated.
+              /// Found 2+ frames — it's animated. No need to read the entire GIF.
+              Inc(FrameIndex);
+              if FrameIndex >= 2 then EXIT(True);
 
-        // Skip local color table
-        if (Descriptor.Packedbit and $80) <> 0 then
-        begin
-          ColorTableSize:= 1 shl ((Descriptor.Packedbit and 7) + 1);
-          SkipPalette(ColorTableSize);
+              if fs.Read(Descriptor, SizeOf(Descriptor)) <> SizeOf(Descriptor) then Break;
+
+              // Skip local color table
+              if (Descriptor.Packedbit and $80) <> 0 then
+              begin
+                ColorTableSize:= 1 shl ((Descriptor.Packedbit and 7) + 1);
+                SkipPalette(ColorTableSize);
+              end;
+
+              // Skip the LZW-compressed image data without decompressing
+              if NOT ReadByte(Skipped) OR NOT SkipSubBlocks then Break;
+            end;
         end;
-
-        SkipImageData;
-
-        /// Found 2+ frames — it's animated. No need to read the entire GIF.
-        Inc(FrameIndex);
-        if FrameIndex >= 2 then EXIT(True);
-      end;
     EXCEPT
-      // Corrupt or truncated GIF — treat as not animated (Result stays False).
+      // Corrupt GIF - treat as not animated (Result stays False). A cut-off GIF raises nothing here: every read above is checked.
       // File-not-found exceptions propagate from TFileStream.Create above.
     END;
   FINALLY
