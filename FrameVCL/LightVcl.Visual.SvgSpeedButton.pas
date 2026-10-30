@@ -1,7 +1,7 @@
 UNIT LightVcl.Visual.SvgSpeedButton;
 
 {=============================================================================================================
-   2026.10.29
+   2026.10.30
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    TLightSvgSpeedButton - a TSpeedButton that draws a solid one-colour SVG icon on top of its face.
@@ -32,6 +32,29 @@ UNIT LightVcl.Visual.SvgSpeedButton;
 
    SvgText raises ESvgError (LightCore.SvgShapes) when the text cannot be read, when it is assigned.
 
+   The same icons for controls that are not a TLightSvgSpeedButton:
+     StyleGlyphColor  - white or #202020, whichever stands out on the panel colour of the active VCL style
+                        (clBtnFace with no style). The same colour PickColorsFromStyle gives GlyphColor.
+                          Color:= StyleGlyphColor(Form1);
+     StyleMenuHighlightColor - the colour the active style paints a selected menu item with (clHighlight with
+                        no style). Use it to decide whether menu glyphs need an outline.
+                          if ContrastRatio(Color, StyleMenuHighlightColor) < 3 then Outline:= clBlack;
+     GlyphOutlineColor - #202020 for a white glyph, clNone otherwise: the rim that keeps a white glyph readable on
+                        every light hot, selected or focused surface, without measuring each one.
+                          SvgToImageList(imgList, 5, SvgText, Color, GlyphOutlineColor(Color));
+     SvgToImageList   - draws an SVG into picture Index of a cd32Bit image list, at the list's size.
+                        Index < Count replaces that picture, Index = Count appends one, any other index raises.
+                        OutlineColor (default clNone) adds a thin rim, so a white glyph stays readable on a
+                        light highlight bar. An image list holds one picture per index, so there is no hot colour.
+                        Wrap many calls in ImageList.BeginUpdate / EndUpdate: every call fires OnChange.
+                          SvgToImageList(imgList, 5, SvgText, Color, clBlack);
+     SetButtonSvg     - gives a TButton an SVG picture, in an image list that the button owns: picture 0 is the
+                        glyph (ImageIndex), picture 1 the same glyph at 40% opacity (DisabledImageIndex), the
+                        disabled look of TLightSvgSpeedButton. A second call replaces both pictures.
+                        Raises when the button already uses someone else's image list. OutlineColor as in SvgToImageList.
+                          SetButtonSvg(btnPlay, SvgText, Color, 0, GlyphOutlineColor(Color));
+   All three raise ESvgRenderError (or ESvgError for SVG text that cannot be read) and never show a dialog.
+
    Tests: UnitTesting\Test.LightVcl.Visual.SvgSpeedButton.pas
 =============================================================================================================}
 
@@ -40,7 +63,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, System.Math, System.Types,
   Winapi.Windows, Winapi.GDIPAPI, Winapi.GDIPOBJ,
-  Vcl.Graphics, Vcl.Controls, Vcl.Buttons, Vcl.Themes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Buttons, Vcl.Themes, Vcl.ImgList, Vcl.StdCtrls,
   LightCore.SvgShapes;
 
 TYPE
@@ -86,11 +109,32 @@ TYPE
   end;
 
 { Draws Img, fitted into a Size x Size square with its aspect ratio kept, every shape in Color.
+  OutlineColor <> clNone: every shape is first stroked in OutlineColor with a 1.5 px pen, then filled on top,
+  which leaves a thin rim outside the shape. clNone draws exactly what it drew before the parameter existed.
   Returns a pf32bit bitmap with premultiplied alpha (AlphaFormat = afPremultiplied); the caller frees it. }
-function RenderSvgGlyph(CONST Img: TSvgImage; Size: Integer; Color: TColor): TBitmap;
+function RenderSvgGlyph(CONST Img: TSvgImage; Size: Integer; Color: TColor; OutlineColor: TColor = clNone): TBitmap;
 
 function ContrastRatio(C1, C2: TColor): Double;           { WCAG 2 contrast ratio, 1 to 21 }
 function BestContrastColor(Background: TColor): TColor;    { White or #202020, whichever has the higher ContrastRatio on Background }
+
+{ BestContrastColor of the colour a TPanel is filled with under the VCL style of Control (the active style when NIL) }
+function StyleGlyphColor(Control: TControl = NIL): TColor;
+
+{ The colour the VCL style of Control paints a selected (hot) menu item with, read from the centre of the drawn
+  style element. clHighlight with no style. }
+function StyleMenuHighlightColor(Control: TControl = NIL): TColor;
+
+{ The rim for a glyph drawn in GlyphColor: #202020 for a white glyph, clNone for any other colour.
+  A white glyph is the dark-skin choice of StyleGlyphColor, and it vanishes on a light hot or selected surface. }
+function GlyphOutlineColor(GlyphColor: TColor): TColor;
+
+{ Draws SvgText into picture Index of ImageList (cd32Bit only), fitted into Min(Width, Height) and centred.
+  Index < Count replaces the picture, Index = Count appends one. OutlineColor: see RenderSvgGlyph. }
+procedure SvgToImageList(ImageList: TCustomImageList; Index: Integer; CONST SvgText: string; Color: TColor; OutlineColor: TColor = clNone);
+
+{ Shows SvgText on Button, from a cd32Bit image list owned by the button: picture 0 normal, picture 1 at 40% opacity
+  for the disabled state. GlyphSize 0 = 64% of the smaller button side. OutlineColor: see RenderSvgGlyph. }
+procedure SetButtonSvg(Button: TButton; CONST SvgText: string; Color: TColor; GlyphSize: Integer = 0; OutlineColor: TColor = clNone);
 
 procedure Register;
 
@@ -100,6 +144,8 @@ IMPLEMENTATION
 CONST
   NearBlack       = TColor($202020);
   AutoSizePercent = 0.64;      { GlyphSize 0: the glyph side as a part of the smaller button side }
+  OutlineWidthPx  = 1.5;       { Pen width of the outline in output pixels; half of it shows outside the fill }
+  DefaultDisabledOpacity = 102;   { 40%. The default of TLightSvgSpeedButton.DisabledOpacity and the disabled picture of SetButtonSvg }
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -185,11 +231,8 @@ begin
 end;
 
 
-procedure DrawShape(Canvas: TGPGraphics; Brush: TGPSolidBrush; GpColor: ARGB; CONST Shape: TSvgShape; Scale, OffX, OffY: Single);
-VAR
-  Matrix, ShapeMatrix: TGPMatrix;
-  Path: TGPGraphicsPath;
-  Pen: TGPPen;
+procedure SetShapeTransform(Canvas: TGPGraphics; CONST Shape: TSvgShape; Scale, OffX, OffY: Single);
+VAR Matrix, ShapeMatrix: TGPMatrix;
 begin
   { viewBox to pixels, applied after the shape's own transform }
   Matrix:= TGPMatrix.Create(Scale, 0, 0, Scale, OffX, OffY);
@@ -204,6 +247,58 @@ begin
   finally
     FreeAndNil(Matrix);
   end;
+end;
+
+
+{ Strokes the shape's figure with a pen OutlinePx pixels wider than what DrawShape paints, so after the fill
+  a rim of OutlinePx / 2 pixels stays visible outside it }
+procedure DrawShapeOutline(Canvas: TGPGraphics; OutlineArgb: ARGB; CONST Shape: TSvgShape; Scale, OffX, OffY, OutlinePx: Single);
+VAR
+  Path: TGPGraphicsPath;
+  Pen: TGPPen;
+  PxPerUnit, Extra: Single;
+begin
+  { The world transform scales the pen too, so the pixel width is divided by the pixels per shape unit }
+  PxPerUnit:= Scale * Sqrt(Abs(Shape.Transform.A * Shape.Transform.D - Shape.Transform.B * Shape.Transform.C));
+  if PxPerUnit <= 0 then EXIT;
+  Extra:= OutlinePx / PxPerUnit;
+
+  SetShapeTransform(Canvas, Shape, Scale, OffX, OffY);
+  Path:= BuildPath(Shape);
+  try
+    if Shape.Fill.Kind <> spkNone then
+      begin
+        Pen:= TGPPen.Create(OutlineArgb, Extra);
+        try
+          GdiCheck(Pen.SetLineJoin(LineJoinRound), 'SetLineJoin');
+          GdiCheck(Canvas.DrawPath(Pen, Path), 'DrawPath outline');
+        finally
+          FreeAndNil(Pen);
+        end;
+      end;
+
+    if (Shape.Stroke.Kind <> spkNone) AND (Shape.StrokeWidth > 0) then
+      begin
+        Pen:= TGPPen.Create(OutlineArgb, Shape.StrokeWidth + Extra);
+        try
+          GdiCheck(Pen.SetLineJoin(LineJoinRound), 'SetLineJoin');
+          GdiCheck(Canvas.DrawPath(Pen, Path), 'DrawPath outline');
+        finally
+          FreeAndNil(Pen);
+        end;
+      end;
+  finally
+    FreeAndNil(Path);
+  end;
+end;
+
+
+procedure DrawShape(Canvas: TGPGraphics; Brush: TGPSolidBrush; GpColor: ARGB; CONST Shape: TSvgShape; Scale, OffX, OffY: Single);
+VAR
+  Path: TGPGraphicsPath;
+  Pen: TGPPen;
+begin
+  SetShapeTransform(Canvas, Shape, Scale, OffX, OffY);
 
   Path:= BuildPath(Shape);
   try
@@ -226,8 +321,9 @@ begin
 end;
 
 
-function RenderSvgGlyph(CONST Img: TSvgImage; Size: Integer; Color: TColor): TBitmap;
+function RenderSvgGlyph(CONST Img: TSvgImage; Size: Integer; Color: TColor; OutlineColor: TColor = clNone): TBitmap;
 VAR
+  OutlineRGB: Cardinal;
   GpBmp: TGPBitmap;
   Canvas: TGPGraphics;
   Brush: TGPSolidBrush;
@@ -266,6 +362,14 @@ begin
         GdiCheck(Canvas.Clear(MakeColor(0, 0, 0, 0)), 'Clear');
         GdiCheck(Canvas.SetSmoothingMode(SmoothingModeAntiAlias8x8), 'SetSmoothingMode');
         GdiCheck(Canvas.SetPixelOffsetMode(PixelOffsetModeHalf), 'SetPixelOffsetMode');   { Pixel centres at +0.5, so an edge on a whole coordinate falls between two pixels }
+        { Every outline first, then every fill on top, so a rim never covers a neighbouring shape }
+        if OutlineColor <> clNone then
+          begin
+            OutlineRGB:= Cardinal(ColorToRGB(OutlineColor));
+            for Shape in Img.Shapes do
+              DrawShapeOutline(Canvas, MakeColor(255, GetRValue(OutlineRGB), GetGValue(OutlineRGB), GetBValue(OutlineRGB)), Shape, Scale, OffX, OffY, OutlineWidthPx);
+          end;
+
         Brush:= TGPSolidBrush.Create(GpColor);
         try
           for Shape in Img.Shapes do
@@ -336,8 +440,26 @@ begin
 end;
 
 
+{ The colour TCustomPanel.Paint fills a panel with under Style. The Windows style answers clNone, so then clBtnFace. }
+function StylePanelColor(Style: TCustomStyleServices): TColor;
+VAR C: TColor;
+begin
+  Result:= ColorToRGB(clBtnFace);
+  if Style.Enabled
+  AND Style.GetElementColor(Style.GetElementDetails(tpPanelBackground), ecFillColor, C)
+  AND (C <> clNone)
+  then Result:= ColorToRGB(C);
+end;
+
+
+function StyleGlyphColor(Control: TControl = NIL): TColor;
+begin
+  Result:= BestContrastColor(StylePanelColor(StyleServices(Control)));
+end;
+
+
 { The centre pixel of a style element drawn over Background. The hot and pressed toolbar buttons are pictures in most styles. }
-function ElementCentreColor(Style: TCustomStyleServices; Element: TThemedToolBar; Background: TColor): TColor;
+function ElementCentreColor(Style: TCustomStyleServices; CONST Details: TThemedElementDetails; Background: TColor): TColor;
 CONST Side = 24;
 VAR Bmp: TBitmap;
 begin
@@ -346,11 +468,34 @@ begin
     Bmp.SetSize(Side, Side);
     Bmp.Canvas.Brush.Color:= Background;
     Bmp.Canvas.FillRect(Rect(0, 0, Side, Side));
-    Style.DrawElement(Bmp.Canvas.Handle, Style.GetElementDetails(Element), Rect(0, 0, Side, Side));
+    Style.DrawElement(Bmp.Canvas.Handle, Details, Rect(0, 0, Side, Side));
     Result:= Bmp.Canvas.Pixels[Side DIV 2, Side DIV 2];
   finally
     FreeAndNil(Bmp);
   end;
+end;
+
+
+function StyleMenuHighlightColor(Control: TControl = NIL): TColor;
+VAR
+  Style: TCustomStyleServices;
+  MenuBkg: TColor;
+begin
+  Style:= StyleServices(Control);
+  if Style.IsSystemStyle OR NOT Style.Enabled
+  then EXIT(ColorToRGB(clHighlight));
+
+  { The hot item drawn over the popup background, as the style's menu painting does }
+  MenuBkg:= ElementCentreColor(Style, Style.GetElementDetails(tmPopupBackground), ColorToRGB(Style.GetSystemColor(clMenu)));
+  Result:= ColorToRGB(ElementCentreColor(Style, Style.GetElementDetails(tmPopupItemHot), MenuBkg));
+end;
+
+
+function GlyphOutlineColor(GlyphColor: TColor): TColor;
+begin
+  if ColorToRGB(GlyphColor) = ColorToRGB(clWhite)
+  then Result:= NearBlack
+  else Result:= clNone;
 end;
 
 
@@ -365,7 +510,7 @@ begin
   FGlyphColor     := clBlack;
   FHotColor       := clBlack;
   FPressedColor   := clBlack;
-  FDisabledOpacity:= 102;
+  FDisabledOpacity:= DefaultDisabledOpacity;
 end;
 
 
@@ -507,20 +652,136 @@ end;
 procedure TLightSvgSpeedButton.PickColorsFromStyle;
 VAR
   Style: TCustomStyleServices;
-  Bar, C: TColor;
+  Bar: TColor;
 begin
   Style:= StyleServices(Self);
+  Bar:= StylePanelColor(Style);
 
-  { The colour TCustomPanel.Paint fills a panel with }
-  Bar:= ColorToRGB(clBtnFace);
-  if Style.Enabled
-  AND Style.GetElementColor(Style.GetElementDetails(tpPanelBackground), ecFillColor, C)
-  AND (C <> clNone)
-  then Bar:= ColorToRGB(C);
+  GlyphColor  := BestContrastColor(Bar);   { = StyleGlyphColor(Self) }
+  HotColor    := BestContrastColor(ElementCentreColor(Style, Style.GetElementDetails(ttbButtonHot),     Bar));
+  PressedColor:= BestContrastColor(ElementCentreColor(Style, Style.GetElementDetails(ttbButtonPressed), Bar));
+end;
 
-  GlyphColor  := BestContrastColor(Bar);
-  HotColor    := BestContrastColor(ElementCentreColor(Style, ttbButtonHot,     Bar));
-  PressedColor:= BestContrastColor(ElementCentreColor(Style, ttbButtonPressed, Bar));
+
+
+{-------------------------------------------------------------------------------------------------------------
+   IMAGE LISTS
+-------------------------------------------------------------------------------------------------------------}
+
+TYPE
+  { The image list SetButtonSvg creates. Its class tells it apart from an image list the button got elsewhere. }
+  TSvgButtonImageList = class(TImageList);
+
+
+{ Opacity scales the alpha of every pixel: 255 = as drawn, DefaultDisabledOpacity = the disabled look of TLightSvgSpeedButton }
+procedure SvgImageToImageList(ImageList: TCustomImageList; Index: Integer; CONST Img: TSvgImage; Color: TColor; Opacity: Byte = 255; OutlineColor: TColor = clNone);
+VAR
+  Glyph, Frame: TBitmap;
+  Side, OffX, OffY, x, y: Integer;
+  Px: PByte;
+begin
+  if ImageList = NIL then raise ESvgRenderError.Create('SvgToImageList: ImageList is NIL');
+  if ImageList.ColorDepth <> cd32Bit
+  then raise ESvgRenderError.Create('SvgToImageList: ' + ImageList.Name + ' must have ColorDepth = cd32Bit. Without an alpha channel the picture would be a solid square.');
+  if (Index < 0) OR (Index > ImageList.Count)
+  then raise ESvgRenderError.Create('SvgToImageList: Index ' + IntToStr(Index) + ' is outside 0..' + IntToStr(ImageList.Count) + ' (Count = ' + IntToStr(ImageList.Count) + ')');
+
+  Side:= Min(ImageList.Width, ImageList.Height);
+  Glyph:= RenderSvgGlyph(Img, Side, Color, OutlineColor);
+  try
+    Frame:= TBitmap.Create;
+    try
+      Frame.PixelFormat:= pf32bit;
+      Frame.SetSize(ImageList.Width, ImageList.Height);
+      Frame.AlphaFormat:= afPremultiplied;
+      for y:= 0 to Frame.Height - 1 do
+        FillChar(Frame.ScanLine[y]^, Frame.Width * 4, 0);
+
+      { # Glyph in the centre of the frame }
+      OffX:= (Frame.Width  - Side) DIV 2;
+      OffY:= (Frame.Height - Side) DIV 2;
+      for y:= 0 to Side - 1 do
+        Move(Glyph.ScanLine[y]^, (PByte(Frame.ScanLine[OffY + y]) + OffX * 4)^, Side * 4);
+
+      { # Opacity. The pixels are premultiplied, so all four bytes scale together. }
+      if Opacity < 255 then
+        for y:= 0 to Frame.Height - 1 do
+          begin
+            Px:= Frame.ScanLine[y];
+            for x:= 0 to Frame.Width * 4 - 1 do
+              begin
+                Px^:= (Px^ * Opacity + 127) DIV 255;
+                Inc(Px);
+              end;
+          end;
+
+      { # Straight alpha, the form TCustomImageList.CopyImages (Vcl.ImgList.pas) hands to Add.
+          Changing to afIgnored un-premultiplies the pixels (TBitmap.SetAlphaFormat, Vcl.Graphics.pas). }
+      Frame.AlphaFormat:= afIgnored;
+      if Index = ImageList.Count
+      then ImageList.Add(Frame, NIL)
+      else ImageList.Replace(Index, Frame, NIL);
+    finally
+      FreeAndNil(Frame);
+    end;
+  finally
+    FreeAndNil(Glyph);
+  end;
+end;
+
+
+procedure SvgToImageList(ImageList: TCustomImageList; Index: Integer; CONST SvgText: string; Color: TColor; OutlineColor: TColor = clNone);
+begin
+  SvgImageToImageList(ImageList, Index, ParseSvg(SvgText), Color, 255, OutlineColor);
+end;
+
+
+procedure SetButtonSvg(Button: TButton; CONST SvgText: string; Color: TColor; GlyphSize: Integer = 0; OutlineColor: TColor = clNone);
+VAR
+  Img: TSvgImage;
+  List: TCustomImageList;
+  Created: Boolean;
+  Size: Integer;
+begin
+  if Button = NIL then raise ESvgRenderError.Create('SetButtonSvg: Button is NIL');
+  List:= Button.Images;
+  if (List <> NIL) AND NOT ((List is TSvgButtonImageList) AND (List.Owner = Button))
+  then raise ESvgRenderError.Create('SetButtonSvg: ' + Button.Name + ' already uses the image list ' + List.Name + ', which SetButtonSvg did not create');
+
+  if GlyphSize > 0
+  then Size:= GlyphSize
+  else Size:= Round(Min(Button.Width, Button.Height) * AutoSizePercent);
+  if Size < 1 then raise ESvgRenderError.Create('SetButtonSvg: ' + Button.Name + ' is too small for a glyph (size ' + IntToStr(Size) + ')');
+
+  Img:= ParseSvg(SvgText);   { Raises before the button changes }
+
+  Created:= List = NIL;
+  if Created then
+    begin
+      List:= TSvgButtonImageList.Create(Button);
+      List.ColorDepth:= cd32Bit;
+    end;
+  try
+    List.BeginUpdate;    { One OnChange at the end, so the button never sees the list empty }
+    try
+      if (List.Width <> Size) OR (List.Height <> Size)
+      then List.SetSize(Size, Size);     { Clears the list }
+      SvgImageToImageList(List, 0, Img, Color, 255, OutlineColor);
+      { Without a disabled picture TCustomButton.UpdateImages uses AddDisabledImage, which makes a white glyph nearly vanish }
+      SvgImageToImageList(List, 1, Img, Color, DefaultDisabledOpacity, OutlineColor);
+    finally
+      List.EndUpdate;
+    end;
+  except
+    if Created then FreeAndNil(List);
+    raise;
+  end;
+
+  Button.Images:= List;
+  Button.ImageIndex:= 0;
+  Button.DisabledImageIndex:= 1;
+  if Button.Caption = ''
+  then Button.ImageAlignment:= iaCenter;
 end;
 
 
