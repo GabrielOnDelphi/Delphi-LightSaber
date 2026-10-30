@@ -241,7 +241,7 @@ end;
 function IsAnimated(CONST AGraphFile: string): Boolean;
 begin
  { Both branches must behave the same for a missing file. IsAnimatedGif opens the file with a
-   TFileStream and lets the "file not found" exception out (GifProperties.pas:155), while
+   TFileStream and lets the "file not found" exception out (TFileStream.Create in GifProperties.IsAnimatedGif), while
    LightCore.IO.IsVideo only reads the extension and would answer FALSE. }
  if NOT System.SysUtils.FileExists(AGraphFile)
  then raise EFileNotFoundException.Create('Cannot check if animated. File not found: ' + AGraphFile);
