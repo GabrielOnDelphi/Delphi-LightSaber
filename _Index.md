@@ -4050,7 +4050,7 @@ procedure Change; override;
 procedure Register;
 ```
 
-## LightVcl.Visual.SvgSpeedButton (22)
+## LightVcl.Visual.SvgSpeedButton (28)
 
 ```pascal
 procedure SetSvgText(CONST Value: string);
@@ -4069,8 +4069,14 @@ function GlyphBitmap(State: TSvgGlyphState): TBitmap; { The cached glyph of Stat
 function RenderSvgGlyph(CONST Img: TSvgImage; Size: Integer; Color: TColor; OutlineColor: TColor = clNone): TBitmap;
 function ContrastRatio(C1, C2: TColor): Double; { WCAG 2 contrast ratio, 1 to 21 }
 function BestContrastColor(Background: TColor): TColor; { White or #202020, whichever has the higher ContrastRatio on Background }
+function BestContrastColorOn(CONST Backgrounds: array of TColor): TColor;
 function StyleGlyphColor(Control: TControl = NIL): TColor;
 function StyleMenuHighlightColor(Control: TControl = NIL): TColor;
+function StyleMenuColor(Control: TControl = NIL): TColor;
+function StyleMenuBarColor(Control: TControl = NIL): TColor;
+function StyleButtonFaceColor(Control: TControl = NIL): TColor;
+function StyleToolButtonColor(Control: TControl = NIL): TColor;
+function StyleButtonGlyphColor(Control: TControl = NIL): TColor;
 function GlyphOutlineColor(GlyphColor: TColor): TColor;
 procedure SvgToImageList(ImageList: TCustomImageList; Index: Integer; CONST SvgText: string; Color: TColor; OutlineColor: TColor = clNone);
 procedure SetButtonSvg(Button: TButton; CONST SvgText: string; Color: TColor; GlyphSize: Integer = 0; OutlineColor: TColor = clNone);
@@ -4161,4 +4167,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2977 public routines across 235 units._
+_2983 public routines across 235 units._
