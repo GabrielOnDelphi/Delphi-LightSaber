@@ -37,8 +37,13 @@ UNIT LightVcl.Visual.SvgSpeedButton;
                         (clBtnFace with no style). The same colour PickColorsFromStyle gives GlyphColor.
                           Color:= StyleGlyphColor(Form1);
      StyleMenuHighlightColor - the colour the active style paints a selected menu item with (clHighlight with
-                        no style). Use it to decide whether menu glyphs need an outline.
-                          if ContrastRatio(Color, StyleMenuHighlightColor) < 3 then Outline:= clBlack;
+                        no style). Use it to measure how readable a menu glyph is on the selected item.
+                          Readable:= ContrastRatio(Color, StyleMenuHighlightColor) >= 3;
+     StyleMenuColor, StyleMenuBarColor, StyleButtonFaceColor, StyleToolButtonColor - the colour the active style
+                        really paints behind a glyph on that surface. Decide a glyph colour from these, never from
+                        the style's name. BestContrastColorOn picks one colour for a glyph shown on several surfaces.
+                          Color:= BestContrastColorOn([StyleMenuColor(Form1), StyleButtonFaceColor(Form1)]);
+     StyleButtonGlyphColor - white or #202020 for a glyph on a TButton (the colour for SetButtonSvg).
      GlyphOutlineColor - #202020 for a white glyph, clNone otherwise: the rim that keeps a white glyph readable on
                         every light hot, selected or focused surface, without measuring each one.
                           SvgToImageList(imgList, 5, SvgText, Color, GlyphOutlineColor(Color));
@@ -117,12 +122,30 @@ function RenderSvgGlyph(CONST Img: TSvgImage; Size: Integer; Color: TColor; Outl
 function ContrastRatio(C1, C2: TColor): Double;           { WCAG 2 contrast ratio, 1 to 21 }
 function BestContrastColor(Background: TColor): TColor;    { White or #202020, whichever has the higher ContrastRatio on Background }
 
+{ White or #202020, whichever has the higher LOWEST ContrastRatio over all Backgrounds: the colour for a glyph
+  that is shown on several surfaces. Raises ESvgRenderError for an empty array. }
+function BestContrastColorOn(CONST Backgrounds: array of TColor): TColor;
+
 { BestContrastColor of the colour a TPanel is filled with under the VCL style of Control (the active style when NIL) }
 function StyleGlyphColor(Control: TControl = NIL): TColor;
 
 { The colour the VCL style of Control paints a selected (hot) menu item with, read from the centre of the drawn
   style element. clHighlight with no style. }
 function StyleMenuHighlightColor(Control: TControl = NIL): TColor;
+
+{ The surfaces the VCL style of Control (the active style when NIL) paints, read from the centre of the drawn
+  style element. With no style: the Windows colour named in brackets.
+  StyleMenuColor        - a popup menu, behind its items (clMenu)
+  StyleMenuBarColor     - the menu bar of a form (clMenuBar)
+  StyleButtonFaceColor  - a TButton in its normal state (clBtnFace)
+  StyleToolButtonColor  - a TToolButton of a TToolBar in its normal state (clBtnFace) }
+function StyleMenuColor(Control: TControl = NIL): TColor;
+function StyleMenuBarColor(Control: TControl = NIL): TColor;
+function StyleButtonFaceColor(Control: TControl = NIL): TColor;
+function StyleToolButtonColor(Control: TControl = NIL): TColor;
+
+{ BestContrastColor of StyleButtonFaceColor: the glyph colour for a TButton (SetButtonSvg) }
+function StyleButtonGlyphColor(Control: TControl = NIL): TColor;
 
 { The rim for a glyph drawn in GlyphColor: #202020 for a white glyph, clNone for any other colour.
   A white glyph is the dark-skin choice of StyleGlyphColor, and it vanishes on a light hot or selected surface. }
@@ -440,6 +463,25 @@ begin
 end;
 
 
+function BestContrastColorOn(CONST Backgrounds: array of TColor): TColor;
+VAR
+  Bkg: TColor;
+  WorstWhite, WorstDark: Double;
+begin
+  if Length(Backgrounds) = 0 then raise ESvgRenderError.Create('BestContrastColorOn: no background colour given');
+  WorstWhite:= MaxDouble;
+  WorstDark := MaxDouble;
+  for Bkg in Backgrounds do
+    begin
+      WorstWhite:= Min(WorstWhite, ContrastRatio(clWhite,   Bkg));
+      WorstDark := Min(WorstDark,  ContrastRatio(NearBlack, Bkg));
+    end;
+  if WorstWhite >= WorstDark
+  then Result:= clWhite
+  else Result:= NearBlack;
+end;
+
+
 { The colour TCustomPanel.Paint fills a panel with under Style. The Windows style answers clNone, so then clBtnFace. }
 function StylePanelColor(Style: TCustomStyleServices): TColor;
 VAR C: TColor;
@@ -486,8 +528,61 @@ begin
   then EXIT(ColorToRGB(clHighlight));
 
   { The hot item drawn over the popup background, as the style's menu painting does }
-  MenuBkg:= ElementCentreColor(Style, Style.GetElementDetails(tmPopupBackground), ColorToRGB(Style.GetSystemColor(clMenu)));
+  MenuBkg:= StyleMenuColor(Control);
   Result:= ColorToRGB(ElementCentreColor(Style, Style.GetElementDetails(tmPopupItemHot), MenuBkg));
+end;
+
+
+{ ElementCentreColor of Element over Background, or SystemColor when no VCL style is active }
+function StyleSurfaceColor(Control: TControl; Element: TThemedMenu; Background: TColor; SystemColor: TColor): TColor;
+VAR Style: TCustomStyleServices;
+begin
+  Style:= StyleServices(Control);
+  if Style.IsSystemStyle OR NOT Style.Enabled
+  then EXIT(ColorToRGB(SystemColor));
+  Result:= ColorToRGB(ElementCentreColor(Style, Style.GetElementDetails(Element), Background));
+end;
+
+
+function StyleMenuColor(Control: TControl = NIL): TColor;
+VAR Style: TCustomStyleServices;
+begin
+  Style:= StyleServices(Control);
+  Result:= StyleSurfaceColor(Control, tmPopupBackground, ColorToRGB(Style.GetSystemColor(clMenu)), clMenu);
+end;
+
+
+function StyleMenuBarColor(Control: TControl = NIL): TColor;
+VAR Style: TCustomStyleServices;
+begin
+  Style:= StyleServices(Control);
+  Result:= StyleSurfaceColor(Control, tmMenuBarBackgroundActive, ColorToRGB(Style.GetSystemColor(clMenuBar)), clMenuBar);
+end;
+
+
+function StyleButtonFaceColor(Control: TControl = NIL): TColor;
+VAR Style: TCustomStyleServices;
+begin
+  Style:= StyleServices(Control);
+  if Style.IsSystemStyle OR NOT Style.Enabled
+  then EXIT(ColorToRGB(clBtnFace));
+  Result:= ColorToRGB(ElementCentreColor(Style, Style.GetElementDetails(tbPushButtonNormal), StylePanelColor(Style)));
+end;
+
+
+function StyleToolButtonColor(Control: TControl = NIL): TColor;
+VAR Style: TCustomStyleServices;
+begin
+  Style:= StyleServices(Control);
+  if Style.IsSystemStyle OR NOT Style.Enabled
+  then EXIT(ColorToRGB(clBtnFace));
+  Result:= ColorToRGB(ElementCentreColor(Style, Style.GetElementDetails(ttbButtonNormal), StylePanelColor(Style)));
+end;
+
+
+function StyleButtonGlyphColor(Control: TControl = NIL): TColor;
+begin
+  Result:= BestContrastColor(StyleButtonFaceColor(Control));
 end;
 
 
