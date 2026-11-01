@@ -360,6 +360,22 @@ type
     constructor Create(Source: TFoundTiffDirectory);
   end;
 
+  { The offsets of the directories that one walk of the main chain (TTiffParserEnumerator) has returned.
+    Every directory of that walk holds the same list, so the walk can see an offset it has already visited. }
+  IVisitedOffsets = interface
+    function Add(Offset: LongInt): Boolean;
+  end;
+
+  TVisitedOffsets = class(TInterfacedObject, IVisitedOffsets)
+  strict private
+    FCount: Integer;
+    FOffsets: array of LongInt;
+  public
+    { Adds Offset to the list.
+      Returns False, and adds nothing, when the list already holds Offset. }
+    function Add(Offset: LongInt): Boolean;
+  end;
+
   TFoundTiffDirectory = class(TInterfacedObject, ITiffDirectory, IFoundTiffDirectory)
   strict private
     FIndex: Integer;
@@ -369,6 +385,7 @@ type
     FTags: TTiffTagInfoDynArray;
   protected
     FMoreToFollow: Boolean;
+    FChainOffsets: IVisitedOffsets;  { Set only for a directory of the main chain }
     constructor Create(const AParser: ITiffParser; const AParent: ITiffDirectory; AIndex: Integer;
       const Tags: TTiffTagInfoDynArray; const LoadErrors: TMetadataLoadErrors); overload;
     function GetEnumerator: ITiffDirectoryEnumerator;
@@ -1129,6 +1146,22 @@ begin
   if Result then Result := TryLoadJpegImageFromStream(Dest, FParser.Stream);
 end;
 
+{ TVisitedOffsets }
+
+function TVisitedOffsets.Add(Offset: LongInt): Boolean;
+var
+  I: Integer;
+begin
+  for I := 0 to FCount - 1 do
+    if FOffsets[I] = Offset then
+      Exit(False);
+  if FCount = Length(FOffsets) then
+    SetLength(FOffsets, 2 * FCount + 8);
+  FOffsets[FCount] := Offset;
+  Inc(FCount);
+  Result := True;
+end;
+
 { TTiffParserEnumerator }
 
 constructor TTiffParserEnumerator.Create(const ASource: ITiffParser;
@@ -1143,12 +1176,24 @@ end;
 function TTiffParserEnumerator.MoveNext: Boolean;
 var
   NewDir: TFoundTiffDirectory;
+  Visited: IVisitedOffsets;
 begin
   Result := (FNextOffset <> 0);
   if not Result then Exit;
+  { A damaged file can point the chain back to a directory already returned.
+    The walk then ends at that pointer, instead of returning the same directories for ever. }
+  if FCurrent = nil then
+  begin
+    Visited := TVisitedOffsets.Create;
+    Visited.Add(FNextOffset);
+  end
+  else
+    Visited := (FCurrent as TFoundTiffDirectory).FChainOffsets;
   NewDir := TFoundTiffDirectory.Create(FSource, nil, FNextIndex, FNextOffset);
+  NewDir.FChainOffsets := Visited;
   NewDir.FMoreToFollow := FSource.Stream.ReadLongInt(FSource.Endianness,
-    FNextOffset) and (FNextOffset <> 0) and (FNextOffset <= FMaxPossibleOffset);
+    FNextOffset) and (FNextOffset <> 0) and (FNextOffset <= FMaxPossibleOffset) and
+    Visited.Add(FNextOffset);
   if NewDir.FMoreToFollow then
     Inc(FNextIndex)
   else
