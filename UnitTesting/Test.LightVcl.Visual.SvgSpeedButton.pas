@@ -80,6 +80,10 @@ type
     [Test]
     procedure Test_GlyphOutlineColor_OnlyWhiteGetsRim;
     [Test]
+    procedure Test_BestContrastColorOn_WorstSurfaceDecides;
+    [Test]
+    procedure Test_StyleSurfaceColors_NoStyleAreSystemColors;
+    [Test]
     procedure Test_StyleGlyphColor_NoStyleUsesBtnFace;
     [Test]
     procedure Test_ImageList_DisabledDraw_Measure;
@@ -769,6 +773,31 @@ begin
   Assert.AreEqual(Integer($202020), Integer(GlyphOutlineColor(TColor($FFFFFF))), 'White as an RGB value: #202020 rim');
   Assert.AreEqual(Integer(clNone),  Integer(GlyphOutlineColor(TColor($202020))), 'Dark glyph: no rim');
   Assert.AreEqual(Integer(clNone),  Integer(GlyphOutlineColor(clRed)),           'Any other colour: no rim');
+end;
+
+
+{ Contrast values (WCAG 2, computed by hand): white on #3A3A3A = 11.4, #202020 on #3A3A3A = 1.4; white on #FFFFFF = 1.0,
+  #202020 on #FFFFFF = 16.3; white on #C0C0C0 = 1.8, #202020 on #C0C0C0 = 9.0 }
+procedure TTestSvgSpeedButton.Test_BestContrastColorOn_WorstSurfaceDecides;
+begin
+  Assert.AreEqual(Integer(clWhite),         Integer(BestContrastColorOn([TColor($3A3A3A)])),                   'One dark surface: white');
+  Assert.AreEqual(Integer($202020),         Integer(BestContrastColorOn([TColor($FFFFFF)])),                   'One white surface: dark');
+  { A dark panel with white menus and silver buttons: white fails on the menus (1.0), dark only on the panel (1.4) }
+  Assert.AreEqual(Integer($202020),         Integer(BestContrastColorOn([TColor($3A3A3A), clWhite, TColor($C0C0C0)])), 'Dark panel, white menu, silver button: dark');
+  Assert.AreEqual(Integer(clWhite),         Integer(BestContrastColorOn([TColor($3A3A3A), TColor($202020)])),  'Two dark surfaces: white');
+  Assert.AreEqual(Integer(BestContrastColor(TColor($808080))), Integer(BestContrastColorOn([TColor($808080)])), 'One surface: the same answer as BestContrastColor');
+  Assert.WillRaise(procedure begin BestContrastColorOn([]); end, ESvgRenderError, 'No surface: raises');
+end;
+
+
+procedure TTestSvgSpeedButton.Test_StyleSurfaceColors_NoStyleAreSystemColors;
+begin
+  Assert.IsTrue(TStyleManager.ActiveStyle.IsSystemStyle, 'Precondition: no VCL style is active in the test EXE');
+  Assert.AreEqual(Integer(ColorToRGB(clMenu)),    Integer(StyleMenuColor),        'Menu: clMenu');
+  Assert.AreEqual(Integer(ColorToRGB(clMenuBar)), Integer(StyleMenuBarColor),     'Menu bar: clMenuBar');
+  Assert.AreEqual(Integer(ColorToRGB(clBtnFace)), Integer(StyleButtonFaceColor),  'Button: clBtnFace');
+  Assert.AreEqual(Integer(ColorToRGB(clBtnFace)), Integer(StyleToolButtonColor),  'Tool button: clBtnFace');
+  Assert.AreEqual(Integer(BestContrastColor(clBtnFace)), Integer(StyleButtonGlyphColor), 'Button glyph: BestContrastColor of clBtnFace');
 end;
 
 

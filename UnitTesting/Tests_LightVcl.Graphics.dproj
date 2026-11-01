@@ -138,6 +138,8 @@
         <DCCReference Include="Test.LightVcl.Graph.Gif.pas"/>
         <DCCReference Include="..\External\GifProperties.pas"/>
         <DCCReference Include="Test.GifProperties.pas"/>
+        <DCCReference Include="..\External\Exif\CCR.Exif.TiffUtils.pas"/>
+        <DCCReference Include="Test.CCR.Exif.TiffUtils.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Graph.Resize.pas"/>
         <DCCReference Include="Test.LightVcl.Graph.Resize.pas"/>
         <DCCReference Include="Test.LightVcl.Graph.Util.pas"/>
