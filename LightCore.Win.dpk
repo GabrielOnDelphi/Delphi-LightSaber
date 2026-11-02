@@ -1,4 +1,4 @@
-package LightCore.Win;
+﻿package LightCore.Win;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -46,7 +46,8 @@ contains
   LightCore.Win.IO in 'LightCore.Win.IO.pas',
   LightCore.Win.Shell in 'LightCore.Win.Shell.pas',
   LightCore.Win.Internet in 'LightCore.Win.Internet.pas',
-  LightCore.Win.SystemTime in 'LightCore.Win.SystemTime.pas';
+  LightCore.Win.SystemTime in 'LightCore.Win.SystemTime.pas',
+  LightCore.Win.FrameTimer in 'LightCore.Win.FrameTimer.pas';
 
 end.
 
