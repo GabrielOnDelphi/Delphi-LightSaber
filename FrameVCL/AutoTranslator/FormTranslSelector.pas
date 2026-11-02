@@ -1,7 +1,7 @@
 UNIT FormTranslSelector;
 
 {=============================================================================================================
-   2026.01.29
+   2026.11.02
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    LANGUAGE SELECTOR FORM
@@ -71,7 +71,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.Dialogs, LightCore.IO, LightVcl.Common.IO, FormTranslEditor;
+  LightCore, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.Dialogs, LightCore.IO, LightVcl.Common.IO, FormTranslEditor;
 
 
 { Shows the language selector form as a modal dialog }
@@ -125,7 +125,23 @@ begin
     if FileExistsMsg(GetSelectedFilePath)
     then
       begin
-        AppData.Translator.CurLanguage:= AppData.Translator.GetLangFolder + GetSelectedFileName;
+        { A file that cannot be read raises before the translator changes anything: the current language stays }
+        TRY
+          AppData.Translator.CurLanguage:= AppData.Translator.GetLangFolder + GetSelectedFileName;
+        EXCEPT
+          on E: EStreamError do
+           begin
+            AppDataCore.LogError('ApplyLanguage [' + GetSelectedFilePath + ']: ' + E.ClassName + ' - ' + E.Message);
+            MessageWarning('Cannot load language file!' + CRLF + E.Message);
+            EXIT;
+           end;
+          on E: EEncodingError do
+           begin
+            AppDataCore.LogError('ApplyLanguage [' + GetSelectedFilePath + ']: ' + E.ClassName + ' - ' + E.Message);
+            MessageWarning('Cannot load language file!' + CRLF + E.Message);
+            EXIT;
+           end;
+        END;
         lblAuthors.Caption:= 'Translated by: ' + AppData.Translator.Authors;
         lblAuthors.Visible:= TRUE;
       end
