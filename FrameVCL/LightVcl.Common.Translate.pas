@@ -1,7 +1,7 @@
 unit LightVcl.Common.Translate;
 
 {=============================================================================================================
-   2026.06.12
+   2026.11.02
    www.GabrielMoraru.com
 
 --------------------------------------------------------------------------------------------------------------
@@ -274,6 +274,11 @@ procedure TTranslator.setCurLanguage(const Value: string);
 VAR EnglishPath: string;
 begin
   Assert(Pos(PathDelim, Value) > 0, 'CurLanguage var must contain the full path!');
+
+  { Read the new file once BEFORE anything changes. A file that cannot be read (locked, bad encoding) raises here,
+    so the language in use, and the Last_Language the destructor saves, stay the previous ones. }
+  VAR Probe:= TMemIniFile.Create(Value);
+  FreeAndNil(Probe);
 
   { First reset to English baseline to clear any leftover text from the previous language }
   EnglishPath:= GetLangFolder + DefaultLang;
