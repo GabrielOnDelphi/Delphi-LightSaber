@@ -1,7 +1,7 @@
 UNIT LightCore.CpuUsageProcess;
 
 {=============================================================================================================
-   2026.09.12
+   2026.11.02
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Returns CPU/CORE usage for the specified process.
@@ -15,6 +15,19 @@ UNIT LightCore.CpuUsageProcess;
       finally
         FreeAndNil(Monitor);
       end;
+
+   How it measures:
+      CoreUsage = the CPU cycles the process used in the interval (QueryProcessCycleTime), divided by the ticks of the processor's time-stamp counter (RDTSC) in the same interval.
+      Windows reads these cycles from the CPU "using mechanisms like RDTSC" (https://devblogs.microsoft.com/oldnewthing/20161021-00/?p=94565), so both numbers count the same clock and no CPU frequency is needed.
+      Microsoft warns not to convert the cycles to elapsed time, because the rate of the counter differs between CPUs (https://learn.microsoft.com/en-us/windows/win32/api/realtimeapiset/nf-realtimeapiset-querythreadcycletime). This unit never converts them: it divides one count by another count of the same counter.
+      The busy-loop tests in Test.LightCore.CpuUsageProcess check that one busy thread reads close to 100.
+      [UNVERIFIED] on Windows on ARM, where an x86/x64 program runs emulated.
+
+   Why not GetProcessTimes:
+      It counts CPU time in whole clock ticks (Gary Nebbett's ETW analysis: https://learn.microsoft.com/en-us/answers/questions/1183193/totalprocessortime-differs-between-windows-10-and), and on Windows 11 the ticks land in lumps.
+      Measured on Windows 11 with a 1 ms clock tick: a VCL program that draws frames on a TTimer used 11-12% of one core in every second (QueryProcessCycleTime),
+      while GetProcessTimes read 0% for 13 seconds in a row, then 30-43%. Its 30-second average was 6.8%, so a longer average does not repair it. Minimized, the same.
+      Test_CoreUsage_ShortBursts_MatchesSpinTime reproduces it: GetProcessTimes read 0 for a thread that was busy 12.9% of the time.
 
    Also see:
       * Get the Percentage of Total CPU Usage: https://stackoverflow.com/questions/33571061/get-the-percentage-of-total-cpu-usage
@@ -37,11 +50,10 @@ TYPE
   private
     FPID: Cardinal;
     FHandle: THandle;
-    FOldUser: Int64;
-    FOldKernel: Int64;
+    FOldCycles: UInt64;     { QueryProcessCycleTime at the last measurement }
+    FOldStamp: UInt64;      { ReadTimeStampCounter at the last measurement }
     FLastUpdateTime: UInt64;
     FLastUsage: Single;
-    function FileTimeToInt64(CONST FT: TFileTime): Int64;
   public
     constructor Create; overload;
     constructor Create(APID: Cardinal); overload;
@@ -51,6 +63,8 @@ TYPE
     property PID: Cardinal read FPID;
     property LastUsage: Single read FLastUsage;
   end;
+
+function ReadTimeStampCounter: UInt64;  { The processor's time-stamp counter (RDTSC): the clock QueryProcessCycleTime counts in }
 
 {$ENDIF}
 
@@ -62,10 +76,20 @@ USES
   System.SysUtils;
 
 
-function TCpuUsageMonitor.FileTimeToInt64(CONST FT: TFileTime): Int64;
-begin
-  Result:= Int64(FT.dwLowDateTime) or (Int64(FT.dwHighDateTime) shl 32);
+{ Reads the processor's time-stamp counter. Whole-routine asm functions: Win64 does not allow asm inside a Pascal body. }
+{$IFDEF CPUX64}
+function ReadTimeStampCounter: UInt64; assembler;
+asm
+  RDTSC                  { The counter comes back split across EDX:EAX }
+  SHL   RDX, 32
+  OR    RAX, RDX
 end;
+{$ELSE}
+function ReadTimeStampCounter: UInt64; assembler;
+asm
+  RDTSC                  { EDX:EAX, which is already where Win32 returns a 64-bit result }
+end;
+{$ENDIF}
 
 
 constructor TCpuUsageMonitor.Create;
@@ -75,8 +99,6 @@ end;
 
 
 constructor TCpuUsageMonitor.Create(APID: Cardinal);
-VAR
-  CreationTime, ExitTime, KernelTime, UserTime: TFileTime;
 begin
   inherited Create;
   FPID:= APID;
@@ -86,16 +108,15 @@ begin
   if FHandle = 0
   then raise Exception.CreateFmt('Cannot open process %d: %s', [FPID, SysErrorMessage(GetLastError)]);
 
-  if NOT GetProcessTimes(FHandle, CreationTime, ExitTime, KernelTime, UserTime)
+  if NOT QueryProcessCycleTime(FHandle, FOldCycles)
   then
     begin
       CloseHandle(FHandle);
       FHandle:= 0;
-      raise Exception.CreateFmt('Cannot query process times for PID %d: %s', [FPID, SysErrorMessage(GetLastError)]);
+      raise Exception.CreateFmt('Cannot query the cycle time of PID %d: %s', [FPID, SysErrorMessage(GetLastError)]);
     end;
 
-  FOldKernel:= FileTimeToInt64(KernelTime);
-  FOldUser:= FileTimeToInt64(UserTime);
+  FOldStamp:= ReadTimeStampCounter;
   FLastUpdateTime:= GetTickCount64;
 end;
 
@@ -110,32 +131,26 @@ end;
 
 function TCpuUsageMonitor.CoreUsage: Single;
 VAR
-  CreationTime, ExitTime, KernelTime, UserTime: TFileTime;
-  DeltaMs, ThisTime: UInt64;
-  Kernel, User, Delta: Int64;
+  ThisTime, Cycles, Stamp: UInt64;
 begin
   Result:= FLastUsage;
   ThisTime:= GetTickCount64;
+  if ThisTime - FLastUpdateTime < MIN_MEASUREMENT_INTERVAL then EXIT;
 
-  DeltaMs:= ThisTime - FLastUpdateTime;
-  if DeltaMs < MIN_MEASUREMENT_INTERVAL then EXIT;
-
-  if NOT GetProcessTimes(FHandle, CreationTime, ExitTime, KernelTime, UserTime)
+  if NOT QueryProcessCycleTime(FHandle, Cycles)
   then EXIT;
+  Stamp:= ReadTimeStampCounter;
 
+  { If either count went backwards (a time-stamp counter that differs between cores), the unsigned subtractions below would wrap. Start a new interval instead. }
+  if (Cycles >= FOldCycles) AND (Stamp > FOldStamp) then
+    begin
+      Result:= (Cycles - FOldCycles) / (Stamp - FOldStamp) * 100;
+      FLastUsage:= Result;
+    end;
+
+  FOldCycles:= Cycles;
+  FOldStamp:= Stamp;
   FLastUpdateTime:= ThisTime;
-  Kernel:= FileTimeToInt64(KernelTime);
-  User:= FileTimeToInt64(UserTime);
-
-  Delta:= (User + Kernel) - (FOldUser + FOldKernel);
-  FOldUser:= User;
-  FOldKernel:= Kernel;
-
-  { FILETIME units: 100ns intervals. DeltaMs: milliseconds.
-    1ms = 10,000 x 100ns. Percentage = Delta / (DeltaMs x 10,000) x 100
-    Simplified: Delta / (DeltaMs x 100) }
-  Result:= Delta / (DeltaMs * 100);
-  FLastUsage:= Result;
 end;
 
 
