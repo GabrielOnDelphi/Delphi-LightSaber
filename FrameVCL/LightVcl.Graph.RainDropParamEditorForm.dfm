@@ -104,7 +104,9 @@ object frmRainEditor: TfrmRainEditor
           Hint = 
             'Animation speed.'#13#10'The higher the speed, the more CPU needed.'#13#10'Al' +
             'so, the CPU depends on the area in which it rains (greater the a' +
-            're, higher the CPU).'
+            're, higher the CPU).'#13#10 +
+            'Smoothest when the monitor refresh rate divides evenly by this value. ' +
+            'On a 60 Hz monitor: 60, 30, 20, 15. On a 144 Hz monitor: 144, 72, 48, 36, 24.'
           Increment = 2
           MaxValue = 100
           MinValue = 1
