@@ -1,4 +1,4 @@
-package LightCore;
+﻿package LightCore;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -108,7 +108,8 @@ contains
   LightCore.SystemPermissions in 'LightCore.SystemPermissions.pas',
   LightCore.Shell in 'LightCore.Shell.pas',
   LightCore.SystemTime in 'LightCore.SystemTime.pas',
-  LightCore.SvgShapes in 'LightCore.SvgShapes.pas';
+  LightCore.SvgShapes in 'LightCore.SvgShapes.pas',
+  LightCore.FramePacer in 'LightCore.FramePacer.pas';
 
 end.
 
