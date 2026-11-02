@@ -133,9 +133,9 @@ function UsageText: string; { 'Switches:' + one aligned line per registered swit
 ## LightCore.CpuUsageProcess (3)
 
 ```pascal
-function FileTimeToInt64(CONST FT: TFileTime): Int64;
 function CoreUsage: Single; { Per-core usage (0..100). One core at max on 4-core CPU returns 100% }
 function CpuUsage: Single; { Total CPU usage (0..100). One core at max on 4-core CPU returns 25% }
+function ReadTimeStampCounter: UInt64; { The processor's time-stamp counter (RDTSC): the clock QueryProcessCycleTime counts in }
 ```
 
 ## LightCore.Debugger (14)
@@ -229,6 +229,15 @@ function ExceptionLogPath: string; { exposed for diagnostics — read the value 
 ```pascal
 function GetVersionInfoFile(CONST FileName: string; OUT Version: TFileVersion): Boolean;
 function GetVersionInfo(CONST FileName: string; ShowBuildNo: Boolean = False): string;
+```
+
+## LightCore.FramePacer (4)
+
+```pascal
+procedure Start(NowMs: Double); { First frame due at NowMs + IntervalMs, as TTimer }
+function IsDue(NowMs: Double): Boolean; { TRUE once per period; advances the schedule }
+function MsUntilDue(NowMs: Double): Double; { How long the caller should wait; 0 when due }
+procedure SetIntervalMs(Value: Double); { Raises on <= 0, NaN or infinite }
 ```
 
 ## LightCore.Graph.BkgColorParams (3)
@@ -1495,6 +1504,21 @@ function DownloadToFile (CONST URL, Referer, DestinationFile: string): Cardinal;
 function ExpandEnvironmentStrings(CONST Vars: string): string;
 function SetEnvironmentVars(CONST Name, Value: string; User: Boolean = True): Boolean;
 function GetEnvironmentVars(CONST Name: string; User: Boolean = True): string; overload;
+```
+
+## LightCore.Win.FrameTimer (10)
+
+```pascal
+procedure WndProc(var Msg: TMessage);
+procedure UpdateTimer;
+procedure StartWorker;
+procedure SetEnabled(Value: Boolean);
+procedure SetInterval(Value: Cardinal);
+function GetInterval: Cardinal;
+procedure SetFramesPerSecond(Value: Double);
+function GetFramesPerSecond: Double;
+procedure SetOnTimer(Value: TNotifyEvent);
+function GetSkipped: Integer;
 ```
 
 ## LightCore.Win.Internet (6)
@@ -4167,4 +4191,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2983 public routines across 235 units._
+_2997 public routines across 237 units._
