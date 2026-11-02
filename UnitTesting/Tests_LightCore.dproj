@@ -198,6 +198,8 @@
         <DCCReference Include="..\LightCore.WrapString.pas"/>
         <DCCReference Include="Test.LightCore.SvgShapes.pas"/>
         <DCCReference Include="..\LightCore.SvgShapes.pas"/>
+        <DCCReference Include="Test.LightCore.FramePacer.pas"/>
+        <DCCReference Include="..\LightCore.FramePacer.pas"/>
         <DCCReference Include="..\Updater\ciUpdaterRec.pas"/>
         <DCCReference Include="..\LightCore.pas"/>
         <DCCReference Include="..\LightCore.Types.pas"/>
@@ -249,6 +251,10 @@
         <DCCReference Include="..\LightCore.WinVersion.pas"/>
         <DCCReference Include="Test.LightCore.Process.pas"/>
         <DCCReference Include="..\LightCore.Process.pas"/>
+        <DCCReference Include="Test.LightCore.CpuUsageProcess.pas"/>
+        <DCCReference Include="..\LightCore.CpuUsageProcess.pas"/>
+        <DCCReference Include="Test.LightCore.ProcessCpuMonitor.pas"/>
+        <DCCReference Include="..\LightCore.ProcessCpuMonitor.pas"/>
         <DCCReference Include="Test.LightCore.ExeVersion.pas"/>
         <DCCReference Include="..\LightCore.ExeVersion.pas"/>
         <DCCReference Include="Test.LightCore.Sound.pas"/>
@@ -287,6 +293,8 @@
         <DCCReference Include="..\LightCore.SystemTime.pas"/>
         <DCCReference Include="Test.LightCore.Win.SystemTime.pas"/>
         <DCCReference Include="..\LightCore.Win.SystemTime.pas"/>
+        <DCCReference Include="Test.LightCore.Win.FrameTimer.pas"/>
+        <DCCReference Include="..\LightCore.Win.FrameTimer.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

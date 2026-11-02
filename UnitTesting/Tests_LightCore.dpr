@@ -78,8 +78,11 @@ uses
   Test.LightCore.Graph.RainDropParams in 'Test.LightCore.Graph.RainDropParams.pas',
   Test.LightCore.WinVersion in 'Test.LightCore.WinVersion.pas',
   Test.LightCore.SvgShapes in 'Test.LightCore.SvgShapes.pas',
+  Test.LightCore.FramePacer in 'Test.LightCore.FramePacer.pas',
   {$IFDEF MSWINDOWS}
   Test.LightCore.Process in 'Test.LightCore.Process.pas',
+  Test.LightCore.CpuUsageProcess in 'Test.LightCore.CpuUsageProcess.pas',
+  Test.LightCore.ProcessCpuMonitor in 'Test.LightCore.ProcessCpuMonitor.pas',
   Test.LightCore.ExeVersion in 'Test.LightCore.ExeVersion.pas',
   Test.LightCore.Sound in 'Test.LightCore.Sound.pas',
   Test.LightCore.Win.Sound in 'Test.LightCore.Win.Sound.pas',
@@ -99,6 +102,7 @@ uses
   Test.LightCore.Win.Shell in 'Test.LightCore.Win.Shell.pas',
   Test.LightCore.SystemTime in 'Test.LightCore.SystemTime.pas',
   Test.LightCore.Win.SystemTime in 'Test.LightCore.Win.SystemTime.pas',
+  Test.LightCore.Win.FrameTimer in 'Test.LightCore.Win.FrameTimer.pas',
   {$ENDIF}
   { Source units }
   LightCore in '..\LightCore.pas',
@@ -154,6 +158,7 @@ uses
   LightCore.System in '..\LightCore.System.pas',
   LightCore.Shell in '..\LightCore.Shell.pas',
   LightCore.SvgShapes in '..\LightCore.SvgShapes.pas',
+  LightCore.FramePacer in '..\LightCore.FramePacer.pas',
   {$IFDEF MSWINDOWS}
   LightCore.Win.WinVersionApi in '..\LightCore.Win.WinVersionApi.pas',
   LightCore.Win.Window in '..\LightCore.Win.Window.pas',
@@ -162,8 +167,11 @@ uses
   LightCore.Win.Shell in '..\LightCore.Win.Shell.pas',
   LightCore.SystemTime in '..\LightCore.SystemTime.pas',
   LightCore.Win.SystemTime in '..\LightCore.Win.SystemTime.pas',
+  LightCore.Win.FrameTimer in '..\LightCore.Win.FrameTimer.pas',
   {$ENDIF}
   LightCore.Process in '..\LightCore.Process.pas',
+  LightCore.CpuUsageProcess in '..\LightCore.CpuUsageProcess.pas',
+  LightCore.ProcessCpuMonitor in '..\LightCore.ProcessCpuMonitor.pas',
   LightCore.ExeVersion in '..\LightCore.ExeVersion.pas',
   LightCore.Sound in '..\LightCore.Sound.pas',
   {$IFDEF MSWINDOWS}
