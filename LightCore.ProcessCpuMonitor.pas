@@ -1,7 +1,7 @@
 UNIT LightCore.ProcessCpuMonitor;
 
 {=============================================================================================================
-   2026.09.30
+   2026.11.02
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Enumerates all running processes and returns the top-N by CPU usage and RAM consumption.
@@ -34,13 +34,14 @@ UNIT LightCore.ProcessCpuMonitor;
      - Protected/system processes that cannot be opened are silently skipped
      - First Sample() call populates RAM but not CPU (needs two samples for delta)
      - CPU% values are smoothed over time; processes not seen for several samples fade out
+     - CPU% = the CPU cycles of each process (QueryProcessCycleTime) divided by the ticks of the time-stamp counter in the same interval. GetProcessTimes is not used: on Windows 11 it reads 0 for seconds at a time for work done in short bursts. The measurements and sources: the header of LightCore.CpuUsageProcess.pas.
 
    Also see:
      * LightCore.CpuUsageProcess.pas       - per-process CPU monitor (single process)
      * LightVcl.Common.CpuMonitor.pas      - system-wide CPU monitor
      * LightCore.Process.pas                - process enumeration utilities
 
-   Sample is the only routine that reads the system, and it reads it through Windows calls (the process snapshot, OpenProcess, GetProcessTimes, GetProcessMemoryInfo); every other routine works only on what Sample stored, and GetTopCpu, GetTopRam, TopCpuCount and TopRamCount return measured values. So the whole unit is declared inside a MSWINDOWS conditional - interface and implementation both. Off Windows a TopCpuCount of 0 would read as "no process uses the CPU", which is a silent wrong answer, so a call written in an Android, macOS or iOS build fails to compile instead, and this unit compiles empty there.
+   Sample is the only routine that reads the system, and it reads it through Windows calls (the process snapshot, OpenProcess, QueryProcessCycleTime, the time-stamp counter, GetProcessMemoryInfo); every other routine works only on what Sample stored, and GetTopCpu, GetTopRam, TopCpuCount and TopRamCount return measured values. So the whole unit is declared inside a MSWINDOWS conditional - interface and implementation both. Off Windows a TopCpuCount of 0 would read as "no process uses the CPU", which is a silent wrong answer, so a call written in an Android, macOS or iOS build fails to compile instead, and this unit compiles empty there.
 =============================================================================================================}
 
 INTERFACE
@@ -70,7 +71,7 @@ TYPE
   RPidSample = record
     PID: DWORD;
     Name: string;
-    KernelPlusUser: Int64;
+    Cycles: UInt64;         { QueryProcessCycleTime }
   end;
 
   TPidSamples = array of RPidSample;
@@ -93,7 +94,7 @@ TYPE
     var
       FPrevSamples: TPidSamples;
       FPrevSampleCount: Integer;
-      FPrevTickCount: UInt64;
+      FPrevStamp: UInt64;     { ReadTimeStampCounter at the previous Sample. 0 = no Sample yet }
       FTopCpu: array[0..TOP_N-1] of RProcessInfo;
       FTopRam: array[0..TOP_N-1] of RProcessInfo;
       FTopCpuCount: Integer;  { 0..TOP_N, actual entries filled }
@@ -123,17 +124,12 @@ IMPLEMENTATION
 {$IFDEF MSWINDOWS}
 
 USES
-  System.SysUtils, System.Math, TlHelp32, Winapi.PsAPI;
+  System.SysUtils, System.Math, TlHelp32, Winapi.PsAPI,
+  LightCore.CpuUsageProcess;
 
 CONST
   { Vista+ constant. Declared here in case Winapi.Windows header is missing it. }
   PROCESS_QUERY_LIMITED_INFORMATION_FLAG = $1000;
-
-
-function FileTimeToI64(CONST FT: TFileTime): Int64;
-begin
-  Result:= Int64(FT.dwHighDateTime) shl 32 + Int64(FT.dwLowDateTime);
-end;
 
 
 { Look up a PID in the previous sample array.
@@ -223,11 +219,11 @@ end;
 
 { Takes a snapshot of all running processes and computes top-N by CPU and RAM.
   Algorithm:
-    1. Capture wall clock via GetTickCount64, compute DeltaMs from previous call
+    1. Read the time-stamp counter, compute DeltaStamp from previous call
     2. Enumerate all processes via CreateToolhelp32Snapshot
-    3. For each process: OpenProcess -> GetProcessTimes (CPU) + GetProcessMemoryInfo (RAM)
-    4. CPU% is computed as delta of kernel+user time since previous sample,
-       normalized to total CPU capacity: Delta / (DeltaMs * 100 * NumCPUs)
+    3. For each process: OpenProcess -> QueryProcessCycleTime (CPU) + GetProcessMemoryInfo (RAM)
+    4. CPU% is computed as delta of cycles since previous sample,
+       normalized to total CPU capacity: DeltaCycles / DeltaStamp / NumCPUs * 100
     5. Aggregate all instances of the same exe name (sum CPU% and RAM)
     6. Smooth CPU% via exponential moving average (EMA) for stable rankings
     7. Partial selection sort to extract top-5 by smoothed CPU and top-5 by RAM
@@ -237,10 +233,8 @@ VAR
   SnapHandle: THandle;
   ProcEntry: TProcessEntry32;
   ProcHandle: THandle;
-  CreationTime, ExitTime, KernelTime, UserTime: TFileTime;
   MemCounters: TProcessMemoryCounters;
-  ThisTick, DeltaMs: UInt64;
-  KernelPlusUser, Delta: Int64;
+  ThisStamp, DeltaStamp, Cycles: UInt64;
   CpuPct: Single;
   NumCPUs: Integer;
   HasPrev: Boolean;
@@ -338,9 +332,11 @@ VAR
 VAR
   i, Count: Integer;
 begin
-  ThisTick:= GetTickCount64;
-  DeltaMs:= ThisTick - FPrevTickCount;
-  HasPrev:= (FPrevTickCount > 0) AND (DeltaMs > 0);
+  ThisStamp:= ReadTimeStampCounter;
+  HasPrev:= (FPrevStamp > 0) AND (ThisStamp > FPrevStamp);  { FALSE on the first call, and if the counter went backwards (the unsigned subtraction would wrap) }
+  if HasPrev
+  then DeltaStamp:= ThisStamp - FPrevStamp
+  else DeltaStamp:= 0;
   NumCPUs:= CPUCount;
 
   SnapHandle:= CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -363,21 +359,19 @@ begin
       if ProcHandle = 0 then Continue;
 
       TRY
-        KernelPlusUser:= 0;
         CpuPct:= 0;
 
-        if GetProcessTimes(ProcHandle, CreationTime, ExitTime, KernelTime, UserTime)
-        then KernelPlusUser:= FileTimeToI64(KernelTime) + FileTimeToI64(UserTime);
+        if NOT QueryProcessCycleTime(ProcHandle, Cycles)
+        then Cycles:= 0;
 
         { Compute CPU delta if we have a previous sample }
-        if HasPrev AND (KernelPlusUser > 0) then
+        if HasPrev AND (Cycles > 0) then
           begin
             PrevIdx:= FindPrevSample(ProcEntry.th32ProcessID, ProcEntry.szExeFile);
             if PrevIdx >= 0 then
               begin
-                Delta:= KernelPlusUser - FPrevSamples[PrevIdx].KernelPlusUser;
-                if Delta > 0
-                then CpuPct:= Delta / (Int64(DeltaMs) * 100 * NumCPUs);
+                if Cycles > FPrevSamples[PrevIdx].Cycles
+                then CpuPct:= (Cycles - FPrevSamples[PrevIdx].Cycles) / DeltaStamp / NumCPUs * 100;
                 { Clamp to reasonable range }
                 if CpuPct > 100 then CpuPct:= 100;
                 if CpuPct < 0   then CpuPct:= 0;
@@ -394,7 +388,7 @@ begin
         then SetLength(CurSamples, CurCount + 128);
         CurSamples[CurCount].PID:= ProcEntry.th32ProcessID;
         CurSamples[CurCount].Name:= ProcEntry.szExeFile;
-        CurSamples[CurCount].KernelPlusUser:= KernelPlusUser;
+        CurSamples[CurCount].Cycles:= Cycles;
         Inc(CurCount);
 
         { Aggregate by process name }
@@ -408,7 +402,7 @@ begin
   END;
 
   { Store samples for next call }
-  FPrevTickCount:= ThisTick;
+  FPrevStamp:= ThisStamp;
   SetLength(CurSamples, CurCount);
   FPrevSamples:= CurSamples;
   FPrevSampleCount:= CurCount;
