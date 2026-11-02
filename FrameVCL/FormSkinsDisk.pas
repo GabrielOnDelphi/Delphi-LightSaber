@@ -1,7 +1,7 @@
 UNIT FormSkinsDisk;
 
 {=============================================================================================================
-   2026.08.06
+   2026.11.02
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    UNIVERSAL VCL STYLE LOADER (from disk)
@@ -263,8 +263,27 @@ begin
 end;
 
 
+{ TRUE when the file is a VCL style that can be loaded. IsValidStyle only reads the file; it does not register or apply the style. }
+function styleFileIsValid(const DiskShortName: string): Boolean;
+VAR Info: TStyleInfo;
+begin
+  TRY
+    Result:= FileExists(GetStyleDir + DiskShortName)
+         AND TStyleManager.IsValidStyle(GetStyleDir + DiskShortName, Info);
+  EXCEPT
+    { IsValidStyle opens a TFileStream (Vcl.Themes.pas, TStyleManager.IsValidStyle): a locked file raises EFileStreamError, a truncated one EReadError }
+    on E: EStreamError do
+     begin
+      AppDataCore.LogError('styleFileIsValid [' + DiskShortName + ']: ' + E.ClassName + ' - ' + E.Message);
+      Result:= FALSE;
+     end;
+  END;
+end;
+
+
 { Persists the chosen skin and asks for a restart. Deliberately NEVER calls SetStyle: every live
-  SetStyle leaks the main form's TMainMenuBarStyleHook, which AVs on the next menu click (BUG 5 in Docs\Skins-VCL.md). }
+  SetStyle leaks the main form's TMainMenuBarStyleHook, which AVs on the next menu click (BUG 5 in Docs\Skins-VCL.md).
+  A file that is not a valid style is never saved: the current skin stays the one used at the next start. }
 procedure TfrmStyleDisk.lBoxClick(Sender: TObject);
 VAR NewStyleName: string;
 begin
@@ -273,6 +292,17 @@ begin
   NewStyleName:= lBox.Items[lBox.ItemIndex];
   if NewStyleName = CurrentStyleName
   then EXIT;
+
+  if (NewStyleName <> DefWinTheme)
+  AND NOT styleFileIsValid(NewStyleName) then
+   begin
+    AppDataCore.LogWarn('lBoxClick: not a valid VCL style: ' + GetStyleDir + NewStyleName);
+    lBox.ItemIndex:= lBox.Items.IndexOf(CurrentStyleName);
+    if lBox.ItemIndex < 0
+    then lBox.ItemIndex:= 0;
+    MessageWarning('This file is not a valid skin: ' + NewStyleName + CRLF + 'Your current skin was kept.');
+    EXIT;
+   end;
 
   CurrentStyleName:= NewStyleName;
   LightCore.INIFileQuick.WriteString(IniKeyStyle, CurrentStyleName);
