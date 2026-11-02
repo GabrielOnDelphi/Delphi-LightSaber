@@ -566,12 +566,11 @@ begin
  then Result:= '0 Bytes' else
 
  if Size< 1024
- then Result:= IntToStr(Size)+ ' bytes' else
-
- if (Size>= KB) AND (Size< MB)
- then Result:= Real2Str(Size / KB, Decimals)+ ' KB' else
-
- Result:= Real2Str(Size / MB, Decimals)+ ' MB';
+ then Result:= IntToStr(Size)+ ' bytes'
+ else
+   if (Size>= KB) AND (Size< MB)
+   then Result:= Real2Str(Size / KB, Decimals)+ ' KB'
+   else Result:= Real2Str(Size / MB, Decimals)+ ' MB';
 end;
 
 
