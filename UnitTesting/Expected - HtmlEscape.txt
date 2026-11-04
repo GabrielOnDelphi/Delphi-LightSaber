@@ -1,0 +1,82 @@
+LIFETIME: kept as the source record of the HtmlEscape test in Test.LightCore.HTML.pas.
+
+Source: HTML Living Standard (WHATWG), read live through c:\AI\Tools\Internet\save_web_pages.py.
+Saved text copies: C:\Projects\LightSaber\Temp\whatwg-parsing.txt and C:\Projects\LightSaber\Temp\whatwg-named-characters.txt.
+
+
+1. Pages read
+-------------
+
+https://html.spec.whatwg.org/multipage/parsing.html#escapingString
+  (section 13.3 "Serializing HTML fragments"; the algorithm sits just before "13.4 Parsing HTML fragments")
+https://html.spec.whatwg.org/multipage/named-characters.html
+  (section 13.5 "Named character references")
+
+
+2. The "escaping a string" algorithm, word for word
+---------------------------------------------------
+
+"Escaping a string (for the purposes of the algorithm above) consists of running the following steps:
+
+Replace any occurrence of "&" character by "&amp;".
+
+Replace any occurrences of the U+00A0 NO-BREAK SPACE character by "&nbsp;".
+
+Replace any occurrences of the "<" character by "&lt;".
+
+Replace any occurrences of the ">" character by "&gt;".
+
+If the algorithm was invoked in the attribute mode, then replace any occurrences of the """ character by "&quot;"."
+
+Where the two modes are used (same page, same section):
+
+Text mode, for a Text node:
+"If the parent of current node is a style, script, xmp, iframe, noembed, noframes, or plaintext element, or if the parent of current node is a noscript element and scripting is enabled for the node, then append the value of current node's data literally.
+Otherwise, append the value of current node's data, escaped as described below."
+
+Attribute mode, for an attribute value:
+"For each attribute that the element has, append U+0020 SPACE, the attribute's serialized name as described below, "="", the attribute's value, escaped as described below in attribute mode, and U+0022 (")."
+
+Note: the attribute value is always wrapped in double quotes (U+0022), never in apostrophes.
+That is why only the double quote, and not the apostrophe, needs escaping in attribute mode.
+
+
+3. Expected escaping
+--------------------
+
+Character        | Code point | Text mode               | Attribute mode
+-----------------|------------|-------------------------|------------------------
+&  (ampersand)   | U+0026     | yes -> &amp;            | yes -> &amp;
+NO-BREAK SPACE   | U+00A0     | yes -> &nbsp;           | yes -> &nbsp;
+<  (less-than)   | U+003C     | yes -> &lt;             | yes -> &lt;
+>  (greater-than)| U+003E     | yes -> &gt;             | yes -> &gt;
+"  (double quote)| U+0022     | no (stays ")            | yes -> &quot;
+'  (apostrophe)  | U+0027     | no (stays ')            | no (stays ')
+
+Every other character is copied unchanged in both modes.
+The apostrophe (U+0027) is escaped in NEITHER mode: no step of the algorithm names it.
+"<" and ">" are escaped in BOTH modes: steps 3 and 4 carry no mode condition, only step 5 (the double quote) is limited to attribute mode.
+
+Order matters: "&" is replaced first, so the "&" that the later steps insert (in "&lt;", "&gt;", "&nbsp;", "&quot;") is not escaped a second time.
+Example, text mode: input  a<b & "c" 'd'  ->  a&lt;b &amp; "c" 'd'
+Example, attribute mode: input  a<b & "c" 'd'  ->  a&lt;b &amp; &quot;c&quot; 'd'
+
+[UNVERIFIED] Older editions of the standard escaped "<" and ">" only in text mode; I did not read an older edition, so this is from memory only.
+The current live text quoted in section 2 is the verified part.
+
+
+4. Code point of each entity name used, quoted from the named character references table
+-----------------------------------------------------------------------------------------
+
+Table columns on the page: "Name	Character(s)	Glyph".
+
+amp;	U+00026	&
+lt;	U+0003C	<
+gt;	U+0003E	>
+quot;	U+00022	"
+nbsp;	U+000A0
+
+(The NBSP row has no visible glyph in the saved text.)
+
+For reference only (the algorithm does not use it):
+apos;	U+00027	'

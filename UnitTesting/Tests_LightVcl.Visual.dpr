@@ -32,6 +32,7 @@ uses
   DUnitX.Loggers.Xml.NUnit,
   {$ENDIF }
   DUnitX.TestFramework,
+  Test.RunnerChecks in 'Test.RunnerChecks.pas',
   { Source units }
   LightCore.AppData,
   LightVcl.Visual.AppData in '..\FrameVCL\LightVcl.Visual.AppData.pas',
@@ -122,6 +123,9 @@ begin
     // Check command line options
     TDUnitX.CheckCommandLine;
 
+    // This runner's tests read no fixture folder. Add one here when a test starts to read sample files from disk.
+    FixturesMissing([]);
+
     // Create the test runner
     runner:= TDUnitX.CreateRunner;
 
@@ -150,7 +154,11 @@ begin
     {$ENDIF}
   except
     on E: Exception do
-      System.Writeln(E.ClassName, ': ', E.Message);
+      begin
+        System.Writeln(E.ClassName, ': ', E.Message);
+        if System.ExitCode = EXIT_OK
+        then System.ExitCode:= EXIT_ERRORS;   { An exception of the runner itself (no test registered, a crash in a logger) must not end the run with exit code 0. A bad option keeps the EXIT_OPTIONS_ERROR that CheckCommandLine set. }
+      end;
   end;
 {$ENDIF}
   FINALLY

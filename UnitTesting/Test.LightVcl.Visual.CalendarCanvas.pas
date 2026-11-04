@@ -57,6 +57,9 @@ type
     [Test]
     procedure TestDaysInMonth_December;
 
+    [Test]
+    procedure TestDaysInMonth_EveryMonth_MatchesRTL;
+
     { ValidDate / IsValidDate Tests }
     [Test]
     procedure TestIsValidDate_Valid;
@@ -234,6 +237,35 @@ begin
 end;
 
 { DaysInMonth Tests }
+
+{ Every entry of the DAYS_IN_MONTH table of LightVcl.Visual.CalendarCanvas, plus its leap-year rule.
+  Outside source: System.DateUtils.DaysInAMonth of the Delphi RTL.
+  Years: 2023 (normal), 2024 (leap), 1900 (divisible by 100: normal), 2000 (divisible by 400: leap). }
+procedure TTestCalendarCanvas.TestDaysInMonth_EveryMonth_MatchesRTL;
+CONST
+  Years: array[0..3] of Word = (2023, 2024, 1900, 2000);
+var
+  Calendar: TCalendarCanvas;
+  Year: Word;
+  Month, Expected, Actual: Integer;
+  Mismatches: string;
+begin
+  Mismatches:= '';
+  Calendar:= TCalendarCanvas.Create(FBitmap.Canvas);
+  try
+    for Year in Years do
+      for Month:= 1 to 12 do
+        begin
+          Expected:= DaysInAMonth(Year, Month);
+          Actual:= Calendar.DaysInMonth(Month, Year);
+          if Actual <> Expected
+          then Mismatches:= Mismatches + Format(' %d-%.2d: RTL %d, DaysInMonth %d;', [Year, Month, Expected, Actual]);
+        end;
+  finally
+    FreeAndNil(Calendar);
+  end;
+  Assert.AreEqual('', Mismatches, 'DaysInMonth differs from System.DateUtils.DaysInAMonth:' + Mismatches);
+end;
 
 procedure TTestCalendarCanvas.TestDaysInMonth_January;
 var

@@ -29,6 +29,7 @@ uses
   DUnitX.Loggers.Xml.NUnit,
   {$ENDIF }
   DUnitX.TestFramework,
+  Test.RunnerChecks in 'Test.RunnerChecks.pas',
   LightCore.AppData,
   LightVcl.Visual.AppData in '..\FrameVCL\LightVcl.Visual.AppData.pas',
   Test.LightVcl.Graph.FX.Gradient in 'Test.LightVcl.Graph.FX.Gradient.pas',
@@ -100,6 +101,7 @@ var
   results: IRunResults;
   logger: ITestLogger;
   nunitLogger: ITestLogger;
+  MissingFixtures: Boolean;
 {$ENDIF}
 
 begin
@@ -129,6 +131,9 @@ begin
     // Check command line options
     TDUnitX.CheckCommandLine;
 
+    // The fixtures this runner's tests read, relative to the EXE folder. Test.LightVcl.Graph.GrabAviFrame reads the PNG through AppDataCore.AppSysDir.
+    MissingFixtures:= FixturesMissing(['System\video_player_icon.png']);
+
     // Create the test runner
     runner:= TDUnitX.CreateRunner;
 
@@ -146,6 +151,8 @@ begin
     results:= runner.Execute;
     if not results.AllPassed then
       System.ExitCode:= EXIT_ERRORS;
+    if MissingFixtures AND NOT AllowMissingFixtures
+    then System.ExitCode:= EXIT_FIXTURES_MISSING;
 
     {$IFNDEF CI}
     // Wait for input if running interactively
@@ -157,7 +164,11 @@ begin
     {$ENDIF}
   except
     on E: Exception do
-      System.Writeln(E.ClassName, ': ', E.Message);
+      begin
+        System.Writeln(E.ClassName, ': ', E.Message);
+        if System.ExitCode = EXIT_OK
+        then System.ExitCode:= EXIT_ERRORS;   { An exception of the runner itself (no test registered, a crash in a logger) must not end the run with exit code 0. A bad option keeps the EXIT_OPTIONS_ERROR that CheckCommandLine set. }
+      end;
   end;
 {$ENDIF}
   FINALLY

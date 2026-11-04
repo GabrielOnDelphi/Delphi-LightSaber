@@ -118,6 +118,20 @@ type
     [Test]
     procedure TestLinkOpensInNewWind_False;
 
+    { HtmlEscape - expected values from the HTML Living Standard }
+    [Test]
+    procedure TestHtmlEscape_EachEscapedCharacter;
+    [Test]
+    procedure TestHtmlEscape_SpecExample;
+    [Test]
+    procedure TestHtmlEscape_AmpersandIsEscapedFirst;
+    [Test]
+    procedure TestHtmlEscape_NoSuchCharacter_Unchanged;
+    [Test]
+    procedure TestHtmlEscape_Empty;
+    [Test]
+    procedure TestHtmlEscape_UnescapeRoundTrip;
+
     { URL Manipulation Tests }
     [Test]
     procedure TestMakeLinkRelativeToRoot;
@@ -539,6 +553,82 @@ begin
   Assert.IsTrue(Pos('style.css', Header) > 0);
   Assert.IsTrue(Pos('<body>', Header) > 0);
 end;
+
+
+{---------------------------------------------------------------------------------------------------------------
+   HtmlEscape
+
+   Outside source: the HTML Living Standard, "escaping a string" (section "Serializing HTML fragments"),
+   https://html.spec.whatwg.org/multipage/parsing.html#escapingString :
+     Replace "&" by "&amp;"; U+00A0 by "&nbsp;"; "<" by "&lt;"; ">" by "&gt;"; in attribute mode '"' by "&quot;".
+   The entity names and code points: https://html.spec.whatwg.org/multipage/named-characters.html
+   Quoted word for word in UnitTesting\Expected - HtmlEscape.txt.
+   HtmlEscape serves text AND double-quoted attribute values, so its expected set is the attribute mode.
+   Not tested: U+00A0 -> &nbsp;. The standard escapes it to keep the character visible in the source;
+   HtmlEscape does not escape it, by design (its header comment lists only &<>").
+---------------------------------------------------------------------------------------------------------------}
+TYPE
+  TEscapeEntry = record
+    Ch: Char;
+    Entity: string;
+  end;
+
+CONST
+  EXPECTED_ESCAPES: array[0..3] of TEscapeEntry = (
+    (Ch: '&'; Entity: '&amp;'),     { U+0026 }
+    (Ch: '<'; Entity: '&lt;'),      { U+003C }
+    (Ch: '>'; Entity: '&gt;'),      { U+003E }
+    (Ch: '"'; Entity: '&quot;'));   { U+0022, attribute mode }
+
+
+procedure TTestLightCoreHTML.TestHtmlEscape_EachEscapedCharacter;
+var
+  Entry: TEscapeEntry;
+begin
+  for Entry in EXPECTED_ESCAPES do
+    begin
+      Assert.AreEqual(Entry.Entity, HtmlEscape(Entry.Ch), 'The character ' + Entry.Ch + ' alone');
+      Assert.AreEqual('x' + Entry.Entity + 'y' + Entry.Entity, HtmlEscape('x' + Entry.Ch + 'y' + Entry.Ch), 'Every occurrence of ' + Entry.Ch + ' must be escaped');
+    end;
+end;
+
+
+{ The example of UnitTesting\Expected - HtmlEscape.txt, attribute mode. The apostrophe is escaped in neither mode of the standard. }
+procedure TTestLightCoreHTML.TestHtmlEscape_SpecExample;
+begin
+  Assert.AreEqual('a&lt;b &amp; &quot;c&quot; ''d''', HtmlEscape('a<b & "c" ''d'''));
+end;
+
+
+{ "&" is replaced first, so the "&" of an entity that is already in the text is escaped too, and the entities added later are not escaped twice }
+procedure TTestLightCoreHTML.TestHtmlEscape_AmpersandIsEscapedFirst;
+begin
+  Assert.AreEqual('&amp;lt;',     HtmlEscape('&lt;'), 'Text that already holds an entity');
+  Assert.AreEqual('&lt;&amp;&gt;', HtmlEscape('<&>'),  'Entities added by the later steps must not be escaped again');
+end;
+
+
+procedure TTestLightCoreHTML.TestHtmlEscape_NoSuchCharacter_Unchanged;
+CONST
+  Plain = 'Plain text 123, with an apostrophe''s and a slash /';
+begin
+  Assert.AreEqual(Plain, HtmlEscape(Plain));
+end;
+
+
+procedure TTestLightCoreHTML.TestHtmlEscape_Empty;
+begin
+  Assert.AreEqual('', HtmlEscape(''));
+end;
+
+
+procedure TTestLightCoreHTML.TestHtmlEscape_UnescapeRoundTrip;
+CONST
+  Mixed = 'if a<b && c>"d" then ''e'' &lt; &amp;';
+begin
+  Assert.AreEqual(Mixed, HtmlUnescape(HtmlEscape(Mixed)));
+end;
+
 
 initialization
   TDUnitX.RegisterTestFixture(TTestLightCoreHTML);

@@ -29,6 +29,7 @@ uses
   DUnitX.Loggers.Xml.NUnit,
   {$ENDIF }
   DUnitX.TestFramework,
+  Test.RunnerChecks in 'Test.RunnerChecks.pas',
   LightCore.AppData,
   LightVcl.Visual.AppData in '..\FrameVCL\LightVcl.Visual.AppData.pas',
   Test.FormAbout in 'Test.FormAbout.pas',
@@ -72,6 +73,7 @@ var
   results: IRunResults;
   logger: ITestLogger;
   nunitLogger: ITestLogger;
+  MissingFixtures: Boolean;
 {$ENDIF}
 
 var
@@ -108,6 +110,9 @@ begin
     // Check command line options
     TDUnitX.CheckCommandLine;
 
+    // The fixtures this runner's tests read, relative to the EXE folder. Test.FormSkinsDisk copies this real style into the app's Skins folder.
+    MissingFixtures:= FixturesMissing(['..\Demo\VCL\Template App Full\System\Skins\CyanDusk.vsf']);
+
     // Create the test runner
     runner := TDUnitX.CreateRunner;
 
@@ -119,16 +124,15 @@ begin
     nunitLogger := TDUnitXXMLNUnitFileLogger.Create(TDUnitX.Options.XMLOutputFile);
     runner.AddLogger(nunitLogger);
 
-    { A [Test] with zero Assert calls is a fake test per CLAUDE.md "Fake Test Prevention", so let the
-      runner enforce it instead of trusting review. Measured 2026-08-11: flipping this to TRUE adds
-      zero failures here, so it costs nothing today and catches the next assertion-less test.
-      The other 6 test projects still set FALSE - not measured, so not flipped. }
+    { A [Test] with zero Assert calls is a fake test per CLAUDE.md "Fake Test Prevention", so the runner enforces it }
     runner.FailsOnNoAsserts := TRUE;
 
     // Run tests
     results := runner.Execute;
     if not results.AllPassed then
       System.ExitCode := EXIT_ERRORS;
+    if MissingFixtures AND NOT AllowMissingFixtures
+    then System.ExitCode:= EXIT_FIXTURES_MISSING;
 
     {$IFNDEF CI}
     // Wait for input if running interactively
@@ -140,7 +144,11 @@ begin
     {$ENDIF}
   except
     on E: Exception do
-      System.Writeln(E.ClassName, ': ', E.Message);
+      begin
+        System.Writeln(E.ClassName, ': ', E.Message);
+        if System.ExitCode = EXIT_OK
+        then System.ExitCode:= EXIT_ERRORS;   { An exception of the runner itself (no test registered, a crash in a logger) must not end the run with exit code 0. A bad option keeps the EXIT_OPTIONS_ERROR that CheckCommandLine set. }
+      end;
   end;
 {$ENDIF}
   FINALLY
