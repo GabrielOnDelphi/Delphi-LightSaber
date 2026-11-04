@@ -29,9 +29,9 @@ uses
   DUnitX.Loggers.Xml.NUnit,
   {$ENDIF }
   DUnitX.TestFramework,
+  Test.RunnerChecks in '..\..\..\UnitTesting\Test.RunnerChecks.pas',
   LightCore.AppData,
-  Test.LightVcl.TranslatorLive in 'Test.LightVcl.TranslatorLive.pas',
-  LightVcl.TranslatorAPI in '..\LightVcl.TranslatorAPI.pas',
+  Test.LightVcl.TranslatorLive in 'Test.LightVcl.TranslatorLive.pas',  LightVcl.TranslatorAPI in '..\LightVcl.TranslatorAPI.pas',
   LightVcl.Visual.AppData in '..\..\LightVcl.Visual.AppData.pas';
 
 {$IFNDEF TESTINSIGHT}
@@ -65,6 +65,9 @@ begin
     // Check command line options
     TDUnitX.CheckCommandLine;
 
+    // This runner's tests read no fixture folder (they write their INI files into the Windows temp folder). Add one here when a test starts to read sample files from disk.
+    FixturesMissing([]);
+
     // Create the test runner
     runner:= TDUnitX.CreateRunner;
 
@@ -76,7 +79,7 @@ begin
     nunitLogger:= TDUnitXXMLNUnitFileLogger.Create(TDUnitX.Options.XMLOutputFile);
     runner.AddLogger(nunitLogger);
 
-    runner.FailsOnNoAsserts:= FALSE;
+    runner.FailsOnNoAsserts:= TRUE;   { A [Test] with zero Assert calls is a fake test. With no DeepL key every test ends in Assert.Pass, which DUnitX counts as passed (DUnitX.TestRunner.pas:758-762) }
 
     // Run tests
     results:= runner.Execute;
@@ -93,7 +96,11 @@ begin
     {$ENDIF}
   except
     on E: Exception do
-      System.Writeln(E.ClassName, ': ', E.Message);
+      begin
+        System.Writeln(E.ClassName, ': ', E.Message);
+        if System.ExitCode = EXIT_OK
+        then System.ExitCode:= EXIT_ERRORS;   { An exception of the runner itself (no test registered, a crash in a logger) must not end the run with exit code 0. A bad option keeps the EXIT_OPTIONS_ERROR that CheckCommandLine set. }
+      end;
   end;
 {$ENDIF}
   FINALLY
