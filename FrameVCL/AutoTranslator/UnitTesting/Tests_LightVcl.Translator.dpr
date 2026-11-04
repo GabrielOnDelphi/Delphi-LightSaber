@@ -29,10 +29,10 @@ uses
   DUnitX.Loggers.Xml.NUnit,
   {$ENDIF }
   DUnitX.TestFramework,
+  Test.RunnerChecks in '..\..\..\UnitTesting\Test.RunnerChecks.pas',
   LightCore.AppData,
   Test.LightVcl.Translate in 'Test.LightVcl.Translate.pas',
-  Test.LightVcl.TranslatorAPI in 'Test.LightVcl.TranslatorAPI.pas',
-  LightVcl.Common.Translate in '..\..\LightVcl.Common.Translate.pas',
+  Test.LightVcl.TranslatorAPI in 'Test.LightVcl.TranslatorAPI.pas',  LightVcl.Common.Translate in '..\..\LightVcl.Common.Translate.pas',
   LightVcl.TranslatorAPI in '..\LightVcl.TranslatorAPI.pas',
   LightVcl.Visual.AppData in '..\..\LightVcl.Visual.AppData.pas';
 
@@ -68,6 +68,9 @@ begin
     // Check command line options
     TDUnitX.CheckCommandLine;
 
+    // This runner's tests read no fixture folder (they write their language files into the AppData folder). Add one here when a test starts to read sample files from disk.
+    FixturesMissing([]);
+
     // Create the test runner
     runner:= TDUnitX.CreateRunner;
 
@@ -79,7 +82,7 @@ begin
     nunitLogger:= TDUnitXXMLNUnitFileLogger.Create(TDUnitX.Options.XMLOutputFile);
     runner.AddLogger(nunitLogger);
 
-    runner.FailsOnNoAsserts:= FALSE;
+    runner.FailsOnNoAsserts:= TRUE;   { A [Test] with zero Assert calls is a fake test per CLAUDE.md "Fake Test Prevention", so the runner enforces it }
 
     // Run tests
     results:= runner.Execute;
@@ -96,7 +99,11 @@ begin
     {$ENDIF}
   except
     on E: Exception do
-      System.Writeln(E.ClassName, ': ', E.Message);
+      begin
+        System.Writeln(E.ClassName, ': ', E.Message);
+        if System.ExitCode = EXIT_OK
+        then System.ExitCode:= EXIT_ERRORS;   { An exception of the runner itself (no test registered, a crash in a logger) must not end the run with exit code 0. A bad option keeps the EXIT_OPTIONS_ERROR that CheckCommandLine set. }
+      end;
   end;
 {$ENDIF}
   FINALLY
