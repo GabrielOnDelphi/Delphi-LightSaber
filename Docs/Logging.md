@@ -81,10 +81,19 @@ In MT mode every individual operation (`Add`, `Count`, filtered iteration) is in
 
 | Property | Default | Triggers when... | Output file |
 |---|---|---|---|
-| `MaxEntries` | 1,000,000 | `Lines.Count > MaxEntries` on any `Add*` | `AppDataFolder\LargeLogSave.logbin` (then RAM is cleared) |
-| `SaveInterval` | 60 seconds | seconds-since-last-save ≥ `SaveInterval` | `AppDataFolder\PeriodicLogSave.logbin` (RAM kept) |
+| `MaxEntries` | 1,000,000 | `Lines.Count > MaxEntries` on any `Add*` | `OverflowFile(N)`: `AppDataFolder\<OverflowName>.logbin`, then `<OverflowName> (2).logbin`, ... (then RAM is cleared) |
+| `SaveInterval` | 60 seconds | seconds-since-last-save ≥ `SaveInterval`, and only when `PeriodicSave` is TRUE | `AppDataFolder\PeriodicLogSave.logbin` (RAM kept) |
 
 Both properties have `Assert` guards (must be `> 0`).
+
+**The periodic save belongs to the application log only.** `PeriodicSave` (a public Boolean field) is FALSE in every new `TRamLog`; `TAppDataCore.Create` sets it TRUE for `AppDataCore.RamLog`. A second log (one per tool form, a private preview log) would otherwise write the same file, and the last log to save would overwrite the application log's save. 
+
+**The overflow save runs for every log, each to its own file.** It also empties the RAM, so switching it off would lose the lines.
+- `OverflowName` (a public string field) is the file name without folder and extension. `TAppDataCore.Create` sets `LargeLogSave` for `AppDataCore.RamLog`, so the application log still writes `LargeLogSave.logbin`. Every other log gets `LargeLogSave_<N>` in its constructor, where N is the creation number of that log in the process (1, 2, 3, ...). A caller that wants a name that stays the same from run to run sets `OverflowName` itself.
+- Each overflow of the same log writes a new numbered file: the first `<OverflowName>.logbin`, the second `<OverflowName> (2).logbin`, and so on. Numbered files, not one appended file: `LoadFromFile` reads one header and one block of lines, so a second block appended to the same file could never be read back.
+- The numbers start again at 1 in each run, so a new run overwrites the files of the previous run, as before.
+- Nothing deletes older parts: a log that overflows K times in one run leaves K files on disk.
+- `OverflowFile(Part)` returns the full path of overflow number `Part`.
 
 The overflow path uses `SnapshotAndClear` under exclusive lock, so no entries are lost between snapshot and clear. The periodic path is best-effort — disk-full / sharing / permission errors are logged via `OutputDebugString` (Windows) or `stderr` (POSIX) and swallowed; unknown exception classes are re-raised.
 
@@ -225,7 +234,7 @@ If you implement a custom `ILogObserver` and forget the destruction guard descri
 
 ### MaxEntries silently clears RAM
 
-When the in-memory log crosses `MaxEntries` (default 1M), `TRamLog` saves the snapshot to `LargeLogSave.logbin` and **empties the in-RAM list**. If your code reads `RamLog.Lines` after each `Add` expecting to see all history, it won't. Either lower `MaxEntries` deliberately, or read `LargeLogSave.logbin` for older entries.
+When the in-memory log crosses `MaxEntries` (default 1M), `TRamLog` saves the snapshot to `OverflowFile(N)` (`LargeLogSave.logbin` for the application log) and **empties the in-RAM list**. If your code reads `RamLog.Lines` after each `Add` expecting to see all history, it won't. Either lower `MaxEntries` deliberately, or load the overflow files (`OverflowFile(1)`, `OverflowFile(2)`, ...) for older entries.
 
 ### Locked-walk methods block writers
 
