@@ -260,6 +260,12 @@ type
     procedure TestCountAppearance_Char;
 
     [Test]
+    procedure TestCountAppearance_Char_NullNeedle;     { #0 must not read past the end of the string }
+
+    [Test]
+    procedure TestCountAppearance_Char_EmbeddedNull;   { a #0 inside the string must not stop the count }
+
+    [Test]
     procedure TestLastPos;
 
     [Test]
@@ -1002,6 +1008,22 @@ end;
 procedure TTestLightCore.TestCountAppearance_Char;
 begin
   Assert.AreEqual(3, CountAppearance('a', 'banana'));
+end;
+
+procedure TTestLightCore.TestCountAppearance_Char_NullNeedle;
+VAR s: string;
+begin
+  s:= 'abc';
+  Assert.AreEqual(0, CountAppearance(Char(#0), s), 'No #0 inside "abc"');
+  s:= 'a'#0'b';
+  Assert.AreEqual(1, CountAppearance(Char(#0), s), 'One #0 inside the string');
+end;
+
+procedure TTestLightCore.TestCountAppearance_Char_EmbeddedNull;
+VAR s: string;
+begin
+  s:= 'a'#0'a';
+  Assert.AreEqual(2, CountAppearance(Char('a'), s), 'The "a" after the #0 must be counted');
 end;
 
 procedure TTestLightCore.TestLastPos;

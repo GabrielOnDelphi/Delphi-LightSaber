@@ -1,4 +1,4 @@
-﻿unit Test.LightCore.Win.FrameTimer;
+unit Test.LightCore.Win.FrameTimer;
 
 {=============================================================================================================
    Unit tests for LightCore.Win.FrameTimer.pas

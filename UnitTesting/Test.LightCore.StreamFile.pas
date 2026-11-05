@@ -189,6 +189,9 @@ type
     procedure TestReadByteChunk_Empty;
 
     [Test]
+    procedure TestReadByteChunk_CountPastEnd_RaisesBeforeAllocating;
+
+    [Test]
     procedure TestPushAnsi;
 
     [Test]
@@ -1421,6 +1424,29 @@ begin
   end;
 
   Assert.AreEqual(0, Length(ReadBack), 'Empty chunk should return empty array');
+end;
+
+{ A damaged length prefix: 104 bytes claimed, 4 present. Must be refused before the allocation. }
+procedure TTestStreamFile.TestReadByteChunk_CountPastEnd_RaisesBeforeAllocating;
+var
+  WriteStream, ReadStream: TLightFileStream;
+begin
+  WriteStream:= TLightFileStream.CreateWrite(FTestFile);
+  try
+    WriteStream.WriteCardinal(104);
+    WriteStream.WriteCardinal($DEADBEEF);
+  finally
+    FreeAndNil(WriteStream);
+  end;
+
+  ReadStream:= TLightFileStream.CreateRead(FTestFile);
+  try
+    Assert.WillRaise(
+      procedure begin ReadStream.ReadByteChunk; end,
+      EStreamDataError, 'A length prefix past the end of the stream must raise EStreamDataError');
+  finally
+    FreeAndNil(ReadStream);
+  end;
 end;
 
 procedure TTestStreamFile.TestPushAnsi;

@@ -131,6 +131,23 @@ type
     [Test]
     procedure TestOverflow_PopulatesEveryObserver;
 
+    { Overflow save Tests }
+    [Test]
+    procedure TestOverflow_SecondLog_DoesNotOverwriteAppLogFile;
+
+    [Test]
+    procedure TestOverflow_SameLogTwice_KeepsFirstSave;
+
+    [Test]
+    procedure TestOverflowFile_AppLogKeepsName_OthersDiffer;
+
+    { Periodic save Tests }
+    [Test]
+    procedure TestPeriodicSave_SecondLog_DoesNotWriteAppLogFile;
+
+    [Test]
+    procedure TestPeriodicSave_AppLog_StillWritesFile;
+
     { Timestamp Tests }
     [Test]
     procedure TestTimestampRecorded;
@@ -690,18 +707,13 @@ end;
 
 
 { The overflow path frees the old lines right after it refreshes the observers, so EVERY observer must be refreshed there (each one caches pointers to those lines).
-  The save writes LargeLogSave.logbin into the AppData folder of the test EXE; the test removes it again if it was not there before. }
+  The save writes the log's own overflow file into the AppData folder of the test EXE; the test removes it again. }
 procedure TTestLogRam.TestOverflow_PopulatesEveryObserver;
 var
   ObserverA, ObserverB: TMockLogObserver;
   RefA, RefB: ILogObserver;
   LogFull: TRamLog;
-  SaveFile: string;
-  FileWasThere: Boolean;
 begin
-  SaveFile:= TAppDataCore.AppDataFolder + 'LargeLogSave.logbin';
-  FileWasThere:= FileExists(SaveFile);
-
   ObserverA:= TMockLogObserver.Create;
   RefA:= ObserverA;
   ObserverB:= TMockLogObserver.Create;
@@ -722,9 +734,206 @@ begin
     Assert.AreEqual(2, ObserverA.PopulateCallCount, 'The first observer must be refreshed by the overflow path and by the notification');
     Assert.AreEqual(2, ObserverB.PopulateCallCount, 'The second observer must be refreshed by the overflow path and by the notification');
   finally
+    if FileExists(LogFull.OverflowFile(1))
+    then System.SysUtils.DeleteFile(LogFull.OverflowFile(1));
     FreeAndNil(LogFull);
-    if NOT FileWasThere AND FileExists(SaveFile)
-    then System.SysUtils.DeleteFile(SaveFile);
+  end;
+end;
+
+
+{ Overflow save Tests
+
+  When a log holds more than MaxEntries lines, the next Add saves every line to a .logbin file in the AppData folder and empties the RAM.
+  The application log (AppDataCore.RamLog) saves to LargeLogSave.logbin.
+  Each test removes the files it created; a file that was there before the test stays. }
+
+{ TRUE when the .logbin file FileName holds a line whose text is Msg. }
+function FileHoldsLine(CONST FileName, Msg: string): Boolean;
+var
+  Loaded: TRamLog;
+  i: Integer;
+begin
+  Result:= FALSE;
+  Loaded:= TRamLog.Create(False, nil, False);
+  try
+    Assert.IsTrue(Loaded.LoadFromFile(FileName), 'The overflow file must load: ' + FileName);
+    for i:= 0 to Loaded.Lines.Count-1 do
+      if Loaded.Lines[i].Msg = Msg
+      then EXIT(TRUE);
+  finally
+    FreeAndNil(Loaded);
+  end;
+end;
+
+
+{ Adds two lines to a log whose MaxEntries is 1, so the second Add runs the overflow save. The saved lines are 'Padding' and Marker. }
+procedure OverflowWith(Log: TRamLog; CONST Marker: string);
+begin
+  Log.MaxEntries:= 1;
+  Log.AddInfo('Padding');
+  Log.AddInfo(Marker);
+  Assert.AreEqual(0, Log.Lines.Count, 'The overflow save must have emptied the RAM');
+end;
+
+
+{ A second log that overflows must not overwrite the overflow file of the application log.
+  The application log's overflow here must be its FIRST in this process (part 1 = LargeLogSave.logbin): no other test may overflow AppDataCore.RamLog. }
+procedure TTestLogRam.TestOverflow_SecondLog_DoesNotOverwriteAppLogFile;
+var
+  AppFile, MarkerA, MarkerB: string;
+  AppFileWasThere: Boolean;
+  AppLogMax: Integer;
+  SecondLog: TRamLog;
+begin
+  Assert.IsNotNull(AppDataCore, 'The test runner must create AppDataCore');
+  AppFile:= TAppDataCore.AppDataFolder + 'LargeLogSave.logbin';
+  AppFileWasThere:= FileExists(AppFile);
+  MarkerA:= 'Application log ' + TGUID.NewGuid.ToString;
+  MarkerB:= 'Second log '      + TGUID.NewGuid.ToString;
+
+  AppLogMax:= AppDataCore.RamLog.MaxEntries;
+  SecondLog:= TRamLog.Create(False, nil, False);
+  try
+    AppDataCore.RamLog.Clear;                  { Exactly two lines, so the second Add is the one that overflows }
+    OverflowWith(AppDataCore.RamLog, MarkerA);
+    OverflowWith(SecondLog, MarkerB);
+
+    Assert.IsTrue(FileHoldsLine(AppFile, MarkerA), 'LargeLogSave.logbin must still hold the overflow of the application log, not the overflow of the second log');
+    Assert.AreNotEqual(AppFile, SecondLog.OverflowFile(1), 'The second log must have an overflow file of its own');
+    Assert.IsTrue(FileHoldsLine(SecondLog.OverflowFile(1), MarkerB), 'The overflow file of the second log must hold its lines');
+  finally
+    AppDataCore.RamLog.MaxEntries:= AppLogMax;
+    if FileExists(SecondLog.OverflowFile(1))
+    then System.SysUtils.DeleteFile(SecondLog.OverflowFile(1));
+    FreeAndNil(SecondLog);
+    if NOT AppFileWasThere AND FileExists(AppFile)
+    then System.SysUtils.DeleteFile(AppFile);
+  end;
+end;
+
+
+{ A log that overflows twice must not overwrite its own first overflow file: the second overflow goes to a numbered file. }
+procedure TTestLogRam.TestOverflow_SameLogTwice_KeepsFirstSave;
+var
+  Marker1, Marker2: string;
+  LogTwice: TRamLog;
+begin
+  Marker1:= 'First overflow '  + TGUID.NewGuid.ToString;
+  Marker2:= 'Second overflow ' + TGUID.NewGuid.ToString;
+
+  LogTwice:= TRamLog.Create(False, nil, False);
+  try
+    OverflowWith(LogTwice, Marker1);
+    OverflowWith(LogTwice, Marker2);
+
+    Assert.IsTrue(FileHoldsLine(LogTwice.OverflowFile(1), Marker1), 'The second overflow must not overwrite the first overflow file of the same log');
+    Assert.IsTrue(FileHoldsLine(LogTwice.OverflowFile(2), Marker2), 'The second overflow must be saved to the second overflow file');
+  finally
+    if FileExists(LogTwice.OverflowFile(1)) then System.SysUtils.DeleteFile(LogTwice.OverflowFile(1));
+    if FileExists(LogTwice.OverflowFile(2)) then System.SysUtils.DeleteFile(LogTwice.OverflowFile(2));
+    FreeAndNil(LogTwice);
+  end;
+end;
+
+
+{ The application log keeps the file name LargeLogSave.logbin; every other log gets a different name. }
+procedure TTestLogRam.TestOverflowFile_AppLogKeepsName_OthersDiffer;
+var
+  LogA, LogB: TRamLog;
+begin
+  Assert.AreEqual(TAppDataCore.AppDataFolder + 'LargeLogSave.logbin',     AppDataCore.RamLog.OverflowFile(1));
+  Assert.AreEqual(TAppDataCore.AppDataFolder + 'LargeLogSave (2).logbin', AppDataCore.RamLog.OverflowFile(2));
+
+  LogA:= TRamLog.Create(False, nil, False);
+  LogB:= TRamLog.Create(False, nil, False);
+  try
+    Assert.AreNotEqual(LogA.OverflowFile(1), LogB.OverflowFile(1), 'Two logs must not share an overflow file');
+    Assert.AreNotEqual(AppDataCore.RamLog.OverflowFile(1), LogA.OverflowFile(1), 'A second log must not use the application log''s overflow file');
+
+    LogA.OverflowName:= 'MyToolLog';
+    Assert.AreEqual(TAppDataCore.AppDataFolder + 'MyToolLog.logbin', LogA.OverflowFile(1), 'A caller may name the overflow file');
+  finally
+    FreeAndNil(LogB);
+    FreeAndNil(LogA);
+  end;
+end;
+
+
+{ Periodic save Tests
+
+  PeriodicLogSave.logbin in the AppData folder holds the periodic save of the APPLICATION log (AppDataCore.RamLog).
+  A program can have more logs (one per tool form, a private preview log); if those saved there too, the last one to save would overwrite the application log's save.
+  Both tests leave the file in the AppData folder of the test EXE. }
+
+{ A second TRamLog whose save interval has passed must not write the application log's file. }
+procedure TTestLogRam.TestPeriodicSave_SecondLog_DoesNotWriteAppLogFile;
+var
+  SaveFile: string;
+  FileWasThere: Boolean;
+  TimeBefore: TDateTime;
+  SecondLog: TRamLog;
+  AppLogInterval: Integer;
+begin
+  Assert.IsNotNull(AppDataCore, 'The test runner must create AppDataCore');
+  SaveFile:= TAppDataCore.AppDataFolder + 'PeriodicLogSave.logbin';
+
+  AppLogInterval:= AppDataCore.RamLog.SaveInterval;
+  AppDataCore.RamLog.SaveInterval:= MaxInt;         { The application log must not write the file during this test }
+  SecondLog:= TRamLog.Create(False, nil, False);
+  try
+    FileWasThere:= FileExists(SaveFile);
+    if FileWasThere
+    then TimeBefore:= TFile.GetLastWriteTime(SaveFile)
+    else TimeBefore:= 0;
+
+    SecondLog.SaveInterval:= 1;
+    Sleep(1100);                                     { SecondsBetween truncates: wait more than one full second }
+    SecondLog.AddInfo('Line of the second log');     { The save interval has passed: this Add would run the periodic save }
+
+    Assert.AreEqual(FileWasThere, FileExists(SaveFile), 'A second TRamLog must not create the application log''s PeriodicLogSave.logbin');
+    if FileWasThere
+    then Assert.AreEqual(TimeBefore, TFile.GetLastWriteTime(SaveFile), 'A second TRamLog must not overwrite the application log''s PeriodicLogSave.logbin');
+  finally
+    FreeAndNil(SecondLog);
+    AppDataCore.RamLog.SaveInterval:= AppLogInterval;
+  end;
+end;
+
+
+{ The application log keeps its periodic save in PeriodicLogSave.logbin. }
+procedure TTestLogRam.TestPeriodicSave_AppLog_StillWritesFile;
+var
+  SaveFile, Marker: string;
+  AppLogInterval: Integer;
+  Loaded: TRamLog;
+  i: Integer;
+  Found: Boolean;
+begin
+  Assert.IsNotNull(AppDataCore, 'The test runner must create AppDataCore');
+  SaveFile:= TAppDataCore.AppDataFolder + 'PeriodicLogSave.logbin';
+  Marker:= 'AppLog periodic save ' + TGUID.NewGuid.ToString;
+
+  AppLogInterval:= AppDataCore.RamLog.SaveInterval;
+  AppDataCore.RamLog.SaveInterval:= 1;
+  try
+    Sleep(1100);                                     { SecondsBetween truncates: wait more than one full second }
+    AppDataCore.RamLog.AddInfo(Marker);              { The save interval has passed: this Add runs the periodic save }
+  finally
+    AppDataCore.RamLog.SaveInterval:= AppLogInterval;
+  end;
+
+  Assert.IsTrue(FileExists(SaveFile), 'The application log must write PeriodicLogSave.logbin');
+
+  Loaded:= TRamLog.Create(False, nil, False);
+  try
+    Assert.IsTrue(Loaded.LoadFromFile(SaveFile), 'PeriodicLogSave.logbin must load');
+    Found:= FALSE;
+    for i:= 0 to Loaded.Lines.Count-1 do
+      if Loaded.Lines[i].Msg = Marker
+      then Found:= TRUE;
+    Assert.IsTrue(Found, 'PeriodicLogSave.logbin must hold the line just added to the application log');
+  finally
+    FreeAndNil(Loaded);
   end;
 end;
 

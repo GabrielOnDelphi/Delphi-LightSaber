@@ -258,15 +258,30 @@ end;
 
 { SetWindowPos Tests }
 
+{ The window under test is created AFTER the probe, not taken from Setup. Measured in the full Tests_LightCore run:
+  the window that Setup created stayed refused (SetWindowPos TRUE, GetLastError 0, WS_EX_TOPMOST clear, also without
+  SWP_NOACTIVATE), while a window created after the probe became topmost through SetWindowPosToFront every time.
+  The run that shows it: Test.LightCore.Pascal .. Test.LightCore.Win.WinVersionApi without the two Test.LightCore.System fixtures. }
 procedure TTestWindow.Test_SetWindowPosToFront_ValidHandle_MakesTopmost;
+VAR Wnd: HWND;
 begin
-  Assert.IsFalse(IsTopmost(FTestWnd), 'Precondition: the test window starts not topmost');
   if NOT OsAllowsTopmost(SWP_NOMOVE OR SWP_NOSIZE OR SWP_NOACTIVATE)   { The flags SetWindowPosToFront passes }
   then Assert.Pass('Windows refuses to make a window of this process topmost right now (see OsAllowsTopmost)');
 
-  SetWindowPosToFront(FTestWnd);
+  Wnd:= AllocateHWnd(NIL);
+  if Wnd = 0
+  then RaiseLastOSError;
+  TRY
+    if NOT SetWindowPos(Wnd, 0, 0, 0, 100, 100, SWP_NOMOVE OR SWP_NOZORDER OR SWP_NOACTIVATE)
+    then RaiseLastOSError;
+    Assert.IsFalse(IsTopmost(Wnd), 'Precondition: the test window starts not topmost');
 
-  Assert.IsTrue(IsTopmost(FTestWnd), 'SetWindowPosToFront must make the window topmost. ExStyle=' + IntToHex(GetWindowLong(FTestWnd, GWL_EXSTYLE), 8));
+    SetWindowPosToFront(Wnd);
+
+    Assert.IsTrue(IsTopmost(Wnd), 'SetWindowPosToFront must make the window topmost. ExStyle=' + IntToHex(GetWindowLong(Wnd, GWL_EXSTYLE), 8));
+  FINALLY
+    DeallocateHWnd(Wnd);
+  END;
 end;
 
 

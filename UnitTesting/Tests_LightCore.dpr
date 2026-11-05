@@ -104,6 +104,7 @@ uses
   Test.LightCore.SystemTime in 'Test.LightCore.SystemTime.pas',
   Test.LightCore.Win.SystemTime in 'Test.LightCore.Win.SystemTime.pas',
   Test.LightCore.Win.FrameTimer in 'Test.LightCore.Win.FrameTimer.pas',
+  Test.LightCore.Win.DPAPI in 'Test.LightCore.Win.DPAPI.pas',
   {$ENDIF}
   { Source units }
   LightCore in '..\LightCore.pas',
@@ -169,6 +170,7 @@ uses
   LightCore.SystemTime in '..\LightCore.SystemTime.pas',
   LightCore.Win.SystemTime in '..\LightCore.Win.SystemTime.pas',
   LightCore.Win.FrameTimer in '..\LightCore.Win.FrameTimer.pas',
+  LightCore.Win.DPAPI in '..\LightCore.Win.DPAPI.pas',
   {$ENDIF}
   LightCore.Process in '..\LightCore.Process.pas',
   LightCore.CpuUsageProcess in '..\LightCore.CpuUsageProcess.pas',

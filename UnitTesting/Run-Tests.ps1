@@ -17,10 +17,19 @@
 #   - "Tests Failed" or "Tests Errored" is not 0;
 #   - the EXE's exit code is not 0 (1 = a test failed or the runner raised; 2 = a fixture folder is missing;
 #     100 = a bad command-line option). The fixture check is in each runner: UnitTesting\Test.RunnerChecks.pas;
-#   - FastMM4 left <exe>_MemoryManager_EventLog.txt beside the EXE (a leak or a heap error), or printed "FastMM4: NOT INSTALLED";
+#   - FastMM4 left <exe>_MemoryManager_EventLog.txt beside the EXE (a leak or a heap error), or printed "FastMM4: NOT INSTALLED".
+#     ONE exception, the known RTL leak of System.Devices: c:\Delphi\Delphi 13\source\rtl\common\System.Devices.pas:351
+#     (TDeviceInfo.SelectDevices, called on every FMX form load by c:\Delphi\Delphi 13\source\fmx\FMX.Forms.pas:4076)
+#     overwrites FThisDevice without freeing the old TDeviceInfo, and each one owns a TDictionary<string,string>.
+#     A log is accepted when EVERY block in it is a leak of System.Devices.TDeviceInfo or of
+#     System.Generics.Collections.TDictionary<System.string,System.string> whose allocation stack holds a [System.Devices] frame,
+#     and the summary names only those two classes. Anything else in the log (another class, the same class allocated
+#     elsewhere, a medium or large block, a heap error) fails the run. The rule: function Test-FastMMLog below;
 #   - with -Release: the EXE is older than the newest unit its .dpr names (without -Release that is only a WARNING).
 # Before each EXE runs, an old <exe>_MemoryManager_EventLog.txt is recycled, so an old log cannot fail a clean run.
-# Each EXE appends one line to UnitTesting\Test runs.log: date and time, EXE, found, passed, failed, errored, FastMM log yes/no, exit code.
+# For a failed or errored test the script prints the test's full name and message, from the "Failing Tests" and
+# "Tests With Errors" sections that DUnitX writes at the end of its output (c:\Delphi\Delphi 13\source\DunitX\DUnitX.Loggers.Console.pas).
+# Each EXE appends one line to UnitTesting\Test runs.log: date and time, EXE, found, passed, failed, errored, FastMM log yes/no/rtl-only, exit code.
 # The full console output of each EXE goes to C:\Projects\LightSaber\Temp\Test run - <exe name>.txt.
 #
 # Parameters:
@@ -28,6 +37,7 @@
 #   -Release                 an EXE older than its source fails the run (use it before a release)
 #   -AllowMissingFixtures    pass --allow-missing-fixtures to every EXE (a missing fixture folder then does not fail)
 #   -TimeoutMinutes <n>      per EXE, default 20
+#   -CheckFastMMLog <path>   run no EXE: only judge one FastMM log file by the rule above, print the verdict, exit 0 (accepted) or 1
 #
 # Exit codes of this script: 0 = every EXE green; 1 = at least one EXE failed (the lines starting with FAIL say why).
 #
@@ -37,7 +47,8 @@ param(
     [switch]$Live,
     [switch]$Release,
     [switch]$AllowMissingFixtures,
-    [int]$TimeoutMinutes = 20
+    [int]$TimeoutMinutes = 20,
+    [string]$CheckFastMMLog = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -84,6 +95,83 @@ function Get-Count([string[]]$Lines, [string]$Name) {
         if ($line -match "^\s*Tests $Name\s*:\s*(\d+)") { return [int]$Matches[1] }
     }
     return $null
+}
+
+# Judges a FastMM4 event log. Returns '' when the log holds only the known System.Devices RTL leak (see the header),
+# else the first reason why it does not. Unknown content is never accepted.
+function Test-FastMMLog([string]$LogPath) {
+    $knownClasses = @('System.Devices.TDeviceInfo', 'System.Generics.Collections.TDictionary<System.string,System.string>')
+    $lines = @(Get-Content $LogPath)
+
+    # Cut the log into sections at the separator lines  ----...2026/11/2 21:45:33...----
+    $sections = New-Object System.Collections.Generic.List[object]
+    $current  = New-Object System.Collections.Generic.List[string]
+    foreach ($line in $lines) {
+        if ($line -match '^-{10,}.*-{10,}\s*$') {
+            if ($current.Count -gt 0) { $sections.Add($current.ToArray()) }
+            $current = New-Object System.Collections.Generic.List[string]
+        }
+        else { $current.Add($line) }
+    }
+    if ($current.Count -gt 0) { $sections.Add($current.ToArray()) }
+
+    $blockCount = @{}   # class -> number of accepted leak blocks
+    $summary    = @{}   # class -> number the summary names
+    $sawSummary = $false
+
+    foreach ($sec in $sections) {
+        $text = @($sec | Where-Object { $_.Trim() -ne '' })
+        if ($text.Count -eq 0) { continue }
+
+        if ($sec -match 'A memory block has been leaked') {
+            $alloc     = ($sec | Where-Object { $_ -match '^The allocation number is:' } | Select-Object -First 1)
+            $stackIdx  = -1
+            $classIdx  = -1
+            for ($i = 0; $i -lt $sec.Count; $i++) {
+                if ($stackIdx -lt 0 -and $sec[$i] -match 'stack trace \(return addresses\)') { $stackIdx = $i }
+                if ($sec[$i] -match '^The block is currently used for an object of class:') { $classIdx = $i; break }
+            }
+            if ($classIdx -lt 0) { return "a leaked block that is not an object ($alloc)" }
+            $class = ($sec[$classIdx] -replace '^The block is currently used for an object of class:\s*', '').Trim()
+            if ($knownClasses -notcontains $class) { return "a leaked $class block ($alloc)" }
+            if ($stackIdx -lt 0) { return "a leaked $class block with no allocation stack ($alloc)" }
+            # Only the allocation stack counts: the class line itself contains the text System.Devices
+            $stack = $sec[($stackIdx + 1)..($classIdx - 1)]
+            if (-not ($stack -match '\[System\.Devices\]')) { return "a leaked $class block allocated outside System.Devices ($alloc)" }
+            $blockCount[$class] = 1 + [int]$blockCount[$class]
+        }
+        elseif ($sec -match 'This application has leaked memory') {
+            $sawSummary = $true
+            foreach ($line in $text) {
+                if ($line -match '^This application has leaked memory' -or $line -match '^Note: ') { continue }
+                if ($line -notmatch '^\s*\d+ - \d+ bytes:\s*(.+)$') { return "the summary names something else: $line" }
+                foreach ($item in ($Matches[1] -split ', ')) {
+                    if ($item -notmatch '^(.+) x (\d+)\s*$') { return "the summary line cannot be read: $line" }
+                    $class = $Matches[1].Trim()
+                    if ($knownClasses -notcontains $class) { return "the summary names a leaked $class" }
+                    $summary[$class] = [int]$Matches[2] + [int]$summary[$class]
+                }
+            }
+        }
+        else { return "a FastMM event that is not a leak: $($text[0])" }
+    }
+
+    if ($blockCount.Count -eq 0) { return 'the log holds no leak block' }
+    if (-not $sawSummary)        { return 'the log has no leak summary' }
+    foreach ($class in $knownClasses) {
+        if ([int]$blockCount[$class] -ne [int]$summary[$class]) {
+            return "the summary counts $([int]$summary[$class]) x $class but the log details $([int]$blockCount[$class])"
+        }
+    }
+    return ''
+}
+
+if ($CheckFastMMLog -ne '') {
+    if (-not (Test-Path $CheckFastMMLog)) { Write-Host "FAIL: $CheckFastMMLog not found"; exit 1 }
+    $reason = Test-FastMMLog $CheckFastMMLog
+    if ($reason -eq '') { Write-Host "ACCEPTED: $CheckFastMMLog holds only the known System.Devices RTL leak"; exit 0 }
+    Write-Host "REJECTED: $CheckFastMMLog - $reason"
+    exit 1
 }
 
 
@@ -151,16 +239,27 @@ foreach ($dpr in $Projects) {
     $failed  = Get-Count $lines 'Failed'
     $errored = Get-Count $lines 'Errored'
     $hasFastLog = Test-Path $fastLog
+    $fastState  = 'no'
+    $fastReason = ''
+    if ($hasFastLog) {
+        $fastReason = Test-FastMMLog $fastLog
+        if ($fastReason -eq '') { $fastState = 'rtl-only' } else { $fastState = 'yes' }
+    }
 
+    $inFailList = $false
     foreach ($line in $lines) {
         if ($line -match '^\s*Tests (Found|Ignored|Passed|Failed|Errored)\s*:' -or $line -match '^MISSING FIXTURE' -or $line -match '^FastMM4') { Write-Host "  $line" }
+        # The names and messages of the failed and errored tests, from the end of the DUnitX output
+        if ($line -match '^(Failing Tests|Tests With Errors)\s*$') { $inFailList = $true; Write-Host "  $line"; continue }
+        if ($inFailList -and $line.Trim() -ne '') { Write-Host "  $line" }
     }
 
     $why = @()
     if ($null -eq $found)                         { $why += 'no "Tests Found" line - the runner stopped before the tests ran' }
     if ($failed  -gt 0)                           { $why += "$failed failed" }
     if ($errored -gt 0)                           { $why += "$errored errored" }
-    if ($hasFastLog)                              { $why += "FastMM log $fastLog (a leak or a heap error)" }
+    if ($fastState -eq 'yes')                     { $why += "FastMM log $fastLog ($fastReason)" }
+    if ($fastState -eq 'rtl-only')                { Write-Host "  NOTE: FastMM log $fastLog holds only the known System.Devices RTL leak - accepted" }
     if ($lines -match 'FastMM4: NOT INSTALLED')   { $why += 'FastMM4 not installed - leaks were not checked' }
     if ($exitCode -ne 0) {
         switch ($exitCode) {
@@ -181,7 +280,7 @@ foreach ($dpr in $Projects) {
     }
 
     $logLine = '{0} | {1} | found {2} | passed {3} | ignored {4} | failed {5} | errored {6} | FastMM log {7} | exit code {8}' -f `
-        (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), "$name.exe", $found, $passed, $ignored, $failed, $errored, ($(if ($hasFastLog) { 'yes' } else { 'no' })), $exitCode
+        (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), "$name.exe", $found, $passed, $ignored, $failed, $errored, $fastState, $exitCode
     Add-Content -Path $RunLog -Value $logLine -Encoding UTF8
 }
 
@@ -192,5 +291,5 @@ if ($Failures.Count -gt 0) {
     foreach ($f in $Failures) { Write-Host "  $f" }
     exit 1
 }
-Write-Host "RESULT: GREEN - $($Projects.Count) of $($Projects.Count) test EXEs, 0 failed, 0 errored, no FastMM log"
+Write-Host "RESULT: GREEN - $($Projects.Count) of $($Projects.Count) test EXEs, 0 failed, 0 errored, no FastMM log except the known System.Devices RTL leak"
 exit 0

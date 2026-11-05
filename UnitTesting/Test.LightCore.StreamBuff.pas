@@ -190,6 +190,12 @@ type
     procedure TestByteChunk_Empty;
 
     [Test]
+    procedure TestByteChunk_CountPastEnd_RaisesBeforeAllocating;
+
+    [Test]
+    procedure TestByteChunk_CountEqualsBytesLeft_Loads;
+
+    [Test]
     procedure TestAsBytes;
 
     [Test]
@@ -877,7 +883,7 @@ begin
       begin
         ReadStream.ReadStringACnt(100);  { Asking for more than is available — caught by EOF check }
       end,
-      Exception
+      EStreamDataError
     );
 
     ReadStream.Position:= 0;             { Rewind so the SafetyLimit check fires before EOF }
@@ -886,7 +892,7 @@ begin
       begin
         ReadStream.ReadStringACnt(2000, 1024);   { Above SafetyLimit — caught before EOF check }
       end,
-      Exception
+      EStreamDataError
     );
   finally
     ReadStream.Free;
@@ -1497,6 +1503,59 @@ begin
     Assert.AreEqual(0, Length(ReadBytes));
   finally
     ReadStream.Free;
+  end;
+end;
+
+
+{ A damaged length prefix: the file says 104 bytes follow, but only 4 do.
+  ReadByteChunk must refuse the count before it allocates (a damaged prefix can say 4 GB). }
+procedure TTestLightStream.TestByteChunk_CountPastEnd_RaisesBeforeAllocating;
+var
+  WriteStream, ReadStream: TLightStream;
+begin
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.WriteCardinal(104);
+    WriteStream.WriteCardinal($DEADBEEF);  // 4 bytes of payload instead of 104
+  finally
+    FreeAndNil(WriteStream);
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    Assert.WillRaise(
+      procedure begin ReadStream.ReadByteChunk; end,
+      EChunkTooLarge, 'A length prefix past the end of the stream must raise EChunkTooLarge');
+  finally
+    FreeAndNil(ReadStream);
+  end;
+end;
+
+
+{ The boundary: a count equal to the bytes left is a valid chunk and must load. }
+procedure TTestLightStream.TestByteChunk_CountEqualsBytesLeft_Loads;
+var
+  WriteStream, ReadStream: TLightStream;
+  WriteBytes, ReadBytes: TBytes;
+begin
+  WriteBytes:= TBytes.Create(7, 8, 9, 10, 11);
+
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.PushBytesCnt(WriteBytes);  // the chunk is the last thing in the file
+  finally
+    FreeAndNil(WriteStream);
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    ReadBytes:= ReadStream.ReadByteChunk;
+    Assert.AreEqual(5, Length(ReadBytes));
+    Assert.AreEqual(Byte(7),  ReadBytes[0]);
+    Assert.AreEqual(Byte(11), ReadBytes[4]);
+    Assert.AreEqual(ReadStream.Size, ReadStream.Position, 'The whole file must be consumed');
+  finally
+    FreeAndNil(ReadStream);
   end;
 end;
 

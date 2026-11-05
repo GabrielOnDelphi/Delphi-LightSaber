@@ -146,9 +146,73 @@ type
 
     [Test]
     procedure TestMacToWin_File_NotMac;
+
+    { An operating-system read that fails in the middle of the file (Read returns 0 before Size).
+      Every routine must raise EReadError instead of looping on the same position. }
+    [Test]
+    procedure TestReadFails_GetEnterType_Raises;
+
+    [Test]
+    procedure TestReadFails_GetEnterType_AfterCR_Raises;
+
+    [Test]
+    procedure TestReadFails_IsMacFile_Raises;
+
+    [Test]
+    procedure TestReadFails_UnixToWin_Raises;
+
+    [Test]
+    procedure TestReadFails_WinToUnix_Raises;
+
+    [Test]
+    procedure TestReadFails_MacToWin_Raises;
+
+    [Test]
+    procedure TestReadFails_AnyToWin_Raises;
   end;
 
 implementation
+
+
+TYPE
+  { Raised by TStuckStream when the code under test keeps calling Read after Read returned 0.
+    Stops an endless loop, so a red run fails on its assertion instead of hanging. }
+  ESpinGuard = class(Exception);
+
+  { A memory stream whose Read returns 0 from position FailAt on, while Size stays larger:
+    the shape of a read that fails in the middle of a file. }
+  TStuckStream = class(TMemoryStream)
+  private
+    FFailAt: Int64;
+    FZeroReads: Integer;
+  public
+    constructor Create(CONST Content: AnsiString; FailAt: Int64);
+    function Read(var Buffer; Count: Longint): Longint; override;
+  end;
+
+constructor TStuckStream.Create(CONST Content: AnsiString; FailAt: Int64);
+begin
+  inherited Create;
+  if Length(Content) > 0
+  then WriteBuffer(Content[1], Length(Content));
+  Position:= 0;
+  FFailAt:= FailAt;
+end;
+
+function TStuckStream.Read(var Buffer; Count: Longint): Longint;
+begin
+  if Position < FFailAt then
+   begin
+     if Position + Count > FFailAt
+     then Count:= Longint(FFailAt - Position);   { a read never crosses the failure point }
+     EXIT(inherited Read(Buffer, Count));
+   end;
+
+  Inc(FZeroReads);
+  if FZeroReads > 1000
+  then raise ESpinGuard.Create('Read was called 1000 times after it returned 0');
+  Result:= 0;
+end;
 
 
 procedure TTestIOPlatformFile.Setup;
@@ -921,6 +985,101 @@ begin
   Assert.AreEqual(4, Length(ResultBytes));
   Assert.AreEqual(Byte($0D), ResultBytes[1]);
   Assert.AreEqual(Byte($0A), ResultBytes[2]);
+end;
+
+
+{ Read fails in the middle of the file }
+
+procedure TTestIOPlatformFile.TestReadFails_GetEnterType_Raises;
+var InStream: TStuckStream;
+begin
+  InStream:= TStuckStream.Create('abcdef', 2);
+  try
+    Assert.WillRaise(procedure begin GetEnterType(InStream); end, EReadError);
+  finally
+    FreeAndNil(InStream);
+  end;
+end;
+
+
+{ The read of the byte after a CR fails: the old code compared an unread byte with LF. }
+procedure TTestIOPlatformFile.TestReadFails_GetEnterType_AfterCR_Raises;
+var InStream: TStuckStream;
+begin
+  InStream:= TStuckStream.Create('ab'#13'cd', 3);
+  try
+    Assert.WillRaise(procedure begin GetEnterType(InStream); end, EReadError);
+  finally
+    FreeAndNil(InStream);
+  end;
+end;
+
+
+procedure TTestIOPlatformFile.TestReadFails_IsMacFile_Raises;
+var InStream: TStuckStream;
+begin
+  InStream:= TStuckStream.Create('abcdef', 2);
+  try
+    Assert.WillRaise(procedure begin IsMacFile(InStream); end, EReadError);
+  finally
+    FreeAndNil(InStream);
+  end;
+end;
+
+
+procedure TTestIOPlatformFile.TestReadFails_UnixToWin_Raises;
+var InStream: TStuckStream; OutStream: TMemoryStream;
+begin
+  OutStream:= TMemoryStream.Create;
+  InStream:= TStuckStream.Create('ab'#10'cdef', 2);
+  try
+    Assert.WillRaise(procedure begin UnixToWin(InStream, OutStream, NIL); end, EReadError);
+  finally
+    FreeAndNil(InStream);
+    FreeAndNil(OutStream);
+  end;
+end;
+
+
+procedure TTestIOPlatformFile.TestReadFails_WinToUnix_Raises;
+var InStream: TStuckStream; OutStream: TMemoryStream;
+begin
+  OutStream:= TMemoryStream.Create;
+  InStream:= TStuckStream.Create('ab'#13#10'cdef', 2);
+  try
+    Assert.WillRaise(procedure begin WinToUnix(InStream, OutStream, NIL); end, EReadError);
+  finally
+    FreeAndNil(InStream);
+    FreeAndNil(OutStream);
+  end;
+end;
+
+
+procedure TTestIOPlatformFile.TestReadFails_MacToWin_Raises;
+var InStream: TStuckStream; OutStream: TMemoryStream;
+begin
+  OutStream:= TMemoryStream.Create;
+  InStream:= TStuckStream.Create('ab'#13'cdef', 2);
+  try
+    Assert.WillRaise(procedure begin MacToWin(InStream, OutStream); end, EReadError);
+  finally
+    FreeAndNil(InStream);
+    FreeAndNil(OutStream);
+  end;
+end;
+
+
+procedure TTestIOPlatformFile.TestReadFails_AnyToWin_Raises;
+var InStream: TStuckStream; OutStream: TMemoryStream;
+begin
+  OutStream:= TMemoryStream.Create;
+  InStream:= TStuckStream.Create('ab'#13'cd'#10'ef', 2);
+  try
+    Assert.WillRaise(procedure begin AnyToWin(InStream, OutStream, NIL); end, EReadError);
+  finally
+    FreeAndNil(InStream);
+    FreeAndNil(OutStream);
+  end;
 end;
 
 

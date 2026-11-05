@@ -94,6 +94,16 @@ type
     [Test]
     procedure TestGetGifSize_HandCraftedWithExtensionBlock;
 
+    { A $2C byte inside an extension block is data, not the image separator. GIF89a spec, sections 15, 23, 24 and 27: https://www.w3.org/Graphics/GIF/spec-gif89a.txt }
+    [Test]
+    procedure TestGetGifSize_CommaInsideControlExtension;
+
+    [Test]
+    procedure TestGetGifSize_CommaInsideCommentExtension;
+
+    [Test]
+    procedure TestGetGifSize_TrailerBeforeImage_ReturnsMinusOne;
+
     { Measurement: was the `packed record` fix actually necessary? }
     [Test]
     procedure TestRecordAlignment_GIFHeader;
@@ -681,11 +691,87 @@ begin
 
     GetGifSize(Stream, Width, Height);
 
-    { Note: the byte-walk parser may pick up dimensions from inside the extension block bytes
-      if it sees a ',' there. For a clean GCE block (all zeros + terminator) the first ',' is
-      the real image separator, so we expect 64x48. }
     Assert.AreEqual(64, Width, 'Hand-crafted GIF (with GCE) Width should be 64');
     Assert.AreEqual(48, Height, 'Hand-crafted GIF (with GCE) Height should be 48');
+  FINALLY
+    FreeAndNil(Stream);
+  END;
+end;
+
+
+{ Header of a GIF89a with no global color table: 13 bytes. }
+CONST
+  GifHeaderNoGCT: array[0..12] of Byte = (Ord('G'), Ord('I'), Ord('F'), Ord('8'), Ord('9'), Ord('a'),
+                                          200, 0, 150, 0,   { logical screen 200 x 150 }
+                                          0, 0, 0);         { flags (no GCT), background, aspect }
+
+  { Image descriptor: separator, Left, Top, Width = 64, Height = 48, flags }
+  GifImage64x48: array[0..9] of Byte = ($2C, 0, 0, 0, 0, 64, 0, 48, 0, 0);
+
+
+{ Graphic Control Extension whose first data byte is $2C: $21 $F9 $04 <$2C 0 0 0> $00.
+  The old byte walk took that $2C as the image separator and read the size from the bytes after it. }
+procedure TTestCoreGraphLoaderResolution.TestGetGifSize_CommaInsideControlExtension;
+var
+  Stream: TMemoryStream;
+  Width, Height: Integer;
+begin
+  Stream:= TMemoryStream.Create;
+  TRY
+    WriteBytes(Stream, GifHeaderNoGCT);
+    WriteBytes(Stream, [$21, $F9, $04, $2C, 0, 0, 0, $00]);
+    WriteBytes(Stream, GifImage64x48);
+    WriteBytes(Stream, [$3B]);
+
+    GetGifSize(Stream, Width, Height);
+
+    Assert.AreEqual(64, Width,  'Width must come from the image descriptor, not from the extension data');
+    Assert.AreEqual(48, Height, 'Height must come from the image descriptor, not from the extension data');
+  FINALLY
+    FreeAndNil(Stream);
+  END;
+end;
+
+
+{ Comment Extension ($21 $FE) holding the text "a,b" in two sub-blocks, then the image. }
+procedure TTestCoreGraphLoaderResolution.TestGetGifSize_CommaInsideCommentExtension;
+var
+  Stream: TMemoryStream;
+  Width, Height: Integer;
+begin
+  Stream:= TMemoryStream.Create;
+  TRY
+    WriteBytes(Stream, GifHeaderNoGCT);
+    WriteBytes(Stream, [$21, $FE, 3, Ord('a'), Ord(','), Ord('b'), 2, Ord(','), Ord(','), $00]);
+    WriteBytes(Stream, GifImage64x48);
+    WriteBytes(Stream, [$3B]);
+
+    GetGifSize(Stream, Width, Height);
+
+    Assert.AreEqual(64, Width,  'A comma in a comment is text, not the image separator');
+    Assert.AreEqual(48, Height, 'A comma in a comment is text, not the image separator');
+  FINALLY
+    FreeAndNil(Stream);
+  END;
+end;
+
+
+{ The trailer $3B ends the GIF. A $2C after it is not an image. }
+procedure TTestCoreGraphLoaderResolution.TestGetGifSize_TrailerBeforeImage_ReturnsMinusOne;
+var
+  Stream: TMemoryStream;
+  Width, Height: Integer;
+begin
+  Stream:= TMemoryStream.Create;
+  TRY
+    WriteBytes(Stream, GifHeaderNoGCT);
+    WriteBytes(Stream, [$3B]);
+    WriteBytes(Stream, GifImage64x48);
+
+    GetGifSize(Stream, Width, Height);
+
+    Assert.AreEqual(-1, Width,  'A GIF that ends before its first image has no size');
+    Assert.AreEqual(-1, Height, 'A GIF that ends before its first image has no size');
   FINALLY
     FreeAndNil(Stream);
   END;

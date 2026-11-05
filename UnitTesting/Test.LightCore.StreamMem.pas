@@ -213,6 +213,9 @@ type
     [Test]
     procedure TestReadByteChunk_Empty;
 
+    [Test]
+    procedure TestReadByteChunk_CountPastEnd_RaisesBeforeAllocating;
+
     { ReadStringCnt Tests }
     [Test]
     procedure TestReadStringCnt;
@@ -945,6 +948,17 @@ begin
   FStream.Position:= 0;
   ReadBack:= FStream.ReadByteChunk;
   Assert.AreEqual(0, Length(ReadBack), 'Empty chunk should return empty array');
+end;
+
+{ A damaged length prefix: 104 bytes claimed, 4 present. Must be refused before the allocation. }
+procedure TTestStreamMem.TestReadByteChunk_CountPastEnd_RaisesBeforeAllocating;
+begin
+  FStream.WriteCardinal(104);
+  FStream.WriteCardinal($DEADBEEF);
+  FStream.Position:= 0;
+  Assert.WillRaise(
+    procedure begin FStream.ReadByteChunk; end,
+    EStreamDataError, 'A length prefix past the end of the stream must raise EStreamDataError');
 end;
 
 { ReadStringCnt Tests }
