@@ -734,7 +734,7 @@ function Add (Value: PLogLine): Integer; override;
 function SnapshotAndClear: TAbstractLogLines; override;
 ```
 
-## LightCore.LogRam (37)
+## LightCore.LogRam (38)
 
 ```pascal
 procedure Populate;
@@ -768,6 +768,7 @@ function LoadFromStream(Stream: TLightStream): Boolean;
 procedure SaveToStream (Stream: TLightStream);
 procedure SaveToFile (CONST FullPath: string);
 function LoadFromFile(CONST FullPath: string): Boolean;
+function OverflowFile(Part: Integer): string; { Full path of this log's overflow save number Part (1 = the first). }
 procedure RegisterLogObserver (Observer: ILogObserver);
 procedure UnregisterLogObserver(Observer: ILogObserver); overload; { Detaches this observer only. The one a viewer calls for itself. }
 procedure UnregisterLogObserver; overload; { Detaches EVERY observer, e.g. to stop all repaints during a burst of Add calls. }
@@ -1496,6 +1497,13 @@ function ToString: string;
 function DownloadAsString (CONST URL: string; Referer: string= ''): string;
 function DownloadBytes (CONST Url, Referer: String; OUT Data: TBytes; PostData: String= ''; SSL: Boolean = FALSE): Cardinal; overload; { TESTED OK }
 function DownloadToFile (CONST URL, Referer, DestinationFile: string): Cardinal; overload; { It can be used with text or binary files }
+```
+
+## LightCore.Win.DPAPI (2)
+
+```pascal
+function ProtectString(CONST PlainText, Entropy: string): string;
+function TryUnprotectString(CONST ProtectedText, Entropy: string; OUT PlainText: string): Boolean;
 ```
 
 ## LightCore.Win.EnvironmentVar (3)
@@ -4191,4 +4199,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2997 public routines across 237 units._
+_3000 public routines across 238 units._
