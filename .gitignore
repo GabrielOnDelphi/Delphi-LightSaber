@@ -147,3 +147,5 @@ CLAUDE.md.backup
 Demo/VCL/Demo Custom component creation order/VCL_Demo_CreationOrder - before DcuOutput fix 2026-10-14.dproj
 Demo/VCL/Template App Minimal/VCL_TemplateMicro.res
 UnitTesting/Test runs.log
+Test runs.log
+*_MemoryManager_EventLog.txt
