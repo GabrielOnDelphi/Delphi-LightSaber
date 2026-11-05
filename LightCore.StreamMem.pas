@@ -1,13 +1,14 @@
 UNIT LightCore.StreamMem;
 
 {=============================================================================================================
-   2026.07.06
+   2026.11.04
    www.GabrielMoraru.com
 
    + LoadFromFile now uses fmShareDenyWrite (loading a file already open elsewhere no longer fails).
    + ReadIntegers/ReadDoubles validate the element count against the remaining stream bytes before SetLength.
 --------------------------------------------------------------------------------------------------------------
    Extends TMemoryStream.
+   Damaged data (a length or a count that does not fit, a checkpoint that does not match) raises EStreamDataError (LightCore.Types).
    Allows you to read and write data directly into a memory stream.
 
    Article: www.GabrielMoraru.com/saving-an-object-to-disk-file
@@ -399,7 +400,7 @@ CONST
 procedure TCubicMemStream.ReadCheckPointE(CONST s: AnsiString= '');
 begin
   if NOT ReadCheckPoint(s)
-  then RAISE Exception.Create('Checkpoint failure! ' + CRLF + string(s));
+  then RAISE EStreamDataError.Create('Checkpoint failure! ' + CRLF + string(s));
 end;
 
 function TCubicMemStream.ReadCheckPoint(CONST s: AnsiString= ''): Boolean;
@@ -496,7 +497,7 @@ begin
     MinSize:= Min(CheckPointSize, Bytes);
     for i := 0 to MinSize- 1 do
         if b[i] <> Byte(SafetyPaddingStr[i + 1])
-        then RAISE Exception.Create('Invalid checkpoint!!');
+        then RAISE EStreamDataError.Create('Invalid checkpoint!!');
   end;
 end;
 
@@ -556,7 +557,7 @@ begin
   ReadBuffer(Count, 4);                        { Read length }
 
   if Count > SafetyLimit
-  then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
+  then RAISE EStreamDataError.CreateFmt('String too large: %d bytes', [Count]);
 
   if Count > 0
   then
@@ -617,7 +618,7 @@ begin
   if Count = 0 then EXIT('');
 
   if Count > SafetyLimit
-  then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
+  then RAISE EStreamDataError.CreateFmt('String too large: %d bytes', [Count]);
 
   SetLength(Result, Count);
   ReadBuffer(Result[1], Count);
@@ -871,7 +872,7 @@ begin
   Count:= ReadInteger;
   // Reject corrupt counts (negative or past EOF) BEFORE SetLength allocates
   if (Count < 0) OR (Position + Int64(Count) * SizeOf(Integer) > Size)
-  then RAISE Exception.CreateFmt('ReadIntegers: invalid count %d. File corrupted?', [Count]);
+  then RAISE EStreamDataError.CreateFmt('ReadIntegers: invalid count %d. File corrupted?', [Count]);
   SetLength(List, Count);
   for i:= 0 to High(List) DO
     List[i]:= ReadInteger;
@@ -895,7 +896,7 @@ begin
   Count:= ReadInteger;
   // Reject corrupt counts (negative or past EOF) BEFORE SetLength allocates
   if (Count < 0) OR (Position + Int64(Count) * SizeOf(Double) > Size)
-  then RAISE Exception.CreateFmt('ReadDoubles: invalid count %d. File corrupted?', [Count]);
+  then RAISE EStreamDataError.CreateFmt('ReadDoubles: invalid count %d. File corrupted?', [Count]);
   SetLength(List, Count);
   for i:= 0 to High(List) DO
     List[i]:= ReadDouble;
@@ -984,7 +985,7 @@ function TCubicMemStream.ReadStringACnt(Count: Cardinal; SafetyLimit: Cardinal):
 VAR TotalBytes: Cardinal;
 begin
   if Count > SafetyLimit
-  then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
+  then RAISE EStreamDataError.CreateFmt('String too large: %d bytes', [Count]);
 
   if Count > 0
   then
@@ -1030,11 +1031,15 @@ begin
 end;
 
 
-{ Reads a chunk of data from the current pos of the stream. The amount of data to read is also retrieved from the stream. }
+{ Reads a chunk of data from the current pos of the stream. The amount of data to read is also retrieved from the stream.
+  The count is checked against the bytes left BEFORE the allocation: a damaged prefix can ask for up to 4 GB. }
 function TCubicMemStream.ReadByteChunk: TBytes;
 VAR Count: Cardinal;
 begin
   Count:= ReadCardinal;
+  if Count > Size - Position
+  then RAISE EStreamDataError.Create('ReadByteChunk: the chunk claims '+ IntToStr(Count)+ ' bytes, but only '+ IntToStr(Size - Position)+ ' are left in the stream');
+
   if Count > 0 then
   begin
     SetLength(Result, Count);
@@ -1085,10 +1090,10 @@ begin
   ReadBuffer(Count, SizeOf(Count));  { First, find out how many characters to read }
 
  if Count > Cardinal(Size - Position)
- then RAISE Exception.CreateFmt('String length (%d) exceeds remaining file size!', [Count]);
+ then RAISE EStreamDataError.CreateFmt('String length (%d) exceeds remaining file size!', [Count]);
 
   if Count > SafetyLimit
-  then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
+  then RAISE EStreamDataError.CreateFmt('String too large: %d bytes', [Count]);
 
   if Count > 0 
   then
@@ -1134,10 +1139,10 @@ begin
  then
    begin
      if (Count+ Position > Size)
-     then RAISE exception.Create('TCubicMemStream-Invalid string size! '+ IntToStr(Count));
+     then RAISE EStreamDataError.Create('TCubicMemStream-Invalid string size! '+ IntToStr(Count));
 
      if (Count > SafetyLimit)
-     then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
+     then RAISE EStreamDataError.CreateFmt('String too large: %d bytes', [Count]);
 
      SetLength(UTF, Count);
      ReadBuffer(UTF[1], Count);

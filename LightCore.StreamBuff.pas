@@ -1,10 +1,11 @@
 UNIT LightCore.StreamBuff;
 
 {=============================================================================================================
-   2026.07.06
+   2026.11.04
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Extends TBufferedFileStream.
+   Damaged data (a length or a count that does not fit, a checkpoint that does not match) raises EStreamDataError (LightCore.Types).
    Ideal for multiple consecutive small reads or writes.
    Specially designed for saving your classes to disk.
 
@@ -93,6 +94,10 @@ USES
    System.SysUtils, System.Classes, System.Types, System.Math, LightCore, LightCore.Types;
 
 TYPE
+  { Raised by ReadByteChunk when the length prefix asks for more bytes than the stream still holds (a damaged file).
+    Descends from EStreamDataError (LightCore.Types) and so from EReadError: a caller that already catches EReadError for a cut-off file handles it too. }
+  EChunkTooLarge= class(EStreamDataError);
+
   TLightStream= class(System.Classes.TBufferedFileStream)
    private
      CONST LisaMagicNumber: Cardinal= $6153694C;     // The LiSa string for "Light Saber'.
@@ -374,7 +379,7 @@ CONST
 procedure TLightStream.ReadCheckPointE(CONST s: AnsiString= '');
 begin
   if NOT ReadCheckPoint(s)
-  then RAISE Exception.Create('Checkpoint failure! ' + CRLF + string(s));
+  then RAISE EStreamDataError.Create('Checkpoint failure! ' + CRLF + string(s));
 end;
 
 function TLightStream.ReadCheckPoint(CONST s: AnsiString= ''): Boolean;
@@ -469,7 +474,7 @@ begin
     MinSize:= Min(CheckPointSize, Bytes);
     for i := 0 to MinSize- 1 do
         if b[i] <> Byte(SafetyPaddingStr[i + 1])
-        then RAISE Exception.Create('Invalid checkpoint!!');
+        then RAISE EStreamDataError.Create('Invalid checkpoint!!');
   end;
 end;
 
@@ -529,7 +534,7 @@ begin
   ReadBuffer(Count, 4);                        { Read length }
 
   if Count > SafetyLimit
-  then RAISE Exception.CreateFmt('String too large: %d bytes (SafetyLimit: %d)', [Count, SafetyLimit]);
+  then RAISE EStreamDataError.CreateFmt('String too large: %d bytes (SafetyLimit: %d)', [Count, SafetyLimit]);
 
   CheckSafetyLimit(Count);
 
@@ -592,7 +597,7 @@ begin
   if Count = 0 then EXIT('');
 
   if Count > SafetyLimit
-  then RAISE Exception.CreateFmt('String too large: %d bytes (SafetyLimit: %d)', [Count, SafetyLimit]);
+  then RAISE EStreamDataError.CreateFmt('String too large: %d bytes (SafetyLimit: %d)', [Count, SafetyLimit]);
 
   CheckSafetyLimit(Count);
   SetLength(Result, Count);
@@ -849,7 +854,7 @@ begin
   Count:= ReadInteger;
   // Reject corrupt counts (negative or past EOF) BEFORE SetLength allocates
   if (Count < 0) OR (Position + Int64(Count) * SizeOf(Integer) > Size)
-  then RAISE Exception.CreateFmt('ReadIntegers: invalid count %d. File corrupted?', [Count]);
+  then RAISE EStreamDataError.CreateFmt('ReadIntegers: invalid count %d. File corrupted?', [Count]);
   SetLength(List, Count);
   for i:= 0 to High(List) DO
     List[i]:= ReadInteger;
@@ -873,7 +878,7 @@ begin
   Count:= ReadInteger;
   // Reject corrupt counts (negative or past EOF) BEFORE SetLength allocates
   if (Count < 0) OR (Position + Int64(Count) * SizeOf(Double) > Size)
-  then RAISE Exception.CreateFmt('ReadDoubles: invalid count %d. File corrupted?', [Count]);
+  then RAISE EStreamDataError.CreateFmt('ReadDoubles: invalid count %d. File corrupted?', [Count]);
   SetLength(List, Count);
   for i:= 0 to High(List) DO
     List[i]:= ReadDouble;
@@ -955,7 +960,7 @@ function TLightStream.ReadStringACnt(Count: Cardinal; SafetyLimit: Cardinal = 1*
 VAR TotalBytes: Cardinal;
 begin
   if Count > SafetyLimit
-  then RAISE Exception.CreateFmt('String too large: %d bytes (SafetyLimit: %d)', [Count, SafetyLimit]);
+  then RAISE EStreamDataError.CreateFmt('String too large: %d bytes (SafetyLimit: %d)', [Count, SafetyLimit]);
 
   CheckSafetyLimit(Count);
 
@@ -1003,11 +1008,15 @@ begin
 end;
 
 
-{ Reads a chunk of data from the current pos of the stream. The amount of data to read is also retrieved from the stream. }
+{ Reads a chunk of data from the current pos of the stream. The amount of data to read is also retrieved from the stream.
+  The count is checked against the bytes left BEFORE the allocation: a damaged prefix can ask for up to 4 GB. }
 function TLightStream.ReadByteChunk: TBytes;
 VAR Count: Cardinal;
 begin
   Count:= ReadCardinal;
+  if Count > Size - Position
+  then RAISE EChunkTooLarge.Create('ReadByteChunk: the chunk claims '+ IntToStr(Count)+ ' bytes, but only '+ IntToStr(Size - Position)+ ' are left in the stream');
+
   if Count > 0 then
   begin
     SetLength(Result, Count);
@@ -1041,7 +1050,7 @@ begin
   ReadBuffer(Count, SizeOf(Count));  { First, find out how many characters to read }
 
   if Count > SafetyLimit
-  then RAISE Exception.CreateFmt('String too large: %d bytes (SafetyLimit: %d)', [Count, SafetyLimit]);
+  then RAISE EStreamDataError.CreateFmt('String too large: %d bytes (SafetyLimit: %d)', [Count, SafetyLimit]);
 
   CheckSafetyLimit(Count);
 
@@ -1088,7 +1097,7 @@ begin
  then
    begin
      if Count > SafetyLimit
-     then RAISE Exception.CreateFmt('String too large: %d bytes (SafetyLimit: %d)', [Count, SafetyLimit]);
+     then RAISE EStreamDataError.CreateFmt('String too large: %d bytes (SafetyLimit: %d)', [Count, SafetyLimit]);
 
      CheckSafetyLimit(Count);
 
@@ -1108,7 +1117,7 @@ end;
 procedure TLightStream.CheckSafetyLimit(Count: Cardinal);
 begin
   if (Count+ Position > Size)
-  then RAISE Exception.Create('String too large. Trying to read: '+ IntToStr(Count)+ ' bytes');
+  then RAISE EStreamDataError.Create('String too large. Trying to read: '+ IntToStr(Count)+ ' bytes');
 end;
 
 

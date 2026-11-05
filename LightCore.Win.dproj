@@ -107,6 +107,7 @@
         <DCCReference Include="LightCore.Win.Internet.pas"/>
         <DCCReference Include="LightCore.Win.SystemTime.pas"/>
         <DCCReference Include="LightCore.Win.FrameTimer.pas"/>
+        <DCCReference Include="LightCore.Win.DPAPI.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

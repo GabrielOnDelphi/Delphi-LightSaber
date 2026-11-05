@@ -2,7 +2,7 @@
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.10.14
+   2026.11.04
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -310,13 +310,25 @@ TYPE
     Flags: Byte;
   end;
 
+  { Skips the data sub-blocks of an extension: each starts with its size byte, a size of 0 ends the chain.
+    FALSE when the file ends inside the chain. }
+  function SkipSubBlocks: Boolean;
+  VAR BlockSize: Byte;
+  begin
+    REPEAT
+      if Stream.Read(BlockSize, 1) <> 1 then EXIT(FALSE);
+      if Stream.Position + BlockSize > Stream.Size then EXIT(FALSE);
+      Stream.Seek(BlockSize, soFromCurrent);
+    UNTIL BlockSize = 0;
+    Result:= TRUE;
+  end;
+
 VAR
    Header: TGifHeader;
    ImageBlock: TGifImageBlock;
    nResult: integer;
    x: integer;
-   car: AnsiChar;
-   DimensionsFound: boolean;
+   Introducer, ExtLabel: Byte;
 begin
  Width  := -1;
  Height := -1;
@@ -338,24 +350,28 @@ begin
    Stream.Seek(x, soFromCurrent);
   end;
 
- DimensionsFound := False;
- FillChar(ImageBlock, SizeOf(TGIFImageBlock), #0);
-
- { Step through blocks. }
- Stream.Read(car, 1);
-
- WHILE (Stream.Position < Stream.Size) AND NOT DimensionsFound DO
-  begin
-    if car = ',' then { Found image }
-      begin
-        nResult:= Stream.Read(ImageBlock, SizeOf(TGIFImageBlock));
-        if nResult <> SizeOf(TGIFImageBlock) then Exit;                       { Invalid image block encountered }
-        Width := ImageBlock.Width;
-        Height:= ImageBlock.Height;
-        DimensionsFound := True;
-      end;
-    Stream.Read(car, 1);
-  end;
+ { Walk the blocks by their introducer byte (GIF89a spec, sections 15 and 20-27: https://www.w3.org/Graphics/GIF/spec-gif89a.txt).
+   Every extension (23-26) is a label byte followed by a chain of data sub-blocks (15) that ends with a size of 0.
+   A $2C inside an extension is data, so extensions are skipped whole, never scanned byte by byte.
+   Every pass reads at least one byte, so the walk ends at the end of the file. }
+ WHILE Stream.Read(Introducer, 1) = 1 DO
+   case Introducer of
+     $2C:                                                                     { Image Descriptor }
+       begin
+         nResult:= Stream.Read(ImageBlock, SizeOf(TGIFImageBlock));
+         if nResult <> SizeOf(TGIFImageBlock) then EXIT;                      { Cut off inside the descriptor }
+         Width := ImageBlock.Width;
+         Height:= ImageBlock.Height;
+         EXIT;
+       end;
+     $21:                                                                     { Extension: label byte, then data sub-blocks }
+       begin
+         if Stream.Read(ExtLabel, 1) <> 1 then EXIT;
+         if NOT SkipSubBlocks then EXIT;
+       end;
+   else
+     EXIT;                                                                    { $3B trailer before any image, or a damaged file }
+   end;
 end;
 
 

@@ -2545,23 +2545,16 @@ begin
 end;
 
 
-{ Case sensitive
-  7ms
-  http://delphi.cjcsoft.net//viewthread.php?tid=43892 }
+{ Case sensitive.
+  Walks the string by its length, not to its #0 terminator: a #0 inside the string is counted like any other char,
+  and searching for #0 itself stops at the end (StrScan returns the terminator for #0, never NIL). }
 function CountAppearance(CONST Niddle: char; CONST Haystack: string): integer;
-VAR p: PChar;
+VAR i: Integer;
 begin
-  Result := 0;
-  p := PChar(Pointer(Haystack));
-  while p <> NIL do
-   begin
-    p := StrScan(p, Niddle);
-    if p <> nil then
-     begin
-      inc(Result);
-      inc(p);
-     end;
-   end;
+ Result:= 0;
+ for i:= 1 to Length(Haystack) DO
+   if Haystack[i] = Niddle
+   then inc(Result);
 end;
 
 

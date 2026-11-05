@@ -2,9 +2,13 @@ UNIT LightCore.IOPlatformFile;
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.09.03
+   2026.11.04
 --------------------------------------------------------------------------------------------------------------
    Line ending conversion utilities for cross-platform text files.
+
+   Every byte is read with ReadBuffer: an operating-system read that fails in the middle of the file
+   (Read returns 0 while Position < Size, for example a dropped network drive) raises EReadError
+   instead of looping on the same position for ever.
 
    Line ending formats:
      - Windows (CRLF)  : $0D $0A (CR + LF)
@@ -71,13 +75,13 @@ begin
 
   while InStream.Position < InStream.Size do
   begin
-    InStream.Read(B1, 1);
+    InStream.ReadBuffer(B1, 1);
     case B1 of
       CHAR_CR:  { Found CR - could be Win (CRLF) or Mac (CR only) }
         begin
           if InStream.Position < InStream.Size
           then begin
-            InStream.Read(B2, 1);
+            InStream.ReadBuffer(B2, 1);
             if B2 = CHAR_LF
             then EXIT(etWin)   { CR+LF = Windows }
             else EXIT(etMac);  { CR alone = Classic Mac }
@@ -127,13 +131,13 @@ begin
   Result:= FALSE;
   while InStream.Position < InStream.Size do
   begin
-    InStream.Read(B, 1);
+    InStream.ReadBuffer(B, 1);
     if B = CHAR_CR
     then begin
       { Check if CR is followed by LF (Windows) or standalone (Mac) }
       if InStream.Position < InStream.Size
       then begin
-        InStream.Read(B, 1);
+        InStream.ReadBuffer(B, 1);
         if B <> CHAR_LF
         then EXIT(TRUE);  { CR not followed by LF = Mac format }
       end
@@ -167,7 +171,7 @@ begin
   BytesProcessed:= 0;
   while InStream.Position < InStream.Size do
   begin
-    InStream.Read(B, 1);
+    InStream.ReadBuffer(B, 1);
 
     { A LF with a CR before it is a finished Windows line ending. Writing a second CR
       would give CR CR LF, which is what corrupted files that held both kinds. }
@@ -208,7 +212,7 @@ begin
   BytesProcessed:= 0;
   while InStream.Position < InStream.Size do
   begin
-    InStream.Read(B, 1);
+    InStream.ReadBuffer(B, 1);
 
     { Skip CR characters - keep everything else including LF }
     if B <> CHAR_CR
@@ -247,7 +251,7 @@ begin
 
   while InStream.Position < InStream.Size do
   begin
-    InStream.Read(B, 1);
+    InStream.ReadBuffer(B, 1);
 
     { A CR is held back for one byte, because only the byte after it says whether it is a solitary
       CR (Mac) or the first half of a CRLF pair that is already correct. Either way it comes out
@@ -295,7 +299,7 @@ begin
 
   while InStream.Position < InStream.Size do
   begin
-    InStream.Read(B, 1);
+    InStream.ReadBuffer(B, 1);
 
     if PendingCR then
      begin

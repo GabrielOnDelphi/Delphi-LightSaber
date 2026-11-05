@@ -992,11 +992,15 @@ begin
 end;
 
 
-{ Reads a chunk of data from the current pos of the stream. The amount of data to read is also retrieved from the stream. }
+{ Reads a chunk of data from the current pos of the stream. The amount of data to read is also retrieved from the stream.
+  The count is checked against the bytes left BEFORE the allocation: a damaged prefix can ask for up to 4 GB. }
 function TLightFileStream.ReadByteChunk: TBytes;
 VAR Count: Cardinal;
 begin
   Count:= ReadCardinal;
+  if Count > Size - Position
+  then RAISE EStreamDataError.Create('ReadByteChunk: the chunk claims '+ IntToStr(Count)+ ' bytes, but only '+ IntToStr(Size - Position)+ ' are left in the stream');
+
   if Count > 0 then
   begin
     SetLength(Result, Count);

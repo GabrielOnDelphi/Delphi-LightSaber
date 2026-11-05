@@ -1,14 +1,14 @@
 UNIT LightCore.LogRam;
 
 {=============================================================================================================
-   2026.10.13
+   2026.11.04
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
    A simple but effective log (non-visual).
    Its data can be displayed by observers (such as TLogViewer in LightVcl.Common.LogViewer.pas or LightFmx.Common.LogViewer.pas), but it can also work alone without being connected to an observer.
    Several observers can show the same log: TAppData (VCL) attaches the hidden log window to AppData.RamLog, and a TLogViewer on the main form can attach to it too.
-   It can easily hold up to 1 million entries. Being a good citizen, when it reaches this number it saves existing data to disk and then clears it from RAM.
+   It can easily hold up to 1 million entries. Being a good citizen, when it reaches this number it saves existing data to disk (OverflowFile, one file per log) and then clears it from RAM.
 
    Verbosity:
      Supports several verbosity levels (verbose, info, warnings, errors, etc)
@@ -86,6 +86,9 @@ TYPE
      FSaveInterval : Integer;            // Interval in seconds between periodic disk saves. Default 60s. Tunable via SaveInterval property.
      FMaxEntries   : Integer;            // Maximum number of entries before overflow-save+clear. Default 1_000_000. Tunable via MaxEntries property.
      FNotifyFlag   : INotifyCoalesceFlag; // Coalesces background-thread observer notifications. See INotifyCoalesceFlag for full rationale. Written only by the constructor; read concurrently by every Add path.
+     FOverflowCount: Integer;            // Overflow saves done by this log so far. Changed only under FAutoSaveLock.
+     class var
+       FLogsCreated: Integer;            // TRamLog objects created so far in this process. Gives each log its default OverflowName. Changed only through TInterlocked.
      const
        StreamSign         = 'TRamLog';   { Header signature for binary save/load. Unit-private — accessed by SaveSnapshotToFile in the same unit. }
      procedure setMaxEntries  (Value: Integer);
@@ -103,6 +106,8 @@ TYPE
        DefaultSaveInterval= 60;          // Default value for FSaveInterval (seconds).
      var
        ShowOnError: Boolean; // Automatically show the visual log form when warnings/errors are added to the log. This way the user is informed about the problems.
+       PeriodicSave: Boolean; // TRUE = every SaveInterval seconds the log is saved to AppDataFolder\PeriodicLogSave.logbin. FALSE by default: that file belongs to the application log, so only TAppDataCore sets it (for AppDataCore.RamLog). A second log saving there would overwrite the application log's save.
+       OverflowName: string;  // File name (no folder, no extension) of this log's overflow save, in AppDataFolder. Default 'LargeLogSave_<N>', N = the creation number of this log in the process; TAppDataCore sets 'LargeLogSave' for AppDataCore.RamLog. Every log needs its own name, or one log's overflow save overwrites another's.
      constructor Create(aShowOnError: Boolean; Observer: ILogObserver; MultiThreaded: Boolean= FALSE);
      destructor Destroy;  override;
      procedure Clear;
@@ -130,6 +135,7 @@ TYPE
 
      procedure SaveToFile  (CONST FullPath: string);
      function  LoadFromFile(CONST FullPath: string): Boolean;
+     function  OverflowFile(Part: Integer): string;   { Full path of this log's overflow save number Part (1 = the first). }
 
     // OBSERVER
     procedure RegisterLogObserver  (Observer: ILogObserver);
@@ -146,9 +152,9 @@ TYPE
     property Lines: TAbstractLogLines read FLines;
 
     { Tunable thresholds — sane defaults set in the constructor; override at any time.
-      MaxEntries  : maximum number of in-RAM entries before the next AddXxx triggers an overflow save (to LargeLogSave.logbin) and clears RAM.
+      MaxEntries  : maximum number of in-RAM entries before the next AddXxx triggers an overflow save (to OverflowFile) and clears RAM.
                     Lower this on memory-constrained devices; raise it if you want to keep more history in RAM for GetAsText/SaveAsText operations.
-      SaveInterval: seconds between periodic crash-recovery saves to PeriodicLogSave.logbin.
+      SaveInterval: seconds between periodic crash-recovery saves to PeriodicLogSave.logbin. Only a log with PeriodicSave = TRUE saves.
                     Lower for tighter durability; raise to reduce disk traffic.
       Setters Assert a positive value — zero or negative would trigger the corresponding save-and-clear on every Add, which is almost certainly a caller mistake. }
     property MaxEntries  : Integer read FMaxEntries   write setMaxEntries;
@@ -273,8 +279,9 @@ begin
   FSaveInterval:= DefaultSaveInterval;
   FMaxEntries  := DefaultMaxEntries;
   FLastSaveTime:= Now;
+  OverflowName := 'LargeLogSave_' + IntToStr(TInterlocked.Increment(FLogsCreated));
 
-  FObserverLock:= TCriticalSection.Create;
+  FObserverLock:=TCriticalSection.Create;
   FAutoSaveLock:= TCriticalSection.Create;
   FNotifyFlag  := TNotifyCoalesceFlag.Create;   { Never reassigned. Auto-released in Destroy via interface refcount. }
 
@@ -602,8 +609,8 @@ end;
    CHECK AND SAVE TO DISK
 
    Auto-save triggers:
-     1. When log exceeds MaxEntries (default 1 million; tunable via MaxEntries property) - saves to LargeLogSave.logbin and clears RAM.
-     2. When FSaveInterval seconds have passed since last save (default 60s; tunable via SaveInterval property) - saves to PeriodicLogSave.logbin.
+     1. When log exceeds MaxEntries (default 1 million; tunable via MaxEntries property) - saves to OverflowFile (a new numbered file per overflow) and clears RAM.
+     2. When FSaveInterval seconds have passed since last save (default 60s; tunable via SaveInterval property) - saves to PeriodicLogSave.logbin. Only when PeriodicSave is TRUE (the application log).
 
    Concurrency model (MT mode):
      FAutoSaveLock.TryEnter ensures only ONE thread runs the save logic at a time.
@@ -651,9 +658,10 @@ begin
 
   Snapshot:= Lines.SnapshotAndClear;   { Atomic — no data can be added between capture and clear }
   HandedOff:= FALSE;
+  Inc(FOverflowCount);                 { Each overflow gets its own file, so a second overflow never overwrites the first }
   TRY
     TRY
-      SaveSnapshotToFile(Snapshot, TAppDataCore.AppDataFolder + 'LargeLogSave.logbin');
+      SaveSnapshotToFile(Snapshot, OverflowFile(FOverflowCount));
     EXCEPT
       on E: EFCreateError do TraceSaveError('Overflow save (file create) failed: ' + E.Message);
       on E: EWriteError   do TraceSaveError('Overflow save (write) failed: '       + E.Message);
@@ -723,6 +731,7 @@ end;
   FLastSaveTime is intentionally not locked — worst case is an extra save or a skipped interval, both harmless under FAutoSaveLock serialization. }
 procedure TRamLog.tryPeriodicSave;
 begin
+  if NOT PeriodicSave then EXIT;
   if SecondsBetween(Now, FLastSaveTime) < FSaveInterval then EXIT;
 
   TRY
@@ -905,6 +914,18 @@ begin
   END;
 
   if Result then NotifyLogObserver;
+end;
+
+
+{ Part 1 is AppDataFolder\<OverflowName>.logbin; part N > 1 is AppDataFolder\<OverflowName> (N).logbin.
+  The numbers start again at 1 in each run, so a new run overwrites the files of the previous run. }
+function TRamLog.OverflowFile(Part: Integer): string;
+begin
+  Assert(Part > 0, 'TRamLog.OverflowFile: Part starts at 1');
+  Assert(OverflowName <> '', 'TRamLog.OverflowName cannot be empty');
+  if Part = 1
+  then Result:= TAppDataCore.AppDataFolder + OverflowName + '.logbin'
+  else Result:= TAppDataCore.AppDataFolder + OverflowName + ' (' + IntToStr(Part) + ').logbin';
 end;
 
 

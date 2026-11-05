@@ -1,7 +1,7 @@
 ﻿UNIT LightCore.Types;
 
 {=============================================================================================================
-   2026.01.30
+   2026.11.04
    www.GabrielMoraru.com
 =============================================================================================================}
 
@@ -102,6 +102,11 @@ CONST
 
 
 TYPE
+  { Raised by the LightSaber streams (TLightStream, TCubicMemStream) when the data they read is damaged: a length or a count that does not fit, a checkpoint that does not match.
+    A descendant of EReadError, so a handler for EReadError (a read past the end of the stream) also catches it.
+    Catch it to refuse a damaged file without also catching a bug in our own code. }
+  EStreamDataError = class(EReadError);
+
   TStringArray     = array of string;
   TSingleArray     = array of Single;
   TBytesArray      = System.SysUtils.TBytes;

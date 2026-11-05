@@ -235,7 +235,7 @@ USES
 constructor TAppDataCore.Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE);
 begin
   inherited Create;
-  FInitializing:= TRUE;                            // Set to FALSE by EndInitialization, after FormPostInitialize completes.
+  FInitializing:= TRUE;                            // Set to FALSE by EndInitialization, which the post-init step of TLightForm calls just BEFORE FormPostInitialize.
 
   { Sanity check via class var }
   if FCreated
@@ -265,6 +265,8 @@ begin
   { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }
   Assert(RamLog = NIL, 'Log already created!');  // Call this as soon as possible so it can catch all Log messages generated during app start up. A good place might be in your DPR file before Application.CreateForm(TMainForm, frmMain)
   RamLog:= TRamLog.Create(FShowOnError, NIL, MultiThreaded);
+  RamLog.PeriodicSave:= TRUE;   // PeriodicLogSave.logbin belongs to the application log; every other TRamLog keeps it FALSE
+  RamLog.OverflowName:= 'LargeLogSave';   // LargeLogSave.logbin belongs to the application log; every other TRamLog gets 'LargeLogSave_<N>'
 
   { App settings }
   defaultSettings;      // Always, and first: LoadSettings keeps these values for every key the INI does not have.

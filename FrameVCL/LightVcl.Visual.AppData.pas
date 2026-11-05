@@ -314,7 +314,7 @@ end;
 
 procedure TAppData.Run;
 begin
-  // Initializing stays TRUE until MainForm PostInitialize completes (via the queued post-init step).
+  // Initializing stays TRUE until the queued post-init step of the MainForm (TLightForm.RunPostInitialize) calls EndInitialization, just BEFORE FormPostInitialize runs.
 
   // Later, we ignore Application.ShowMainForm in CreateMainForm() if "StartMinim" is true. StartMinim remmbers application's last state (it was minimized or not)
   if StartMinim
