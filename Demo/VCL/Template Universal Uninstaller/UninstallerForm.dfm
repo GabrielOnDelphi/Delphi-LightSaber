@@ -2847,22 +2847,7 @@ object frmMain: TfrmMain
       Height = 193
       Align = alTop
       Lines.Strings = (
-        ''
-        'Please tell us why you want to uninstall the program.'
-        
-          'Any constructive critics will help us to improve the program so ' +
-          'you can enjoy it.'
-        ''
-        ''
-        'Disclaimer '
-        ''
-        
-          'This program is provided "AS IS" without warranty of any kind, e' +
-          'ither express or implied,'
-        
-          'including but not limited to the implied warranties of merchanta' +
-          'bility and/or fitness for a particular purpose.'
-        'By using the software you TOTALLY agree with the conditions.')
+        'Log')
       MaxLength = 2147483632
       ParentColor = True
       ScrollBars = ssVertical

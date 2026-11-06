@@ -55,27 +55,41 @@ object MainForm: TMainForm
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 69
+        Width = 50
         Height = 27
         Align = alLeft
         Caption = 'Test'
         TabOrder = 0
         OnClick = Button1Click
       end
+      object btnFill50: TButton
+        AlignWithMargins = True
+        Left = 59
+        Top = 3
+        Width = 50
+        Height = 27
+        Hint =
+          'Adds 50 entries to the log: all levels, some wider than the log,' +
+          ' one with two lines'
+        Align = alLeft
+        Caption = 'Add 50'
+        TabOrder = 1
+        OnClick = btnFill50Click
+      end
       object RichLogTrckbr1: TRichLogTrckbr
         AlignWithMargins = True
-        Left = 78
+        Left = 115
         Top = 3
-        Width = 300
+        Width = 263
         Height = 27
         Align = alClient
         BevelOuter = bvNone
         Caption = 'RichLogTrckbr1'
         ShowCaption = False
-        TabOrder = 1
-        TrackBar.Left = 150
+        TabOrder = 2
+        TrackBar.Left = 143
         TrackBar.Top = 0
-        TrackBar.Width = 150
+        TrackBar.Width = 120
         TrackBar.Height = 27
         TrackBar.Hint = 'Hide all messages below this level'
         TrackBar.Align = alRight

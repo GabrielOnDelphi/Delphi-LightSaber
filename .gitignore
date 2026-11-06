@@ -155,3 +155,5 @@ ToDo GetIt and DPM packages (plan).md
 # Claude session files (keep the shared project settings)
 .claude/*
 !.claude/settings.json
+Demo/VCL/Demo LightLog/VCL_Demo_Log.res
+Demo/VCL/Template Universal Uninstaller/VCL_Uninstaller.res

@@ -49,8 +49,10 @@ TYPE
     btnLoopTest: TButton;
     GridLog: TLogViewer;
     btnClear: TButton;
+    btnFill50: TButton;
     procedure FormCreate(Sender: TObject);
     procedure Button1Click(Sender: TObject);
+    procedure btnFill50Click(Sender: TObject);
     procedure btnTest2Click(Sender: TObject);
     procedure btnLoadClick(Sender: TObject);
     procedure btnSaveClick(Sender: TObject);
@@ -164,6 +166,39 @@ begin
 
  RichLog.AddInteger(42);
  RichLog.AddFromFile(Appdata.AppFolder+ 'Test file.txt', lvrImportant);
+end;
+
+
+{ Adds 50 entries to the RichLog, numbered after the ones already in its log. Two clicks need the scroll bar.
+  Every 10th entry is Verbose and every 10th (shifted by 5) is a Hint, so the slider has lines to hide and show.
+  Every 7th entry is wider than the control. The 46th holds two lines. The 50th is the only Error: at the Errors slider position each click adds one visible entry. }
+procedure TMainForm.btnFill50Click(Sender: TObject);
+CONST
+   WideTail = ' - this entry is wider than the log control, so its right end must be cut before the vertical scroll bar and never be drawn under it';
+VAR
+   First: Integer;
+   Msg: string;
+begin
+ First:= RichLog.RamLog.Lines.Count;
+ for VAR i:= 1 to 50 DO
+   begin
+     Msg:= 'Entry '+ IntToStr(First + i);
+     if i mod 7 = 0
+     then Msg:= Msg+ WideTail;
+     if i = 46
+     then Msg:= Msg+ ', line one'+ sLineBreak+ 'Entry '+ IntToStr(First + i)+ ', line two';
+
+     if i = 50
+     then RichLog.AddError(Msg)
+     else
+       case i mod 10 of
+         0: RichLog.AddVerb(Msg);
+         5: RichLog.AddHint(Msg);
+         3: RichLog.AddWarn(Msg);
+       else
+         RichLog.AddInfo(Msg);
+       end;
+   end;
 end;
 
 

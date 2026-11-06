@@ -116,6 +116,20 @@ CONST
   CubicDesignKey    = 'Software\CubicDesign\';          { Written by TAppData.RegisterUninstaller (LightVcl.Visual.AppData.pas) }
   ShowDesktopProgId = 'SHCmdFile';                      { The Windows file type of .scf ('Show Desktop'). A product can take .scf over: see RestoreOriginalSCF_Association in LightVcl.Common.Shell.pas }
 
+  { The text FormCreate shows in the log, one log entry per line. An empty string is an empty row.
+    It is not in the DFM: TRichLog makes DFM text ONE entry, which scrolls off the page whole and is cut when it is taller than the page (LightVcl.Visual.RichLog.pas, header sections "Virtual scrolling" and "Writes past the log are not supported"). }
+  WelcomeText: array[0..9] of string = (
+    '',
+    'Please tell us why you want to uninstall the program.',
+    'Any constructive critics will help us to improve the program so you can enjoy it.',
+    '',
+    '',
+    'Disclaimer ',
+    '',
+    'This program is provided "AS IS" without warranty of any kind, either express or implied,',
+    'including but not limited to the implied warranties of merchantability and/or fitness for a particular purpose.',
+    'By using the software you TOTALLY agree with the conditions.');
+
 
 
 
@@ -258,8 +272,13 @@ end;
 --------------------------------------------------------------------------------------------------}
 
 procedure TfrmMain.FormCreate(Sender: TObject);
-VAR InstallFolder, Registered: string;
+VAR InstallFolder, Registered, Line: string;
 begin
+ for Line in WelcomeText do
+   if Line = ''
+   then mmoLog.AddEmptyRow
+   else mmoLog.AddMsg(Line);
+
  { A product sets AppData.ProductUninstal (the "why did you uninstall" page) and AppData.ProductSupport (the support e-mail) here. The DNA Baser v6 uninstaller shows how }
  lblVersion.Caption:= 'Uninstaller version: '+ TAppData.GetVersionInfo;
  /// inetDiscount.Link:= BxConstants.wwwUninstallDiscount; { Give user a 50% discount so he won't uninstall. }
