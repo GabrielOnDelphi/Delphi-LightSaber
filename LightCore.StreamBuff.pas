@@ -176,7 +176,7 @@ TYPE
      { Unicode
         SafetyLimit (in bytes) rejects implausibly large length prefixes BEFORE allocating — defends against a corrupted 4-byte length that happens to fit within the actual file size (which CheckSafetyLimit's EOF check alone cannot catch).
         Default 1*KB matches sibling classes TLightFileStream / TCubicMemStream.
-        Pass an explicit larger value when you legitimately read strings > 1 KB (e.g., LogLines messages, RichRamLog payloads, large text files).
+        Pass an explicit larger value when you legitimately read strings > 1 KB (e.g., LogLines messages, large text files).
 
         For the Cnt / Chars variants (ReadStringACnt, ReadStringCnt, ReadCharsA): the check is still `if Count > SafetyLimit then RAISE`.
         SafetyLimit is intentionally defensive, NOT auto-sized to Count.
