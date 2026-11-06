@@ -113,8 +113,6 @@
         <DCCReference Include="Test.LightVcl.Visual.RichLogTrack.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Visual.RichLogUtils.pas"/>
         <DCCReference Include="Test.LightVcl.Visual.RichLogUtils.pas"/>
-        <DCCReference Include="..\FrameVCL\LightVcl.Visual.RichRamLog.pas"/>
-        <DCCReference Include="Test.LightVcl.Visual.RichRamLog.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Visual.Timer.pas"/>
         <DCCReference Include="Test.LightVcl.Visual.Timer.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Visual.ThumbViewerM.pas"/>

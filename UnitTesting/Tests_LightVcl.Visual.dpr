@@ -69,8 +69,6 @@ uses
   Test.LightVcl.Visual.RichLogTrack in 'Test.LightVcl.Visual.RichLogTrack.pas',
   LightVcl.Visual.RichLogUtils in '..\FrameVCL\LightVcl.Visual.RichLogUtils.pas',
   Test.LightVcl.Visual.RichLogUtils in 'Test.LightVcl.Visual.RichLogUtils.pas',
-  LightVcl.Visual.RichRamLog in '..\FrameVCL\LightVcl.Visual.RichRamLog.pas',
-  Test.LightVcl.Visual.RichRamLog in 'Test.LightVcl.Visual.RichRamLog.pas',
   LightVcl.Visual.Timer in '..\FrameVCL\LightVcl.Visual.Timer.pas',
   Test.LightVcl.Visual.Timer in 'Test.LightVcl.Visual.Timer.pas',
   LightVcl.Visual.ThumbViewerM in '..\FrameVCL\LightVcl.Visual.ThumbViewerM.pas',

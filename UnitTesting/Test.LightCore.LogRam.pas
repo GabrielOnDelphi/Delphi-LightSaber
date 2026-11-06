@@ -101,6 +101,18 @@ type
     { Enter Handling Tests }
     [Test]
     procedure TestMessageWithEnters;
+    [Test]
+    procedure TestMessageWithLoneLF_Kept;
+    [Test]
+    procedure TestMultiLineMessage_SurvivesFileRoundTrip;
+
+    { Reset counter Tests }
+    [Test]
+    procedure TestResetCount_SingleThreaded_ClearAndSnapshot;
+    [Test]
+    procedure TestResetCount_MultiThreaded_ClearAndSnapshot;
+    [Test]
+    procedure TestResetCount_LoadFromFile_IsAReset;
 
     { File Not Found Tests }
     [Test]
@@ -182,7 +194,7 @@ type
 implementation
 
 uses
-  LightCore.AppData;
+  LightCore.AppData, LightCore.LogLinesAbstract;
 
 
 procedure TTestLogRam.Setup;
@@ -461,9 +473,108 @@ end;
 
 procedure TTestLogRam.TestMessageWithEnters;
 begin
-  { Messages with enters should have them replaced with spaces }
+  { A multi-line message is stored as ONE entry, with its line break kept }
   FLog.AddMsg('Line1'#13#10'Line2');
-  Assert.AreEqual('Line1 Line2', FLog.Lines[0].Msg);
+  Assert.AreEqual(1, FLog.Lines.Count);
+  Assert.AreEqual('Line1'#13#10'Line2', FLog.Lines[0].Msg);
+end;
+
+
+procedure TTestLogRam.TestMessageWithLoneLF_Kept;
+begin
+  FLog.AddError('Line1'#10'Line2');
+  Assert.AreEqual(1, FLog.Lines.Count);
+  Assert.AreEqual('Line1'#10'Line2', FLog.Lines[0].Msg);
+  Assert.IsTrue(FLog.Lines[0].Level = lvErrors);
+end;
+
+
+procedure TTestLogRam.TestMultiLineMessage_SurvivesFileRoundTrip;
+VAR
+  FilePath: string;
+  NewLog: TRamLog;
+begin
+  FLog.AddWarn('A'#13#10'B'#10'C');
+  FilePath:= TPath.Combine(FTestDir, 'multiline.logbin');
+  FLog.SaveToFile(FilePath);
+
+  NewLog:= TRamLog.Create(False, nil, False);
+  try
+    Assert.IsTrue(NewLog.LoadFromFile(FilePath));
+    Assert.AreEqual(1, NewLog.Lines.Count);
+    Assert.AreEqual('A'#13#10'B'#10'C', NewLog.Lines[0].Msg);
+  finally
+    FreeAndNil(NewLog);
+  end;
+end;
+
+
+{ Reset counter Tests
+  A view that draws the lines incrementally (TRichLog) must learn that the lines it drew are gone, even when Count grew again since. }
+
+{ Shared body: Add changes nothing; Clear and SnapshotAndClear each add one. }
+procedure checkResetCount(Log: TRamLog);
+VAR
+  Start: Integer;
+  Snapshot: TAbstractLogLines;
+begin
+  Start:= Log.Lines.ResetCount;
+  Log.AddInfo('One');
+  Log.AddInfo('Two');
+  Assert.AreEqual(Start, Log.Lines.ResetCount, 'Adding lines is not a reset');
+
+  Log.Clear;
+  Assert.AreEqual(Start + 1, Log.Lines.ResetCount, 'Clear is a reset');
+
+  Log.AddInfo('Three');
+  Snapshot:= Log.Lines.SnapshotAndClear;
+  try
+    Assert.AreEqual(1, Snapshot.Count, 'Precondition: the snapshot took the line');
+    Assert.AreEqual(0, Log.Lines.Count, 'Precondition: the log is empty after the snapshot');
+  finally
+    FreeAndNil(Snapshot);
+  end;
+  Assert.AreEqual(Start + 2, Log.Lines.ResetCount, 'SnapshotAndClear (the overflow save) is a reset');
+end;
+
+
+procedure TTestLogRam.TestResetCount_SingleThreaded_ClearAndSnapshot;
+begin
+  checkResetCount(FLog);   { FLog is single-threaded (Setup) }
+end;
+
+
+procedure TTestLogRam.TestResetCount_MultiThreaded_ClearAndSnapshot;
+VAR MTLog: TRamLog;
+begin
+  MTLog:= TRamLog.Create(FALSE, NIL, TRUE);
+  try
+    checkResetCount(MTLog);
+  finally
+    FreeAndNil(MTLog);
+  end;
+end;
+
+
+{ The case Count cannot detect: the file holds as many lines as the log, or more, so Count does not drop. }
+procedure TTestLogRam.TestResetCount_LoadFromFile_IsAReset;
+VAR
+  FilePath: string;
+  Start: Integer;
+begin
+  FLog.AddInfo('Saved 1');
+  FLog.AddInfo('Saved 2');
+  FLog.AddInfo('Saved 3');
+  FilePath:= TPath.Combine(FTestDir, 'resetcount.logbin');
+  FLog.SaveToFile(FilePath);
+
+  FLog.Clear;
+  FLog.AddInfo('Before the load');
+  Start:= FLog.Lines.ResetCount;
+
+  Assert.IsTrue(FLog.LoadFromFile(FilePath), 'Precondition: the file loads');
+  Assert.AreEqual(3, FLog.Lines.Count, 'Precondition: Count grew from 1 to 3');
+  Assert.IsTrue(FLog.Lines.ResetCount > Start, 'LoadFromFile replaced the lines, so it must count as a reset');
 end;
 
 

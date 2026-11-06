@@ -21,6 +21,7 @@ type
   TTestLogViewer = class
   private
     FTestForm: TForm;
+    procedure checkSavedRtf(CONST MultiLineMsg: string);
   public
     [Setup]
     procedure Setup;
@@ -48,6 +49,12 @@ type
     { SaveAsRtf Tests }
     [Test]
     procedure TestSaveAsRtf_EmptyPath_ShouldRaise;
+
+    [Test]
+    procedure TestSaveAsRtf_LoneLF_SavedAsTwoLines;
+
+    [Test]
+    procedure TestSaveAsRtf_CRLF_SavedAsTwoLines;
 
     { Verbosity2Color Tests }
     [Test]
@@ -77,6 +84,8 @@ type
 implementation
 
 uses
+  System.IOUtils,
+  Vcl.ComCtrls,
   LightVcl.Common.LogViewer;
 
 procedure TTestLogViewer.Setup;
@@ -210,6 +219,59 @@ begin
   finally
     FreeAndNil(LogViewer);
   end;
+end;
+
+
+{ Saves a log of three entries, the middle one MultiLineMsg ('Line A' + a break + 'Line B'), then reads the RTF file back into a rich edit.
+  The file must hold four paragraphs in order: the break inside the entry is kept, and no line is lost or doubled. }
+procedure TTestLogViewer.checkSavedRtf(CONST MultiLineMsg: string);
+var
+  LogViewer: TLogViewer;
+  Reader: TRichEdit;
+  TempFile: string;
+begin
+  TempFile:= TPath.Combine(TPath.GetTempPath, 'Test_LogViewer_SaveAsRtf.rtf');
+  LogViewer:= TLogViewer.Create(FTestForm);
+  Reader:= TRichEdit.Create(NIL);
+  try
+    LogViewer.Parent:= FTestForm;
+    LogViewer.RamLog.AddInfo('First');
+    LogViewer.RamLog.AddInfo(MultiLineMsg);
+    LogViewer.RamLog.AddImpo('Last');   { Not AddError: the log of a TLogViewer has ShowOnError TRUE, and an error would show the test form }
+    Assert.AreEqual(3, LogViewer.RamLog.Count(FALSE, lvDebug), 'Precondition: the multi-line message is one entry');
+
+    LogViewer.SaveAsRtf(TempFile);
+    Assert.IsTrue(FileExists(TempFile), 'SaveAsRtf must write the file');
+    Assert.IsTrue(TFile.ReadAllText(TempFile).StartsWith('{\rtf'), 'The file must be RTF');
+
+    Reader.Visible:= FALSE;
+    Reader.Parent:= FTestForm;
+    Reader.PlainText:= FALSE;
+    Reader.Lines.LoadFromFile(TempFile);
+
+    Assert.AreEqual(4, Reader.Lines.Count, 'Three entries, one of them on two lines, are four lines');
+    Assert.AreEqual('First',  Reader.Lines[0]);
+    Assert.AreEqual('Line A', Reader.Lines[1]);
+    Assert.AreEqual('Line B', Reader.Lines[2]);
+    Assert.AreEqual('Last',   Reader.Lines[3]);
+  finally
+    FreeAndNil(Reader);
+    FreeAndNil(LogViewer);
+    if FileExists(TempFile)
+    then System.SysUtils.DeleteFile(TempFile);
+  end;
+end;
+
+
+procedure TTestLogViewer.TestSaveAsRtf_LoneLF_SavedAsTwoLines;
+begin
+  checkSavedRtf('Line A'#10'Line B');
+end;
+
+
+procedure TTestLogViewer.TestSaveAsRtf_CRLF_SavedAsTwoLines;
+begin
+  checkSavedRtf('Line A'#13#10'Line B');
 end;
 
 { Verbosity2Color Tests }

@@ -74,6 +74,18 @@ type
     [Test]
     procedure TestLog_SynchronizesVerbosity;
 
+    [Test]
+    procedure TestLog_FreedLog_LogBecomesNil;
+
+    [Test]
+    procedure TestLog_AttachedBeforeWindow_KeepsInfos;
+
+    [Test]
+    procedure TestRecreateWnd_KeepsLevel;
+
+    [Test]
+    procedure TestTrackBar_Move_RedrawsLogLines;
+
     { OnVerbChanged Event Tests }
     [Test]
     procedure TestOnVerbChanged_CanBeAssigned;
@@ -87,6 +99,23 @@ uses
   LightVcl.Visual.RichLog,
   LightVcl.Visual.RichLogTrack,
   LightVcl.Visual.RichLogUtils;
+
+
+TYPE
+  { Counts the windows created for the panel }
+  TRichLogTrckbrCounter = class(TRichLogTrckbr)
+  protected
+    procedure CreateWnd; override;
+  public
+    WndCount: Integer;
+  end;
+
+
+procedure TRichLogTrckbrCounter.CreateWnd;
+begin
+  Inc(WndCount);
+  inherited CreateWnd;
+end;
 
 
 procedure TTestRichLogTrack.Setup;
@@ -189,6 +218,7 @@ begin
       end;
 
   Assert.IsTrue(HasLabel, 'Should have a TLabel component');
+  Assert.AreEqual('Log verbosity: Info', VerbosityLabel(Trackbar).Caption, 'Before the slider is ever moved, the label shows the starting level');
 end;
 
 
@@ -209,6 +239,7 @@ end;
 
 { TrackBar Tests }
 
+{ TrackBar is a published subcomponent, so a DFM can store another Min and Max: CreateWnd sets them back }
 procedure TTestRichLogTrack.TestTrackBar_MinIsZero;
 var
   Trackbar: TRichLogTrckbr;
@@ -216,6 +247,9 @@ begin
   Trackbar:= TRichLogTrckbr.Create(FTestForm);
   Trackbar.Parent:= FTestForm;
   FTrackbar:= Trackbar;
+  Trackbar.TrackBar.Min:= 3;
+  Trackbar.TrackBar.Max:= 8;
+  Assert.AreEqual(3, Trackbar.TrackBar.Min, 'Precondition: Min is not 0 before the window exists');
   Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
   Assert.AreEqual(0, Trackbar.TrackBar.Min, 'TrackBar.Min should be 0');
@@ -244,7 +278,7 @@ begin
   FTrackbar:= Trackbar;
   Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
-  Assert.AreEqual(Ord(DefaultVerbosity), Trackbar.TrackBar.Position, 'TrackBar.Position should default to DefaultVerbosity');
+  Assert.AreEqual(Ord(lvrInfos), Trackbar.TrackBar.Position, 'TrackBar.Position should default to lvrInfos');
 end;
 
 
@@ -331,7 +365,7 @@ begin
 
   Trackbar.Verbosity:= lvrErrors;
   Assert.AreEqual(lvrErrors, Trackbar.Verbosity, 'The trackbar must still work without a log');
-  Assert.AreEqual(DefaultVerbosity, RichLog.Verbosity, 'A detached log must keep its verbosity');
+  Assert.AreEqual(lvrInfos, RichLog.Verbosity, 'A detached log must keep its verbosity');
 end;
 
 
@@ -353,6 +387,121 @@ begin
   Trackbar.Log:= RichLog;
 
   Assert.AreEqual(lvrWarnings, RichLog.Verbosity, 'Assigning Log should synchronize verbosity');
+end;
+
+
+{ The slider must forget a log that is freed while attached, or its next move writes to freed memory.
+  The log has no owner: so only a free notification can tell the slider (an owner passes opRemove to every component it owns, System.Classes.pas, TComponent.Notification). }
+procedure TTestRichLogTrack.TestLog_FreedLog_LogBecomesNil;
+var
+  Trackbar: TRichLogTrckbr;
+  RichLog: TRichLog;
+begin
+  Trackbar:= TRichLogTrckbr.Create(FTestForm);
+  Trackbar.Parent:= FTestForm;
+  FTrackbar:= Trackbar;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
+
+  RichLog:= TRichLog.Create(NIL);
+  RichLog.Parent:= FTestForm;
+  FRichLog:= RichLog;
+  Trackbar.Log:= RichLog;
+  Assert.IsNotNull(Trackbar.Log, 'Precondition: the log is attached');
+
+  FRichLog:= NIL;
+  FreeAndNil(RichLog);
+  Assert.IsNull(Trackbar.Log, 'Freeing the attached log must set the Log of the slider to NIL');
+
+  Trackbar.Verbosity:= lvrErrors;   { Would write to the freed log if the slider still pointed at it }
+  Assert.AreEqual('Log verbosity: Errors', VerbosityLabel(Trackbar).Caption, 'The slider keeps working without its log');
+end;
+
+
+{ The DFM loader, and a form built in code, can attach the log before the slider has a window.
+  Once the window exists, the log must show the level the slider shows. }
+procedure TTestRichLogTrack.TestLog_AttachedBeforeWindow_KeepsInfos;
+var
+  Trackbar: TRichLogTrckbr;
+  RichLog: TRichLog;
+begin
+  Trackbar:= TRichLogTrckbr.Create(FTestForm);
+  Trackbar.Parent:= FTestForm;
+  FTrackbar:= Trackbar;
+
+  RichLog:= TRichLog.Create(FTestForm);
+  RichLog.Parent:= FTestForm;
+  FRichLog:= RichLog;
+
+  Assert.IsFalse(Trackbar.HandleAllocated, 'Precondition: the slider has no window yet');
+  Trackbar.Log:= RichLog;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
+
+  Assert.AreEqual(lvrInfos, Trackbar.Verbosity, 'The slider starts at lvrInfos');
+  Assert.AreEqual(lvrInfos, RichLog.Verbosity, 'The log must show the level of the slider');
+end;
+
+
+{ The VCL destroys and creates the window again (RecreateWnd) when, for example, a window style changes.
+  The new window must keep the level the user chose, in the slider, the label and the log, and it is no change the user made. }
+procedure TTestRichLogTrack.TestRecreateWnd_KeepsLevel;
+var
+  Trackbar: TRichLogTrckbrCounter;
+  RichLog: TRichLog;
+begin
+  Trackbar:= TRichLogTrckbrCounter.Create(FTestForm);
+  Trackbar.Parent:= FTestForm;
+  FTrackbar:= Trackbar;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
+
+  RichLog:= TRichLog.Create(FTestForm);
+  RichLog.Parent:= FTestForm;
+  FRichLog:= RichLog;
+  Trackbar.Log:= RichLog;
+  Trackbar.OnVerbChanged:= OnVerbChangedHandler;
+
+  Trackbar.Verbosity:= lvrErrors;
+  Assert.AreEqual(lvrErrors, RichLog.Verbosity, 'Precondition: the log follows the slider');
+  Assert.AreEqual(1, FVerbChangedCount, 'Precondition: the user changed the level once');
+
+  Trackbar.RecreateWnd;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The window is created again');   { The hidden form does not create it by itself }
+  Assert.AreEqual(2, Trackbar.WndCount, 'Precondition: CreateWnd ran a second time');
+
+  Assert.AreEqual(lvrErrors, Trackbar.Verbosity, 'The slider keeps the level the user chose');
+  Assert.AreEqual(lvrErrors, RichLog.Verbosity, 'The log keeps the level the user chose');
+  Assert.AreEqual('Log verbosity: Errors', VerbosityLabel(Trackbar).Caption, 'The label keeps the level the user chose');
+  Assert.AreEqual(1, FVerbChangedCount, 'A new window is no change the user made: OnVerbChanged must not fire');
+end;
+
+
+{ The slider filters the lines the log already holds: moving it redraws them (the TRichLog view of a TRamLog) }
+procedure TTestRichLogTrack.TestTrackBar_Move_RedrawsLogLines;
+var
+  Trackbar: TRichLogTrckbr;
+  RichLog: TRichLog;
+begin
+  Trackbar:= TRichLogTrckbr.Create(FTestForm);
+  Trackbar.Parent:= FTestForm;
+  FTrackbar:= Trackbar;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
+
+  RichLog:= TRichLog.Create(FTestForm);
+  RichLog.Parent:= FTestForm;
+  FRichLog:= RichLog;
+  RichLog.HandleNeeded;
+  Trackbar.Log:= RichLog;
+
+  RichLog.AddInfo('Info line');
+  RichLog.AddError('Error line');
+  Assert.AreEqual(2, RichLog.Lines.Count, 'At the default position both lines are drawn');
+
+  Trackbar.TrackBar.Position:= Ord(lvrErrors);
+  Assert.AreEqual(1, RichLog.Lines.Count, 'At lvrErrors only the error line is drawn');
+  Assert.AreEqual('Error line', RichLog.Lines[0]);
+
+  Trackbar.TrackBar.Position:= Ord(lvrVerbose);
+  Assert.AreEqual(2, RichLog.Lines.Count, 'Moving the slider down brings the info line back');
+  Assert.AreEqual('Info line', RichLog.Lines[0]);
 end;
 
 

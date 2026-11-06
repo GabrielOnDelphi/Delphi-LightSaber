@@ -58,6 +58,9 @@ type
     procedure TestReplaceEnters_CRLF;
 
     [Test]
+    procedure TestFlattenLineBreaks;
+
+    [Test]
     procedure TestRemoveLastEnter;
 
     [Test]
@@ -541,6 +544,22 @@ begin
   // CRLF should be replaced as single unit, not two replacements
   Assert.AreEqual('Hello World', ReplaceEnters('Hello'#13#10'World', ' '));
   Assert.AreEqual('A B C', ReplaceEnters('A'#13'B'#10'C', ' '));
+end;
+
+
+procedure TTestLightCore.TestFlattenLineBreaks;
+begin
+  Assert.AreEqual('',            FlattenLineBreaks(''));
+  Assert.AreEqual('No break',    FlattenLineBreaks('No break'));
+  Assert.AreEqual('A B',         FlattenLineBreaks('A'#13#10'B'));        // CRLF = one space
+  Assert.AreEqual('A B C',       FlattenLineBreaks('A'#13'B'#10'C'));
+  Assert.AreEqual('A  B',        FlattenLineBreaks('A'#10#13'B'));        // LFCR is two breaks
+  Assert.AreEqual('A B C',       FlattenLineBreaks('A'#$2028'B'#$2029'C')); // Unicode line and paragraph separators
+  Assert.AreEqual('A B',         FlattenLineBreaks('A'#10'B'));           // Each break kind alone: a lone LF (Unix)
+  Assert.AreEqual('A B',         FlattenLineBreaks('A'#$2028'B'));        // a lone line separator
+  Assert.AreEqual('A B',         FlattenLineBreaks('A'#$2029'B'));        // a lone paragraph separator
+  Assert.AreEqual('Head ',       FlattenLineBreaks('Head'#13#10));
+  Assert.AreEqual(' ',           FlattenLineBreaks(#13));
 end;
 
 procedure TTestLightCore.TestRemoveLastEnter;
