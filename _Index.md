@@ -777,10 +777,11 @@ procedure NotifyLogObserverAndShow;
 procedure PopUpWindow;
 ```
 
-## LightCore.LogTypes (1)
+## LightCore.LogTypes (2)
 
 ```pascal
 function Verbosity2String(Verbosity: TLogVerbLvl): string;
+function NormalizeLogBreaks(CONST Msg: string): string;
 ```
 
 ## LightCore.Math (32)
@@ -2438,7 +2439,7 @@ procedure TrackBarChange(Sender: TObject);
 procedure Register;
 ```
 
-## LightVcl.Common.LogViewer (31)
+## LightVcl.Common.LogViewer (30)
 
 ```pascal
 function CalculateColWidth(const ATextLength: Integer; const ACaption: string): Integer;
@@ -2467,7 +2468,6 @@ procedure CopyAll;
 procedure CopyVisible;
 procedure CopyCurLine;
 function Verbosity2Color (Verbosity: TLogVerbLvl; IsDark: Boolean = False): TColor;
-function NormalizeLogBreaks(CONST Msg: string): string;
 function RichEditTextLength(RichEdit: TCustomRichEdit): Integer;
 function AppendRichText (RichEdit: TCustomRichEdit; CONST Text: string; Color: TColor; Bold: Boolean): Integer;
 procedure SaveLogAsRtf (Log: TRamLog; CONST FullPath: string; LevelToColor: TLevelToColor; IsDark: Boolean; Host: TWinControl);
@@ -3806,7 +3806,7 @@ procedure Change; override;
 procedure Register;
 ```
 
-## LightVcl.Visual.RichLog (74)
+## LightVcl.Visual.RichLog (75)
 
 ```pascal
 function getVerbosityI: Integer;
@@ -3855,6 +3855,7 @@ procedure CreateWnd; override;
 procedure DestroyWnd; override;
 procedure Loaded; override;
 procedure Resize; override;
+procedure Change; override;
 procedure WndProc(var Message: TMessage); override;
 procedure KeyDown(var Key: Word; Shift: TShiftState); override;
 function DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean; override;
@@ -3885,13 +3886,14 @@ procedure AddDateStamp; { Adds the date, on a new line }
 procedure Register;
 ```
 
-## LightVcl.Visual.RichLogTrack (6)
+## LightVcl.Visual.RichLogTrack (7)
 
 ```pascal
 function getVerbosity: TLogVerb;
 procedure setVerbosity(Value: TLogVerb);
 procedure setRichLog (const Value: TRichLog);
 procedure CreateWnd; override;
+procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 procedure TrackBarChange(Sender: TObject);
 procedure Register;
 ```
@@ -4221,4 +4223,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_3027 public routines across 237 units._
+_3029 public routines across 237 units._
