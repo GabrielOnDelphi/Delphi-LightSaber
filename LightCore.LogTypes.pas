@@ -36,6 +36,7 @@ CONST
    DefaultVerbosity= lvInfos;   { Default verbosity threshold for new logs. }
 
 function Verbosity2String(Verbosity: TLogVerbLvl): string;
+function NormalizeLogBreaks(CONST Msg: string): string;
 
 
 IMPLEMENTATION
@@ -53,6 +54,47 @@ const
 function Verbosity2String(Verbosity: TLogVerbLvl): string;
 begin
   Result:= VerbosityNames[Verbosity];
+end;
+
+
+
+{ Turns a log message into the text a rich edit can take as it is.
+    #0, #11 (vertical tab) and #12 (form feed) become spaces: a rich edit misbehaves on #0 ("EOutOfResources - RichEdit line insertion error") and draws #11 as a line break inside the paragraph.
+    CRLF, a lone CR, a lone LF, U+2028 and U+2029 become one #13, the paragraph break of a rich edit, so one break is exactly one character.
+    One trailing break is dropped, as the TStringList split of the old TRichLog did: AddMsg('Title' + CRLF) gives one line, not a line plus an empty row. }
+function NormalizeLogBreaks(CONST Msg: string): string;
+VAR
+  i, n, Len: Integer;
+  C: Char;
+begin
+  Len:= Length(Msg);
+  SetLength(Result, Len);
+  n:= 0;
+  i:= 1;
+  while i <= Len do
+    begin
+      C:= Msg[i];
+      Inc(n);
+      case C of
+        #0, #11, #12:
+          Result[n]:= ' ';
+        #13:
+          begin
+            Result[n]:= #13;
+            if (i < Len) AND (Msg[i+1] = #10)
+            then Inc(i);   { CRLF is one break }
+          end;
+        #10, #$2028, #$2029:
+          Result[n]:= #13;
+      else
+        Result[n]:= C;
+      end;
+      Inc(i);
+    end;
+
+  if (n > 0) AND (Result[n] = #13)
+  then Dec(n);
+  SetLength(Result, n);
 end;
 
 
