@@ -1,9 +1,7 @@
 UNIT LightVcl.Visual.RichLogUtils;
 
-// OLD LOG based on RichEdit
-
 {=============================================================================================================
-   2026.01.31
+   2026.11.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Utility functions and types for RichLog.
@@ -24,13 +22,13 @@ UNIT LightVcl.Visual.RichLogUtils;
    **I/O**
    The log can be saved to disk to a binary file so it can be restored when the next app starts up.
    Tester:
-     c:\Projects\LightSaber\Demo\LightLog\
+     c:\Projects\LightSaber\Demo\VCL\Demo LightLog\VCL_Demo_Log.dpr
 =============================================================================================================}
 
 INTERFACE
 
 USES
-   System.SysUtils, Vcl.Graphics, LightCore.Colors;
+   System.SysUtils, Vcl.Graphics, LightCore.Colors, LightCore.LogTypes;
 
 TYPE
   TLogVerb= (lvrVerbose, lvrHints, lvrInfos, lvrImportant, lvrWarnings, lvrErrors);
@@ -48,6 +46,12 @@ CONST
 
 function Verbosity2String(Verbosity: TLogVerb): string;
 function Verb2Color(Verb: TLogVerb; IsDark: Boolean = False): TColor;
+
+{ Conversions between the slider levels of TRichLog (TLogVerb) and the levels stored in a TRamLog (TLogVerbLvl).
+  TLogVerb has no Debug level: lvrVerbose filters at lvDebug, so the lowest slider position also shows debug lines, and a debug line is drawn in the lvrVerbose color. }
+function Verb2Level (Verb: TLogVerb): TLogVerbLvl;
+function Level2Verb (Level: TLogVerbLvl): TLogVerb;
+function Level2Color(Level: TLogVerbLvl; IsDark: Boolean): TColor;   { The TRichLog palette (Verb2Color) for a stored level. Matches the procedural type TLevelToColor of LightVcl.Common.LogViewer. }
 
 
 
@@ -96,6 +100,43 @@ begin
    else
      raise Exception.Create('Verb2Color: Invalid verbosity');
    end;
+end;
+
+
+function Verb2Level(Verb: TLogVerb): TLogVerbLvl;
+begin
+ case Verb of
+   lvrVerbose  : Result:= lvDebug;
+   lvrHints    : Result:= lvHints;
+   lvrInfos    : Result:= lvInfos;
+   lvrImportant: Result:= lvImportant;
+   lvrWarnings : Result:= lvWarnings;
+   lvrErrors   : Result:= lvErrors;
+ else
+   raise Exception.Create('Verb2Level: Invalid verbosity');
+ end;
+end;
+
+
+function Level2Verb(Level: TLogVerbLvl): TLogVerb;
+begin
+ case Level of
+   lvDebug,
+   lvVerbose  : Result:= lvrVerbose;
+   lvHints    : Result:= lvrHints;
+   lvInfos    : Result:= lvrInfos;
+   lvImportant: Result:= lvrImportant;
+   lvWarnings : Result:= lvrWarnings;
+   lvErrors   : Result:= lvrErrors;
+ else
+   raise Exception.Create('Level2Verb: Invalid log level');
+ end;
+end;
+
+
+function Level2Color(Level: TLogVerbLvl; IsDark: Boolean): TColor;
+begin
+ Result:= Verb2Color(Level2Verb(Level), IsDark);
 end;
 
 
