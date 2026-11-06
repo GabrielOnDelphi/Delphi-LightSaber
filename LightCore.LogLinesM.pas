@@ -126,6 +126,7 @@ begin
     for i:= 0 to FList.Count - 1 do
       Dispose(PLogLine(FList[i]));
     FList.Clear;
+    Inc(FResetCount);
   finally
     FLock.EndWrite;
   end;
@@ -279,6 +280,7 @@ begin
       for i:= 0 to FList.Count - 1 do
         Snapshot.FList.Add(FList[i]);
       FList.Clear;   { Pointers transferred — do NOT Dispose; the snapshot owns them now. }
+      Inc(FResetCount);
     finally
       FLock.EndWrite;
     end;
