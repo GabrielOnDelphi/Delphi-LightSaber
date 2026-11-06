@@ -181,6 +181,9 @@ type
     procedure TestExternalLog_ExistingLinesDrawn_NoEvents;
 
     [Test]
+    procedure TestExternalLog_MultiThreaded_DrawsAndScrolls;
+
+    [Test]
     procedure TestAssignExternalRamLog_Nil_Raises;
 
     [Test]
@@ -245,6 +248,15 @@ type
     [Test]
     procedure TestTallEntry_CutAtPageBottom;
 
+    [Test]
+    procedure TestFilteredPage_ScrollsOverHiddenLines;
+
+    [Test]
+    procedure TestForeignEdit_NextAppendDrawsFromLog;
+
+    [Test]
+    procedure TestReadOnly_DefaultTrue_DrawCodeStillWrites;
+
     { DFM Tests }
     [Test]
     procedure TestDfmLines_RealTextBecomesEntry;
@@ -285,6 +297,7 @@ uses
   System.Types,
   System.Math,
   System.IOUtils,
+  System.TypInfo,
   Vcl.Clipbrd,
   LightCore.AppData,
   LightCore.LogTypes,
@@ -440,6 +453,17 @@ function LastLine(RichLog: TRichLog): string;
 begin
   Assert.IsTrue(RichLog.Lines.Count > 0, 'The control must show at least one line');
   Result:= RichLog.Lines[RichLog.Lines.Count - 1];
+end;
+
+
+{ Every drawn line is Prefix + a number, and the numbers count up from First: Prefix + First, Prefix + (First + 1), ... }
+procedure AssertPageFrom(RichLog: TRichLog; CONST Prefix: string; First: Integer);
+var
+  Row: Integer;
+begin
+  Assert.IsTrue(RichLog.Lines.Count > 0, 'The control must show at least one line');
+  for Row:= 0 to RichLog.Lines.Count - 1 do
+    Assert.AreEqual(Prefix + IntToStr(First + Row), RichLog.Lines[Row], 'Row ' + IntToStr(Row));
 end;
 
 
@@ -1302,6 +1326,64 @@ begin
     FRichLog:= NIL;
     FreeAndNil(RichLog);    { Before the log: an external log must outlive its observers }
   finally
+    CleanupRichLog;         { A failed assert leaves the control alive: free it before the log, not in TearDown after it }
+    FreeAndNil(ExternalLog);
+  end;
+end;
+
+
+{ A multi-threaded log (AppDataCore.RamLog can be one) is read under its lock, by other routines than a single-threaded one.
+  The test writes from the main thread, so every Populate runs at once, as in the tests of the own log. }
+procedure TTestRichLog.TestExternalLog_MultiThreaded_DrawsAndScrolls;
+CONST
+  Pairs = 100;
+var
+  RichLog: TRichLog;
+  ExternalLog: TRamLog;
+  i, Shown: Integer;
+begin
+  ExternalLog:= TRamLog.Create(FALSE, NIL, TRUE);
+  try
+    ExternalLog.AddInfo('Info old');
+    ExternalLog.AddError('Error old');
+
+    RichLog:= TRichLog(makeLog(120));
+    RichLog.OnError:= OnErrorHandler;
+    RichLog.AssignExternalRamLog(ExternalLog);
+    Assert.AreEqual('Error old', LastLine(RichLog), 'The lines already in the log are drawn');
+    Assert.AreEqual(0, FErrorCount, 'Attaching fires no OnError for old lines');
+
+    for i:= 0 to Pairs - 1 do
+      begin
+        ExternalLog.AddInfo('Info ' + IntToStr(i));
+        ExternalLog.AddVerb('Verb ' + IntToStr(i));   { Hidden at the default lvrInfos }
+      end;
+    Shown:= RichLog.Lines.Count;
+    Assert.IsTrue((Shown > 1) AND (Shown < 20), 'Precondition: the page holds a few one-line entries. Shown: ' + IntToStr(Shown));
+    AssertPageFrom(RichLog, 'Info ', Pairs - Shown);
+
+    RichLog.TopEntry:= 12;           { The two old lines come first: visible entry 12 is 'Info 10' }
+    AssertPageFrom(RichLog, 'Info ', 10);
+
+    ExternalLog.AddError('New error');
+    Assert.AreEqual(1, FErrorCount, 'A new error fires OnError');
+    Assert.AreEqual('New error', LastLine(RichLog), 'AutoScroll: the new line is drawn at the bottom');
+
+    RichLog.Verbosity:= lvrVerbose;  { Counted again under the lock }
+    RichLog.TopEntry:= 2;
+    Assert.AreEqual('Info 0', RichLog.Lines[0]);
+    Assert.AreEqual('Verb 0', RichLog.Lines[1], 'A line that was hidden is drawn in its place');
+
+    ExternalLog.Clear;
+    Assert.AreEqual(0, RichLog.Lines.Count, 'A reset of the log empties the page');
+    ExternalLog.AddInfo('After the clear');
+    Assert.AreEqual(1, RichLog.Lines.Count);
+    Assert.AreEqual('After the clear', RichLog.Lines[0]);
+
+    FRichLog:= NIL;
+    FreeAndNil(RichLog);    { Before the log: an external log must outlive its observers }
+  finally
+    CleanupRichLog;
     FreeAndNil(ExternalLog);
   end;
 end;
@@ -1870,6 +1952,93 @@ begin
 
   RichLog.TopEntry:= MaxInt;
   Assert.AreEqual(0, Pos(NewsLine(BodyLines), RichLog.Text), 'The last line of the entry is on no page');
+end;
+
+
+{ A hidden verbose line follows every info line, so the page is read through the slider filter:
+  backward from the end of the log for the last page and for a page near the end, forward from the start for a page near the start. }
+procedure TTestRichLog.TestFilteredPage_ScrollsOverHiddenLines;
+CONST
+  Pairs = 100;
+var
+  RichLog: TRichLog;
+  i, Shown: Integer;
+begin
+  RichLog:= TRichLog(makeLog(120));
+  for i:= 0 to Pairs - 1 do
+    begin
+      RichLog.RamLog.AddInfo('Info ' + IntToStr(i));
+      RichLog.RamLog.AddVerb('Verb ' + IntToStr(i));
+    end;
+
+  RichLog.Verbosity:= lvrHints;    { Draws the page again from the log; the verbose lines stay hidden }
+  Shown:= RichLog.Lines.Count;
+  Assert.IsTrue((Shown > 1) AND (Shown < 20), 'Precondition: the page holds a few one-line entries. Shown: ' + IntToStr(Shown));
+  AssertPageFrom(RichLog, 'Info ', Pairs - Shown);
+  Assert.AreEqual(Pairs - Shown, RichLog.TopEntry, 'TopEntry counts the visible entries only');
+  Assert.AreEqual(Pairs - Shown, ChildScrollBar(RichLog).Max, 'The range of the scroll bar counts the visible entries only');
+
+  RichLog.TopEntry:= 10;           { Near the start of the log }
+  AssertPageFrom(RichLog, 'Info ', 10);
+
+  RichLog.TopEntry:= Pairs - 20;   { Near the end, above the last page }
+  AssertPageFrom(RichLog, 'Info ', Pairs - 20);
+
+  RichLog.Verbosity:= lvrVerbose;  { Every line visible }
+  Assert.AreEqual('Verb ' + IntToStr(Pairs - 1), LastLine(RichLog), 'AutoScroll: the page ends with the last line of the log');
+  RichLog.TopEntry:= 0;
+  Assert.AreEqual('Info 0', RichLog.Lines[0]);
+  Assert.AreEqual('Verb 0', RichLog.Lines[1], 'A line that was hidden is drawn in its place');
+end;
+
+
+{ Text typed or pasted into the page, or written with Lines.Add or SelText, is not in the log.
+  The next append must draw the page from the log: an append that trims the top by character counts would cut an entry in half. }
+procedure TTestRichLog.TestForeignEdit_NextAppendDrawsFromLog;
+var
+  RichLog: TRichLog;
+  Shown: Integer;
+begin
+  RichLog:= TRichLog(makeLog(120));
+  RichLog.ReadOnly:= FALSE;      { A page the user may type into }
+  AddEntries(RichLog, ManyEntries);
+  Shown:= RichLog.Lines.Count;   { One-line entries at the end of the log: the page holds Shown of them }
+  Assert.IsTrue(Shown > 1, 'Precondition: the page holds several lines. Shown: ' + IntToStr(Shown));
+
+  RichLog.SelStart:= 0;
+  RichLog.SelText:= 'Typed'#13;   { What a user does who types a line at the top of the page }
+  Assert.AreEqual(Shown + 1, RichLog.Lines.Count, 'Precondition: the typed line is in the rich edit');
+
+  RichLog.RamLog.AddInfo('After the edit');
+  Assert.AreEqual(Shown, RichLog.Lines.Count, 'The page is drawn from the log: the typed line is gone and the page is full');
+  Assert.AreEqual('Entry ' + IntToStr(ManyEntries + 1 - Shown), RichLog.Lines[0], 'The page starts with a whole entry');
+  Assert.AreEqual('After the edit', LastLine(RichLog), 'The page ends with the new entry');
+end;
+
+
+{ ReadOnly is TRUE by default and is not stored in a DFM then.
+  The draw code still writes into the read-only rich edit: a full draw, an append that trims the top, and a scroll. }
+procedure TTestRichLog.TestReadOnly_DefaultTrue_DrawCodeStillWrites;
+var
+  RichLog: TRichLog;
+  Shown: Integer;
+begin
+  RichLog:= TRichLog(makeLog(120));
+  Assert.IsTrue(RichLog.ReadOnly, 'A new TRichLog is read-only');
+  Assert.AreEqual(Ord(TRUE), GetPropInfo(RichLog, 'ReadOnly').Default, 'The published ReadOnly is declared default TRUE, so a DFM stores it only when FALSE');
+  Assert.IsTrue((GetWindowLong(RichLog.Handle, GWL_STYLE) AND ES_READONLY) <> 0, 'The window of the rich edit has ES_READONLY');
+
+  AddEntries(RichLog, ManyEntries);
+  Shown:= RichLog.Lines.Count;
+  Assert.IsTrue(Shown > 1, 'Precondition: the page holds several lines. Shown: ' + IntToStr(Shown));
+  AssertPageFrom(RichLog, 'Entry ', ManyEntries - Shown);
+
+  RichLog.RamLog.AddInfo('Entry ' + IntToStr(ManyEntries));   { The page is full: the append trims the top entry }
+  Assert.AreEqual(Shown, RichLog.Lines.Count, 'The page stays full');
+  AssertPageFrom(RichLog, 'Entry ', ManyEntries + 1 - Shown);
+
+  RichLog.TopEntry:= 5;
+  AssertPageFrom(RichLog, 'Entry ', 5);
 end;
 
 
