@@ -1,10 +1,8 @@
 ﻿UNIT LightVcl.Visual.RichLogTrack;
 
-// OLD LOG based on RichEdit
-
 {=============================================================================================================
    Gabriel Moraru
-   2026.01.31
+   2026.11.06
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -14,7 +12,7 @@
      Max= 5 (lvrErrors)
 
    Tester:
-     c:\Projects\LightSaber\Demo\LightLog\
+     c:\Projects\LightSaber\Demo\VCL\Demo LightLog\VCL_Demo_Log.dpr
 =============================================================================================================}
 
 INTERFACE
@@ -36,6 +34,7 @@ TYPE
      procedure setRichLog (const Value: TRichLog);
    protected
      procedure CreateWnd; override;
+     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
      procedure TrackBarChange(Sender: TObject);
    public
      constructor Create(AOwner: TComponent); override;
@@ -70,11 +69,13 @@ end;
 
 //CreateWnd can be called more than once: http://docs.embarcadero.com/products/rad_studio/delphiAndcpp2009/HelpUpdate2/EN/html/delphivclwin32/Controls_TWinControl_CreateWnd.html
 procedure TRichLogTrckbr.CreateWnd;
+VAR FirstWnd: Boolean;
 begin
  inherited CreateWnd;
  ShowCaption := FALSE;                 { https://stackoverflow.com/questions/56859524/how-to-initialize-a-custom-control/64974040?noredirect=1#comment114931111_64974040 }
 
- if NOT Initialized then               { Make sure we don't call this code twice }
+ FirstWnd:= NOT Initialized;
+ if FirstWnd then                      { Make sure we don't call this code twice }
   begin
    Initialized:= TRUE;
 
@@ -97,10 +98,24 @@ begin
  TrackBar.Align      := alRight;
  TrackBar.Name       := 'VerbosityTrackbar';                  { This control MUST have a name so I can save it to INI file }
  TrackBar.OnChange   := TrackBarChange;
- { Finally set the verbosity }
- TrackBar.Position   := Ord(DefaultVerbosity);                { I need this to synchroniz Log's and track's verbosity. Cannot be moved to CreateWnd if I use LoadForm(). Must be after TrackBar.OnChange:= TrackBarChange }
- 
+ { Finally set the verbosity. Only on the first window: a window created again (RecreateWnd) keeps the level the user chose (test: TestRecreateWnd_KeepsLevel) }
+ if FirstWnd
+ then TrackBar.Position:= Ord(DefaultVerbosity);              { I need this to synchroniz Log's and track's verbosity. Cannot be moved to CreateWnd if I use LoadForm(). Must be after TrackBar.OnChange:= TrackBarChange }
+
  ControlState:= ControlState- [csCreating];
+
+ { TrackBarChange skips the log while csCreating is set, and a log attached before the window got the position of the slider without a window (0 = lvrVerbose) }
+ if FLog <> NIL
+ then FLog.Verbosity:= Verbosity;
+end;
+
+
+{ A log freed while attached must not stay in FLog: the next move of the slider would write to freed memory }
+procedure TRichLogTrckbr.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+ inherited Notification(AComponent, Operation);
+ if (Operation = opRemove) AND (AComponent = FLog)
+ then FLog:= NIL;
 end;
 
 
@@ -142,11 +157,18 @@ end;
 
 
 
+{ FreeNotification: a log with another owner, or with none, tells the slider when it is freed (Notification) }
 procedure TRichLogTrckbr.setRichLog(CONST Value: TRichLog);
 begin
+ if (FLog <> NIL) AND (FLog <> Value)
+ then FLog.RemoveFreeNotification(Self);
+
  FLog:= Value;
- if FLog <> NIL
- then FLog.Verbosity:= Verbosity;
+ if FLog <> NIL then
+  begin
+   FLog.FreeNotification(Self);
+   FLog.Verbosity:= Verbosity;
+  end;
 end;
 
 
