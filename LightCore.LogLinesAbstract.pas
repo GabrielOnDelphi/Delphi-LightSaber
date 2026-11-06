@@ -59,6 +59,7 @@ type
     procedure readFromStream_v5(Stream: TLightStream);
   protected
     FList: TList;
+    FResetCount: Integer;     { Bumped by Clear and SnapshotAndClear of the subclasses. Read through ResetCount. }
     CONST StreamSign  = 'TLogLines';
     function getItem(Index: Integer): PLogLine;                                             virtual; abstract;
 
@@ -117,6 +118,11 @@ type
 
     procedure ReadFromStream(Stream: TLightStream); virtual;
     procedure WriteToStream (Stream: TLightStream); virtual;
+
+    { Grows by one at every Clear and SnapshotAndClear.
+      A view that draws the lines incrementally compares it with the value it saw last time: a change means the old lines are gone, even when Count grew again since.
+      TRamLog.LoadFromFile and LoadFromStream call Clear first, so a load counts as a reset too. }
+    property  ResetCount: Integer read FResetCount;
   end;
 
 
