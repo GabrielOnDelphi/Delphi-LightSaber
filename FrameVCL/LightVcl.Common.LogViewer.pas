@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.LogViewer;
 
 {=============================================================================================================
-   2026.05.13
+   2026.11.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    A log viewer based on TStringGrid.
@@ -105,13 +105,23 @@ TYPE
 
 function Verbosity2Color (Verbosity: TLogVerbLvl; IsDark: Boolean = False): TColor;
 
+
+{ Rich text helpers shared by TLogViewer.SaveAsRtf and TRichLog (LightVcl.Visual.RichLog) }
+TYPE
+  TLevelToColor = function(Level: TLogVerbLvl; IsDark: Boolean): TColor;   { The palette of a view: Verbosity2Color here, Level2Color in LightVcl.Visual.RichLogUtils }
+
+function  RichEditTextLength(RichEdit: TCustomRichEdit): Integer;
+function  AppendRichText    (RichEdit: TCustomRichEdit; CONST Text: string; Color: TColor; Bold: Boolean): Integer;
+procedure SaveLogAsRtf      (Log: TRamLog; CONST FullPath: string; LevelToColor: TLevelToColor; IsDark: Boolean; Host: TWinControl);
+
 procedure Register;
 
 
 IMPLEMENTATION
 
 USES
-   LightCore.Types,
+   Winapi.Messages, Winapi.RichEdit,
+   LightCore, LightCore.Types,
    LightCore.Colors, LightVcl.Common.Clipboard, LightVcl.Common.LogFilter;
 
 
@@ -395,12 +405,12 @@ begin
            if ShowDate then s:= DateToStr(CurLine.Time);
            if ShowTime then s:= s + ' ' + FormatDateTime('hh:nn', CurLine.Time);
          end;
-      1: s:= CurLine.Msg;
+      1: s:= FlattenLineBreaks(CurLine.Msg);   { A multi-line entry is one grid row }
     else
       raise Exception.Create('GridDrawCell: Invalid column index');
     end
   else
-    s:= CurLine.Msg;
+    s:= FlattenLineBreaks(CurLine.Msg);
 
   { Draw with verbosity-based color }
   FGrid.Canvas.Font.Color:= Verbosity2Color(CurLine.Level, NOT IsLightStyleColor(clWindow));
@@ -606,9 +616,73 @@ begin
 end;
 
 
+{ Saves the whole log (no verbosity filter) to an RTF file, in the Verbosity2Color palette. The work is done by SaveLogAsRtf. }
+procedure TLogViewer.SaveAsRtf(const FullPath: string);
+begin
+  SaveLogAsRtf(FRamLog, FullPath, Verbosity2Color, NOT IsLightStyleColor(clWindow), Self);
+end;
+
+
+
+{-------------------------------------------------------------------------------------------------------------
+   RICH TEXT HELPERS
+   Shared by TLogViewer.SaveAsRtf and TRichLog.
+-------------------------------------------------------------------------------------------------------------}
+
+{ The number of characters in the rich edit, counted as SelStart counts them: a paragraph break is one character.
+  EM_GETTEXTLENGTHEX without GTL_USECRLF, as the print code of TCustomRichEdit does (Vcl.ComCtrls.pas). Copies no text, unlike Length(Text). }
+function RichEditTextLength(RichEdit: TCustomRichEdit): Integer;
+VAR TextLen: TGetTextLengthEx;
+begin
+  Assert(RichEdit <> NIL, 'RichEditTextLength: RichEdit is NIL');
+  TextLen.flags   := GTL_NUMCHARS OR GTL_PRECISE;
+  TextLen.codepage:= 1200;   { UTF-16 }
+  Result:= SendMessage(RichEdit.Handle, EM_GETTEXTLENGTHEX, WPARAM(@TextLen), 0);
+end;
+
+
+{ Inserts Text at the end of the rich edit, in the given color and weight, and returns the number of characters the rich edit gained (measured, not assumed).
+  Text should come from NormalizeLogBreaks.
+  The insert is done with EM_REPLACESEL (wParam 0: not undoable), never with Lines.Add, which raises EOutOfResources on a lone #10 or #13 (TRichEditStrings.Insert counts only #13#10 pairs).
+  A text that starts with an RTF signature is inserted in two parts, so the rich edit cannot read it as RTF. }
+function AppendRichText(RichEdit: TCustomRichEdit; CONST Text: string; Color: TColor; Bold: Boolean): Integer;
+VAR
+  StartLen: Integer;
+  Range: TCharRange;
+  Head: string;
+begin
+  Assert(RichEdit <> NIL, 'AppendRichText: RichEdit is NIL');
+  StartLen:= RichEditTextLength(RichEdit);
+  if Text = '' then EXIT(0);
+
+  Range.cpMin:= StartLen;
+  Range.cpMax:= StartLen;
+  SendMessage(RichEdit.Handle, EM_EXSETSEL, 0, LPARAM(@Range));
+
+  RichEdit.SelAttributes.Color:= Color;
+  if Bold
+  then RichEdit.SelAttributes.Style:= [fsBold]
+  else RichEdit.SelAttributes.Style:= [];
+
+  Head:= Copy(Text, 1, 5);
+  if SameText(Head, '{\rtf') OR SameText(Head, '{urtf')
+  then
+    begin
+      SendMessage(RichEdit.Handle, EM_REPLACESEL, 0, LPARAM(PChar('{')));
+      SendMessage(RichEdit.Handle, EM_REPLACESEL, 0, LPARAM(PChar(Copy(Text, 2, MaxInt))));
+    end
+  else
+    SendMessage(RichEdit.Handle, EM_REPLACESEL, 0, LPARAM(PChar(Text)));
+
+  Result:= RichEditTextLength(RichEdit) - StartLen;
+end;
+
+
 {--------------------------------------------------------------------------------------------------
-   Saves the log content to an RTF file with colors preserved.
-   Each line is colored according to its verbosity level, and bold lines are formatted accordingly.
+   Saves every line of Log (no verbosity filter) to an RTF file.
+   Each line gets the color LevelToColor gives for its level, and bold lines are bold.
+   A multi-line message stays one entry with line breaks inside it.
+   Host is the window that holds the temporary rich edit for the duration of the save; it must be able to get a handle.
 
    Thread Safety — two-phase pattern with VALUE copy (not pointer copy):
      Phase 1 copies the data we need (Msg, Level, Bold) out of each PLogLine into a local TArray<TRtfLine> under one read lock.
@@ -625,7 +699,7 @@ end;
    Cost: ~16 bytes/line struct overhead (string ref + Level + Bold). String content is NOT duplicated.
      For a 1M-line log: ~16 MB array overhead + zero extra string content.
 --------------------------------------------------------------------------------------------------}
-procedure TLogViewer.SaveAsRtf(const FullPath: string);
+procedure SaveLogAsRtf(Log: TRamLog; CONST FullPath: string; LevelToColor: TLevelToColor; IsDark: Boolean; Host: TWinControl);
 type
   TRtfLine = record
     Msg  : string;
@@ -634,24 +708,27 @@ type
   end;
 VAR
   RichEdit : TRichEdit;
-  IsDark   : Boolean;
   Snapshot : TArray<TRtfLine>;
   SnapCount: Integer;
   i        : Integer;
+  Text     : string;
 begin
   if FullPath = ''
   then raise Exception.Create('SaveAsRtf: FullPath parameter cannot be empty');
 
-  if NOT Assigned(FRamLog)
+  if NOT Assigned(Log)
   then raise Exception.Create('SaveAsRtf: RamLog is not assigned');
 
-  IsDark:= NOT IsLightStyleColor(clWindow);
+  if NOT Assigned(Host)
+  then raise Exception.Create('SaveAsRtf: Host is not assigned');
+
+  Assert(Assigned(LevelToColor), 'SaveLogAsRtf: LevelToColor is NIL');
 
   { Phase 1 — copy values out of each PLogLine under a single read lock.
     Buffer starts at 256 and doubles on overflow — amortized O(N) growth. }
   SnapCount:= 0;
   SetLength(Snapshot, 256);
-  FRamLog.Lines.ForEachLocked(procedure (Line: PLogLine)
+  Log.Lines.ForEachLocked(procedure (Line: PLogLine)
     begin
       if SnapCount >= Length(Snapshot)
       then SetLength(Snapshot, Length(Snapshot) * 2);
@@ -663,19 +740,19 @@ begin
 
   { Phase 2 — slow Win32 work, lock-free.
     The local Snapshot owns its data, so a concurrent overflow + snapshot-dispose during this loop is harmless. }
-  RichEdit:= TRichEdit.Create(Self);
+  RichEdit:= TRichEdit.Create(NIL);
   TRY
-    RichEdit.Parent:= Self;        { Required for TRichEdit to work properly }
     RichEdit.Visible:= FALSE;
+    RichEdit.MaxLength:= $7FFFFFF0;   { The text limit of TRichLog. Set before the handle exists: TCustomEdit.CreateWnd passes it to the window. }
+    RichEdit.Parent:= Host;           { A rich edit needs a parent window to get a handle }
     RichEdit.PlainText:= FALSE;
 
     for i:= 0 to SnapCount - 1 do
       begin
-        RichEdit.SelAttributes.Color:= Verbosity2Color(Snapshot[i].Level, IsDark);
-        if Snapshot[i].Bold
-        then RichEdit.SelAttributes.Style:= [fsBold]
-        else RichEdit.SelAttributes.Style:= [];
-        RichEdit.Lines.Add(Snapshot[i].Msg);
+        Text:= NormalizeLogBreaks(Snapshot[i].Msg);
+        if i > 0
+        then Text:= #13 + Text;       { The paragraph break that ends the entry before }
+        AppendRichText(RichEdit, Text, LevelToColor(Snapshot[i].Level, IsDark), Snapshot[i].Bold);
       end;
 
     RichEdit.Lines.SaveToFile(FullPath);
