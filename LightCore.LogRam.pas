@@ -795,18 +795,13 @@ end;
 
 
 
-{ Prepares a message string for storage by replacing all line breaks with spaces.
-  This ensures each log entry is a single line, which simplifies display and filtering.
-
-  Fast path:
-    Most log messages contain no line breaks.
-    ReplaceEnters always runs three StringReplace passes (CRLF, CR, LF), each allocating a fresh copy of the string even when nothing matches.
-    We pre-scan for line-break characters and short-circuit when none are present — saves three full-string scans plus three allocations on every Add* call in the common case. }
+{ Prepares a message string for storage: only caps its length.
+  Line breaks are kept: one entry may hold a multi-line message, with one level, one time and one bold flag.
+  TRichLog draws it on several lines.
+  A view that shows one row per entry (the VCL and FMX TLogViewer grids) puts it on one line at draw time, with LightCore.FlattenLineBreaks. }
 function TRamLog.prepareString(CONST Msg: string): string;
 begin
-  if (Pos(#10, Msg) = 0) and (Pos(#13, Msg) = 0)
-  then Result:= Msg                         { No line breaks — return verbatim, no allocation }
-  else Result:= ReplaceEnters(Msg, ' ');
+  Result:= Msg;
 
   { Cap the stored length so the binary save stays loadable — see MaxLogMsgChars. }
   if Length(Result) > MaxLogMsgChars then
