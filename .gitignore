@@ -151,3 +151,7 @@ Test runs.log
 *_MemoryManager_EventLog.txt
 ToDo GetIt and DPM packages (plan).md
 /ToDo
+
+# Claude session files (keep the shared project settings)
+.claude/*
+!.claude/settings.json
