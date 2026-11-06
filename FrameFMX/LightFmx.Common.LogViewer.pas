@@ -427,14 +427,14 @@ begin
   s:= '';
   case ColumnCount of
     1: if Column.Index = 0
-       then s:= CurLine.Msg;
+       then s:= FlattenLineBreaks(CurLine.Msg);     { A multi-line entry is one grid row }
 
     2: case Column.Index of
          0: begin  // Time/Date column
               if FShowDate then s:= DateToStr(CurLine.Time);
               if FShowTime then s:= s + ' ' + FormatDateTime('hh:nn', CurLine.Time);
             end;
-         1: s:= CurLine.Msg;
+         1: s:= FlattenLineBreaks(CurLine.Msg);
        end;
     else EXIT;
   end;
