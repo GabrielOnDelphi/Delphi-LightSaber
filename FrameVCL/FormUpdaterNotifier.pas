@@ -79,6 +79,7 @@ TYPE
   private
     HostEvents: RUpdaterEvents;   { The handlers that the host program had set on the Updater before this form set its own. FormDestroy gives them back. }
     procedure PopulateNews;
+    procedure AddNewsBody(CONST Body: string);
   public
     procedure ShowDemoTab;
  end;
@@ -200,7 +201,7 @@ begin     //clr
  then lblVersion.Caption:= lblVersion.Caption+ CRLF+ 'CRITICAL UPDATE!';
 
  Log.AddMsg(Updater.NewsRec.NewsHeadline+ CRLF);
- Log.AddMsg(Updater.NewsRec.NewsBody);
+ AddNewsBody(Updater.NewsRec.NewsBody);
 
  { Show new version in red }
  if Updater.NewVersionFound(RunningVersion) then
@@ -210,6 +211,27 @@ begin     //clr
    lblVersion.StyleElements:= [];
    lblVersion.Transparent:= FALSE;
   end;
+end;
+
+
+{ One log entry per line of the body.
+  TRichLog cuts an entry taller than its page (LightVcl.Visual.RichLog.pas, header section "Virtual scrolling"), and a news body can be longer than the page.
+  An empty line becomes an empty row. }
+procedure TFrmUpdater.AddNewsBody(CONST Body: string);
+VAR
+   Line: string;
+   BodyLines: TStringList;
+begin
+ BodyLines:= TStringList.Create;
+ TRY
+   BodyLines.Text:= Body;          { Splits at CRLF, LF and CR }
+   for Line in BodyLines do
+     if Line = ''
+     then Log.AddEmptyRow
+     else Log.AddMsg(Line);
+ FINALLY
+   FreeAndNil(BodyLines);
+ END;
 end;
 
 
