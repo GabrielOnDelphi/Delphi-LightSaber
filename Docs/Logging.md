@@ -16,9 +16,33 @@ TRamLog                         (LightCore.LogRam.pas)        - non-visual log
         |
         +-- TLogViewer (VCL)    (FrameVCL/LightVcl.Common.LogViewer.pas)
         +-- TLogViewer (FMX)    (FrameFMX/LightFmx.Common.LogViewer.pas)
+        +-- TRichLog   (VCL)    (FrameVCL/LightVcl.Visual.RichLog.pas)
 ```
 
 `TRamLog` holds the messages and broadcasts changes to every registered observer. The visual viewers implement `ILogObserver` and render the data on demand.
+
+## Which view to use
+
+Both VCL views draw the same `TRamLog`, filter by the same levels and are used the same way (`RamLog`, `AssignExternalRamLog`, `FormDestroying`, `Verbosity`, `Clear`, `CopyAll`, `SaveAsRtf`).
+The choice is a question of looks only:
+
+| | `TLogViewer` | `TRichLog` |
+|---|---|---|
+| Shape | a grid, one row per entry | a `TRichEdit`, coloured rich text |
+| A multi-line entry | one row: the line breaks are drawn as spaces | several lines, never word-wrapped. An entry taller than the page is cut at the bottom of the page |
+| Mouse selection and Ctrl+C | one row (`CopyCurLine`) | free selection, but only of the entries on screen. Each arriving line redraws the page and loses the selection |
+| Scroll bars | a private vertical bar | a private vertical bar, plus a horizontal bar that is always shown |
+| `CopyAll` / `SaveAsRtf` | the whole log, every level | the whole log, every level |
+| Verbosity type | `TLogVerbLvl` | `TLogVerb` (no Debug level; its lowest position, `lvrVerbose`, also shows `lvDebug` entries) |
+
+Both scroll virtually: the control holds only the entries that fit on screen, and its scrollbar pages through the `TRamLog`.
+So a log of a million entries costs the RAM of the `TRamLog` only.
+
+`Clear` empties the `TRamLog` the view shows, also an external one such as `AppData.RamLog`.
+
+Text written into a `TRichLog` past its log (`Log.Text:= ...`, `Log.Lines.Add`, `Log.Lines.LoadFromFile`) is not supported: it disappears at the next redraw. Write through the `Add*` methods.
+Text stored in the DFM (`Lines.Strings`) becomes the first entry of the log.
+`TRichLog.LoadFromFile` replaces the log with one Info entry per text line; it does not parse RTF.
 
 ## Several observers on one log
 
@@ -131,7 +155,7 @@ The visual viewer's verbosity property filters which levels are displayed — me
 |---|---|
 | `LoadFromFile` / `SaveToFile` | Binary format (`.logbin`); preferred |
 | `LoadFromStream` / `SaveToStream` | Same format on an open `TLightStream` |
-| `GetAsText` / `SaveAsText` | Plain text dump (one CRLF-separated line per entry) |
+| `GetAsText` / `SaveAsText` | Plain text dump, entries separated by CRLF. An entry that holds line breaks gives several text lines |
 | `Clear` | Empty in-RAM list and notify observer |
 
 Stream format version is currently 5 — see the `Stream Format (Version 5)` block in `LightCore.LogLinesAbstract.pas`. Backward compatibility for binary loading is a project rule; never change the on-disk layout without bumping the version and providing a v4-or-older reader.
@@ -200,6 +224,13 @@ User actions exposed by the viewer:
 - Export (VCL only): `SaveAsRtf`
 - Toggle date/time columns: `ShowDate`, `ShowTime`
 - Filter level: `Verbosity` (writes the property → re-populates)
+
+### Line breaks inside an entry
+
+`TRamLog` keeps the line breaks of a message: one `Add*` call is one entry, with one level, one time and one bold flag, however many lines its text has.
+The grids flatten the breaks at draw time with `LightCore.FlattenLineBreaks` (CRLF, CR, LF, U+2028 and U+2029 become one space each), so a grid row stays one line.
+`CopyVisible`, `CopyCurLine`, `CopyAll` and `SaveAsRtf` copy the message as stored, so a multi-line entry gives several lines there.
+The `.logbin` format did not change (`WriteString` keeps the breaks); an older program that loads a newer file shows the raw breaks in its grid.
 
 ## Demos
 
