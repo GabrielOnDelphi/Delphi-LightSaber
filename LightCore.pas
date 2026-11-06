@@ -51,7 +51,8 @@ CONST
  function  RemoveEnters        (CONST s: Ansistring): Ansistring; overload;
 
  function  ReplaceEnters       (CONST s, ReplaceWith: string): string;
- function  RemoveLastEnter     (CONST s: string): string;         overload;                                       { Cuts the last Enter from a string }
+ function  FlattenLineBreaks   (CONST s: string): string;                                                         { One space for each CRLF, CR, LF, U+2028, U+2029. Returns s itself when it has none }
+ function  RemoveLastEnter     (CONST s: string): string;         overload;                                      { Cuts the last Enter from a string }
  function  RemoveLastEnter     (CONST s: AnsiString): AnsiString; overload;
 
 
@@ -919,6 +920,44 @@ begin
  Result:= StringReplace(s, CRLFw, ReplaceWith, [rfReplaceAll]);
  Result:= StringReplace(Result, #13, ReplaceWith, [rfReplaceAll]);
  Result:= StringReplace(Result, #10, ReplaceWith, [rfReplaceAll]);
+end;
+
+
+{ Puts a multi-line text on one line, for a view that shows one row per log entry (a grid cell).
+  CRLF counts as one break. U+2028 (line separator) and U+2029 (paragraph separator) count as breaks too.
+  The common case (no break) does one scan and returns the same string, with no copy. }
+function FlattenLineBreaks(CONST s: string): string;
+VAR
+  i, Len, OutLen: Integer;
+  HasBreak: Boolean;
+begin
+  HasBreak:= FALSE;
+  for i:= 1 to Length(s) do
+    if CharInSet(s[i], [#10, #13]) OR (s[i] = #$2028) OR (s[i] = #$2029) then
+      begin
+        HasBreak:= TRUE;
+        Break;
+      end;
+  if NOT HasBreak then EXIT(s);
+
+  Len:= Length(s);
+  SetLength(Result, Len);
+  OutLen:= 0;
+  i:= 1;
+  while i <= Len do
+    begin
+      Inc(OutLen);
+      if CharInSet(s[i], [#10, #13]) OR (s[i] = #$2028) OR (s[i] = #$2029) then
+        begin
+          Result[OutLen]:= ' ';
+          if (s[i] = #13) AND (i < Len) AND (s[i+1] = #10)
+          then Inc(i);                                 { CRLF = one break }
+        end
+      else
+        Result[OutLen]:= s[i];
+      Inc(i);
+    end;
+  SetLength(Result, OutLen);
 end;
 
 
