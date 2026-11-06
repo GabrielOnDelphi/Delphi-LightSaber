@@ -840,7 +840,7 @@ procedure FreeMutex;
 function IsSingleInstance(CONST MutexName: string): Boolean;
 ```
 
-## LightCore (131)
+## LightCore (132)
 
 ```pascal
 function CRLFToEnter (CONST s: string): string; // old name: FixCRLF
@@ -852,6 +852,7 @@ function TrimEnters (CONST s: string): string; { Remove enter characters (#10 an
 function RemoveEnters (CONST s: string): string; overload; { Works both with Linux, Windows and half-enter characters }
 function RemoveEnters (CONST s: Ansistring): Ansistring; overload;
 function ReplaceEnters (CONST s, ReplaceWith: string): string;
+function FlattenLineBreaks (CONST s: string): string; { One space for each CRLF, CR, LF, U+2028, U+2029. Returns s itself when it has none }
 function RemoveLastEnter (CONST s: string): string; overload; { Cuts the last Enter from a string }
 function RemoveLastEnter (CONST s: AnsiString): AnsiString; overload;
 function ReplaceUnicodeChars (CONST s: string; ReplaceWith: char): String; { Replace all Unicode characters withsomething else }
@@ -2437,7 +2438,7 @@ procedure TrackBarChange(Sender: TObject);
 procedure Register;
 ```
 
-## LightVcl.Common.LogViewer (27)
+## LightVcl.Common.LogViewer (31)
 
 ```pascal
 function CalculateColWidth(const ATextLength: Integer; const ACaption: string): Integer;
@@ -2466,6 +2467,10 @@ procedure CopyAll;
 procedure CopyVisible;
 procedure CopyCurLine;
 function Verbosity2Color (Verbosity: TLogVerbLvl; IsDark: Boolean = False): TColor;
+function NormalizeLogBreaks(CONST Msg: string): string;
+function RichEditTextLength(RichEdit: TCustomRichEdit): Integer;
+function AppendRichText (RichEdit: TCustomRichEdit; CONST Text: string; Color: TColor; Bold: Boolean): Integer;
+procedure SaveLogAsRtf (Log: TRamLog; CONST FullPath: string; LevelToColor: TLevelToColor; IsDark: Boolean; Host: TWinControl);
 procedure Register;
 ```
 
@@ -3179,8 +3184,8 @@ procedure Restore;
 procedure Restart;
 procedure SelfDelete(AlsoRemoveFolder: Boolean = FALSE);
 procedure Minimize; override;
-function RunFileAtStartUp(CONST FilePath: string; Active: Boolean): Boolean;
-function RunSelfAtStartUp(Active: Boolean): Boolean;
+function RunFileAtStartUp(CONST FilePath: string; Active: Boolean; CONST Params: string= ''): Boolean;
+function RunSelfAtStartUp(Active: Boolean; CONST Params: string= ''): Boolean;
 function ReadAppDataFolder(CONST UninstalledApp: string): string; //used by Uninstaller App
 function ReadInstallationFolder(CONST UninstalledApp: string): string;
 procedure CreateMainForm (aClass: TFormClass; AutoState: TAutoState= asPosOnly); overload;
@@ -3801,16 +3806,63 @@ procedure Change; override;
 procedure Register;
 ```
 
-## LightVcl.Visual.RichLog (27)
+## LightVcl.Visual.RichLog (74)
 
 ```pascal
 function getVerbosityI: Integer;
 procedure setVerbosityI(const Value: Integer);
-procedure Add(s: string);
-procedure AddFormated(s: string);
-procedure ScrollDown;
+procedure setVerbosity (Value: TLogVerb);
+procedure setInsertTime(Value: Boolean);
+procedure setInsertDate(Value: Boolean);
+procedure setTopEntry (Value: Integer);
 function IsDark: Boolean;
-procedure addColorMsg (CONST Mesaj: string; TextColor: TColor);
+procedure detachLog;
+procedure ensureHandle;
+procedure processLog;
+procedure resync;
+function readNewEntries(out NewLines: TArray<RLogLine>): Boolean;
+function readPage(First, MaxCount: Integer): TArray<RLogLine>;
+function countFiltered(Limit: Integer): Integer;
+procedure fireEvents(CONST NewLines: TArray<RLogLine>);
+procedure flushPending;
+function canDraw: Boolean;
+function capacity: Integer;
+function linePitch: Integer;
+function pitchChanged: Boolean;
+function isAtEnd: Boolean;
+function bottomTop(Cap: Integer): Integer;
+procedure redraw;
+procedure requestRedraw;
+procedure drawBottom;
+procedure drawFrom(Top: Integer);
+procedure drawEntries(CONST Entries: TArray<RLogLine>; From, Top, Cap: Integer);
+procedure showNewEntries(CONST NewLines: TArray<RLogLine>; OldFiltered, NewVisible: Integer);
+procedure appendAtEnd(CONST NewLines: TArray<RLogLine>; Cap: Integer; KeepBottom: Boolean);
+procedure appendEntry(CONST Line: RLogLine; MaxLines: Integer);
+function entryText(CONST Line: RLogLine; MaxLines: Integer; out LineCount: Integer; out Cut: Boolean): string;
+procedure trimTop;
+procedure beginDraw;
+procedure endDraw;
+procedure updateBar(BottomEntry: Integer);
+procedure applyFormatRect;
+procedure scrollBarChange(Sender: TObject);
+function wheelStep: Integer;
+function getDfmText: string;
+procedure CMFontChanged(var Message: TMessage); message CM_FONTCHANGED;
+procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
+procedure CreateParams(var Params: TCreateParams); override;
+procedure CreateWnd; override;
+procedure DestroyWnd; override;
+procedure Loaded; override;
+procedure Resize; override;
+procedure WndProc(var Message: TMessage); override;
+procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+function DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean; override;
+function DoMouseWheelUp (Shift: TShiftState; MousePos: TPoint): Boolean; override;
+procedure Clear; override; { Empties the log the control shows, also an external one }
+procedure AssignExternalRamLog(ExternalLog: TRamLog); { Shows ExternalLog instead of the own log. ExternalLog must outlive this control. }
+procedure Populate; { ILogObserver: draws the lines that arrived in the log }
+procedure PopUpWindow; { ILogObserver: shows the form of the control }
 procedure RemoveLastEmptyRows;
 procedure CopyAll;
 procedure SaveAsRtf (CONST FullPath: string);
@@ -3829,7 +3881,7 @@ procedure AddMsgInt (CONST Mesaj: string; i: Integer);
 procedure AddInteger (CONST i: Integer);
 procedure AddFromFile (CONST FileName: string; MsgType: TLogVerb);
 procedure AddEmptyRow;
-procedure AddDateStamp; { Adds the date/time, on a new line }
+procedure AddDateStamp; { Adds the date, on a new line }
 procedure Register;
 ```
 
@@ -3844,44 +3896,14 @@ procedure TrackBarChange(Sender: TObject);
 procedure Register;
 ```
 
-## LightVcl.Visual.RichLogUtils (2)
+## LightVcl.Visual.RichLogUtils (5)
 
 ```pascal
 function Verbosity2String(Verbosity: TLogVerb): string;
 function Verb2Color(Verb: TLogVerb; IsDark: Boolean = False): TColor;
-```
-
-## LightVcl.Visual.RichRamLog (28)
-
-```pascal
-procedure setVerbosity(const Value: TLogVerb);
-procedure addNewMessage(const Level, Mesaj: string);
-function getContent(Line: string): string;
-function getLog(MsgType: Char): string; { UNUSED }
-function getText: string;
-procedure setText(Value: string);
-procedure Clear(ClearVisualLog: Boolean);
-procedure Update;
-function Count: Integer;
-procedure importRawData(const RamLogRawLines: string); { Access to the unformated lines of the log } { One ore more lines of data in TRamLog format (#1# text_text_text). Used by Baser to restore Log from disk }
-procedure LoadFromStream(Stream: TLightStream); overload;
-procedure LoadFromStream(Stream: TCubicMemStream); overload;
-procedure SaveToStream (Stream: TLightStream); overload;
-procedure SaveToStream (Stream: TCubicMemStream); overload;
-procedure AddBold (CONST Mesaj: string);
-procedure AddMsgInt (CONST Mesaj: string; i: Integer);
-procedure AddMsgLvl (CONST Mesaj: string; MsgType: TLogVerb);
-procedure AddEmptyRow;
-procedure AddMsg (CONST Mesaj: string);
-procedure AddVerb (CONST Mesaj: string);
-procedure AddHint (CONST Mesaj: string);
-procedure AddInfo (CONST Mesaj: string);
-procedure AddImpo (CONST Mesaj: string);
-procedure AddWarn (CONST Mesaj: string);
-procedure AddError (CONST Mesaj: string);
-procedure Append (RamLog: TRamLog);
-procedure ExportTo (aRichLog: TRichLog);
-procedure SaveAsTextFile(CONST FullPath: string); { Save plain text to file }
+function Verb2Level (Verb: TLogVerb): TLogVerbLvl;
+function Level2Verb (Level: TLogVerbLvl): TLogVerb;
+function Level2Color(Level: TLogVerbLvl; IsDark: Boolean): TColor; { The TRichLog palette (Verb2Color) for a stored level. Matches the procedural type TLevelToColor of LightVcl.Common.LogViewer. }
 ```
 
 ## LightVcl.Visual.ScrollBox (10)
@@ -4199,4 +4221,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_3000 public routines across 238 units._
+_3027 public routines across 237 units._
