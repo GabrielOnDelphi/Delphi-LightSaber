@@ -181,8 +181,8 @@ TYPE
     procedure SelfDelete(AlsoRemoveFolder: Boolean = FALSE);
     procedure Minimize; override;
 
-    function  RunFileAtStartUp(CONST FilePath: string; Active: Boolean): Boolean;
-    function  RunSelfAtStartUp(Active: Boolean): Boolean;
+    function  RunFileAtStartUp(CONST FilePath: string; Active: Boolean; CONST Params: string= ''): Boolean;
+    function  RunSelfAtStartUp(Active: Boolean; CONST Params: string= ''): Boolean;
 
     class procedure RaiseIfStillInitializing;
 
@@ -602,10 +602,17 @@ end;
    APPLICATION CONTROL
       WIN START UP
 --------------------------------------------------------------------------------------------------}
-{ Run the specified application at Windows startup }
-function TAppData.RunFileAtStartUp(CONST FilePath: string; Active: Boolean): Boolean;
-VAR Reg: TRegistry;
+{ Run the specified application at Windows startup.
+  Params (optional) is appended after the quoted path, for example '--autostart'. }
+function TAppData.RunFileAtStartUp(CONST FilePath: string; Active: Boolean; CONST Params: string): Boolean;
+VAR
+  Reg: TRegistry;
+  Command: string;
 begin
+ Command:= '"'+ FilePath + '"';
+ if Params <> ''
+ then Command:= Command+ ' '+ Params;
+
  Result:= FALSE;
  TRY
   Reg:= TRegistry.Create;
@@ -615,7 +622,7 @@ begin
    if Reg.OpenKey('\Software\Microsoft\Windows\CurrentVersion\Run', TRUE) then
      begin
       if Active
-      then Reg.WriteString(ExtractOnlyName(FilePath),'"'+ FilePath + '"')             { I got once an error here: ERegistryexception-Failed to set data for 'App-Name2'. Probably cause by an anti-virus }
+      then Reg.WriteString(ExtractOnlyName(FilePath), Command)             { I got once an error here: ERegistryexception-Failed to set data for 'App-Name2'. Probably cause by an anti-virus }
       else Reg.DeleteValue(ExtractOnlyName(FilePath));
       Reg.CloseKey;
       Result:= TRUE;
@@ -630,9 +637,9 @@ end;
 
 
 { Run THIS application at Windows startup }
-function TAppData.RunSelfAtStartUp(Active: Boolean): Boolean;
+function TAppData.RunSelfAtStartUp(Active: Boolean; CONST Params: string): Boolean;
 begin
-  Result:= RunFileAtStartUp(ParamStr(0), Active);
+  Result:= RunFileAtStartUp(ParamStr(0), Active, Params);
 end;
 
 
