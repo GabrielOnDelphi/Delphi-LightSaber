@@ -121,9 +121,30 @@ Both properties have `Assert` guards (must be `> 0`).
 
 The overflow path uses `SnapshotAndClear` under exclusive lock, so no entries are lost between snapshot and clear. The periodic path is best-effort — disk-full / sharing / permission errors are logged via `OutputDebugString` (Windows) or `stderr` (POSIX) and swallowed; unknown exception classes are re-raised.
 
-**Snapshot-dispose deferral (custom observers, take note):** when overflow fires from a worker thread, `CheckAndSaveToDisk` writes the snapshot to disk and then queues a closure that runs `Populate` *and only then* disposes the snapshot. This protects observers that cache `PLogLine` pointers (e.g. `TLogViewer`'s `FGrid.Objects` in VCL, `FVisibleLines` in FMX) — by the time the snapshot's records are freed, `Populate` has already refreshed those caches with new pointers from the (empty) live list. If you write a custom observer that caches `PLogLine` between Populate calls, the framework guarantees those pointers stay valid until your next Populate runs.
+**Snapshot-dispose deferral (custom observers, take note):** when overflow fires from a worker thread, `CheckAndSaveToDisk` writes the snapshot to disk and then queues a closure that runs `Populate` *and only then* disposes the snapshot. This protects observers that cache `PLogLine` pointers (e.g. `FVisibleLines` of the FMX `TLogViewer`, and `TRichLog`; the VCL `TLogViewer` keeps copies of its rows, see "TLogViewer (VCL and FMX)") — by the time the snapshot's records are freed, `Populate` has already refreshed those caches with new pointers from the (empty) live list. If you write a custom observer that caches `PLogLine` between Populate calls, the framework guarantees those pointers stay valid until your next Populate runs.
 
 If you don't want any disk activity, raise `MaxEntries` to a huge number and `SaveInterval` to `MaxInt`.
+
+## The ring (`RingSize`, off by default)
+
+A program that runs for weeks (a server) wants the newest lines in RAM, not one overflow file after another.
+- `RingSize = 0` (the default): the log grows to `MaxEntries`, then saves an overflow file and empties itself, as above.
+- `RingSize = N > 0`: when an `Add*` takes the log past N lines, the oldest lines are dropped: the excess plus `N div 10`, so the count stays between `N - N div 10` and N and a drop does not come at every line. No overflow file is written while the ring is on. Keep N below `MaxEntries`.
+- A drop bumps `Lines.ResetCount`, and `Lines.DroppedCount(Level)` counts the dropped lines per level, so a viewer can keep its place.
+- The dropped records are freed only after every observer's `Populate` ran (the same deferral as the overflow snapshot above), so a view that caches `PLogLine` pointers stays safe.
+- A new value applies at the next `Add*`.
+
+`Lines.ReadPage(var Page: RLogPage)` is the read a viewer uses with the ring: it copies the rows on screen under one read lock, and moves `TopRow` back by the lines dropped since the last read (`DroppedSeen`), so a view that is scrolled up keeps showing the same lines. With `Follow = TRUE` it returns the newest page.
+
+## The daily text file (`CreateDailyFile`, off by default)
+
+`TRamLog.CreateDailyFile(Folder, Prefix)` makes every line of the log also go to a text file, one file per day: `Folder\<Prefix>yyyy-mm-dd.log`, one line per entry, `hh:nn:ss  <message>`, a multi-line message flattened to one line. The writer is `TLogDailyFile` (`LightCore.LogFile.pas`).
+- `Add*` only puts the line into a buffer (`MaxPending` lines, default 20,000; a full buffer drops the newest lines and counts them). The owner calls `DailyFile.Flush` from a timer every `TLogDailyFile.FlushSeconds` (5) seconds, on the main thread. The destructor of the log writes the rest.
+- `MaxFileMB` (default 100): when the file of a day reaches it, one closing line is written and nothing more that day. A restart counts the real size of the file.
+- `DaysToKeep` (default 30, today included): older files of this prefix are deleted when the value is set and at each day change.
+- `Active` (default TRUE once created): FALSE stops the writing, the lines are not kept.
+- A failed write adds one warning line to the log (`OnWriteError`), once per failure streak.
+- Call `CreateDailyFile` once, from the main thread, before other threads add lines.
 
 ## Coalesced cross-thread notifications
 
@@ -183,6 +204,11 @@ procedure AddEmptyRow;
 // Tunable thresholds
 property MaxEntries  : Integer;   // default 1,000,000
 property SaveInterval: Integer;   // default 60 (seconds)
+property RingSize    : Integer;   // default 0 = off; see "The ring"
+
+// Daily text file (see "The daily text file")
+function  CreateDailyFile(CONST Folder, Prefix: string): TLogDailyFile;
+property  DailyFile: TLogDailyFile;   // NIL until CreateDailyFile
 
 // Lifecycle
 property ShowOnError : Boolean;
@@ -224,6 +250,18 @@ User actions exposed by the viewer:
 - Export (VCL only): `SaveAsRtf`
 - Toggle date/time columns: `ShowDate`, `ShowTime`
 - Filter level: `Verbosity` (writes the property → re-populates)
+
+**Following the newest line (both viewers, the default).**
+While the bottom of the log is in view, the viewer shows each new line (it "follows").
+Scroll up and it stays on the lines you read, also when the ring drops older lines; scroll back to the bottom and it follows again.
+`AutoScroll = FALSE` (VCL) never follows. The read-only property `Following` tells which state the viewer is in.
+
+**VCL only, all off or unchanged by default:**
+- `RefreshInterval` (milliseconds, default 0): 0 redraws at every new line; above 0 the viewer redraws at most once per interval, from a timer. A server with many lines per second sets it (ProteusServer: 250).
+- `TimeFormat` (default `hh:nn`): the `FormatDateTime` format of the time column (`ShowTime`).
+- Read-only, for tests and Autopilot `read_property`: `LineCount` (lines that pass the filter), `TopRow` (the filtered line in the first row), `Following`, `VisibleText` (the rows on screen as text).
+- `Grid` (public): the grid inside the viewer, to give it the focus with `Form.ActiveControl`.
+- The VCL viewer keeps copies of the rows on screen (`Lines.ReadPage`), not pointers into the log.
 
 ### Line breaks inside an entry
 
