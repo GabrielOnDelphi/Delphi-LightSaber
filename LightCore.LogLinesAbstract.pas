@@ -1,10 +1,8 @@
 UNIT LightCore.LogLinesAbstract;
 
 {=============================================================================================================
-   2026.07.07
+   2026.11.12
    www.GabrielMoraru.com
-   Last update: 2026.07.07 - RLogLine.ReadFromStream_v5 validates the Level enum range (corrupt values
-                             previously loaded silently and raised later inside the viewers' paint code).
 --------------------------------------------------------------------------------------------------------------
    Abstract base class for log line storage.
 
@@ -53,13 +51,30 @@ type
   end;
 
 
+  { One page of a log view, read by TAbstractLogLines.ReadPage under one read lock.
+    The rows are COPIES of the lines (the strings are reference-counted, so a copy costs no text copy): a view that keeps them holds no pointer into the log, so the log may drop or free its lines at any time. }
+  RLogPage = record
+    Verbosity  : TLogVerbLvl;       { In.  Only lines with Level >= Verbosity count. }
+    Follow     : Boolean;           { In.  TRUE = the page shows the newest lines; TopRow is ignored on the way in. }
+    TopRow     : Integer;           { In/out. The first filtered line of the page. Out: moved back by the lines the log dropped since DroppedSeen, then kept inside 0..Total-Length(Rows). }
+    DroppedSeen: Int64;             { In/out. DroppedCount(Verbosity) when the caller read the page before; -1 = first read, do not move TopRow. Out: the count now. }
+    Total      : Integer;           { Out. The number of filtered lines in the log. }
+    Rows       : TArray<RLogLine>;  { In: its length is the number of rows wanted. Out: cut to the rows filled. }
+  end;
+
   { List of lines }
   TAbstractLogLines = class abstract
   private
     procedure readFromStream_v5(Stream: TLightStream);
   protected
     FList: TList;
-    FResetCount: Integer;     { Bumped by Clear and SnapshotAndClear of the subclasses. Read through ResetCount. }
+    FResetCount: Integer;     { Bumped by Clear, SnapshotAndClear and DropOldest of the subclasses. Read through ResetCount. }
+    FDropped: array[TLogVerbLvl] of Int64;   { Lines removed by DropOldest since the list was created, per level. Never decreases. }
+
+    { Moves the oldest Count lines into Target (an empty list) and counts them in FDropped. One block move, so the cost does not grow with Count.
+      The caller holds the write lock (MT) and bumps FResetCount. }
+    function moveOldestTo(Target: TAbstractLogLines; Count: Integer): Integer;   { Returns the number of lines moved }
+    function sumDropped(MinLevel: TLogVerbLvl): Int64;                            { No lock: the caller holds one }
     CONST StreamSign  = 'TLogLines';
     function getItem(Index: Integer): PLogLine;                                             virtual; abstract;
 
@@ -116,11 +131,22 @@ type
       can be added between snapshotting and clearing. }
     function  SnapshotAndClear: TAbstractLogLines;                                          virtual; abstract;
 
+    { Atomic: removes the oldest Count lines (all of them when Count >= Self.Count) and returns them in a new list that the caller owns and must free.
+      The records are not disposed: a view may still hold pointers to them, so the caller frees the returned list only after every view refreshed (TRamLog does this).
+      Bumps ResetCount, because the index of every remaining line changed. }
+    function  DropOldest(Count: Integer): TAbstractLogLines;                                virtual; abstract;
+
+    { The number of lines with Level >= MinLevel that DropOldest removed since the list was created. }
+    function  DroppedCount(MinLevel: TLogVerbLvl): Int64;                                   virtual;
+
+    { Fills Page (see RLogPage) in one walk under one read lock, so its total, its rows and its dropped count agree. }
+    procedure ReadPage(var Page: RLogPage);                                                 virtual;
+
     procedure ReadFromStream(Stream: TLightStream); virtual;
     procedure WriteToStream (Stream: TLightStream); virtual;
 
-    { Grows by one at every Clear and SnapshotAndClear.
-      A view that draws the lines incrementally compares it with the value it saw last time: a change means the old lines are gone, even when Count grew again since.
+    { Grows by one at every Clear, SnapshotAndClear and DropOldest.
+      A view that draws the lines incrementally compares it with the value it saw last time: a change means the old lines are gone (or moved to other indexes), even when Count grew again since.
       TRamLog.LoadFromFile and LoadFromStream call Clear first, so a load counts as a reset too. }
     property  ResetCount: Integer read FResetCount;
   end;
@@ -272,6 +298,116 @@ begin
   finally
     releaseReadLock;
   end;
+end;
+
+
+{-------------------------------------------------------------------------------------------------------------
+   DROP + PAGE
+-------------------------------------------------------------------------------------------------------------}
+function TAbstractLogLines.moveOldestTo(Target: TAbstractLogLines; Count: Integer): Integer;
+var
+  i, Remain: Integer;
+begin
+  Assert(Target <> NIL, 'moveOldestTo: Target cannot be nil');
+  Assert(Target.FList.Count = 0, 'moveOldestTo: Target must be empty');
+
+  if Count > FList.Count
+  then Count:= FList.Count;
+  if Count <= 0 then EXIT(0);
+
+  Target.FList.Count:= Count;    { A plain TList grows here without Notify calls }
+  System.Move(FList.List[0], Target.FList.List[0], Count * SizeOf(Pointer));
+  for i:= 0 to Count - 1 do
+    Inc(FDropped[PLogLine(Target.FList.List[i]).Level]);
+
+  Remain:= FList.Count - Count;
+  if Remain > 0
+  then System.Move(FList.List[Count], FList.List[0], Remain * SizeOf(Pointer));
+  FList.Count:= Remain;          { Shrinking a plain TList is O(1): TList.SetCount calls Notify only for descendants }
+  Result:= Count;
+end;
+
+
+function TAbstractLogLines.sumDropped(MinLevel: TLogVerbLvl): Int64;
+var
+  Level: TLogVerbLvl;
+begin
+  Result:= 0;
+  for Level:= MinLevel to High(TLogVerbLvl) do
+    Inc(Result, FDropped[Level]);
+end;
+
+
+function TAbstractLogLines.DroppedCount(MinLevel: TLogVerbLvl): Int64;
+begin
+  acquireReadLock;
+  try
+    Result:= sumDropped(MinLevel);
+  finally
+    releaseReadLock;
+  end;
+end;
+
+
+procedure TAbstractLogLines.ReadPage(var Page: RLogPage);
+var
+  i, Wanted, Total, Filled, Visible, MaxTop: Integer;
+  NewTop, Dropped: Int64;
+  Line: PLogLine;
+begin
+  Wanted:= Length(Page.Rows);
+  SetLength(Page.Rows, Wanted);   { Makes the array unique: a caller's other reference to it never sees the new rows }
+  Filled:= 0;
+
+  acquireReadLock;
+  try
+    Dropped:= sumDropped(Page.Verbosity);
+
+    Total:= 0;
+    for i:= 0 to FList.Count - 1 do
+      if PLogLine(FList[i]).Level >= Page.Verbosity
+      then Inc(Total);
+
+    { Where the page starts }
+    MaxTop:= Total - Wanted;
+    if MaxTop < 0
+    then MaxTop:= 0;
+    if Page.Follow
+    then NewTop:= MaxTop
+    else
+      begin
+        NewTop:= Page.TopRow;
+        if Page.DroppedSeen >= 0
+        then NewTop:= NewTop - (Dropped - Page.DroppedSeen);   { The rows under the reader stay where they are }
+        if NewTop > MaxTop then NewTop:= MaxTop;
+        if NewTop < 0      then NewTop:= 0;
+      end;
+    Page.TopRow:= Integer(NewTop);
+
+    { Copy the rows }
+    if Wanted > 0 then
+      begin
+        Visible:= 0;
+        for i:= 0 to FList.Count - 1 do
+          begin
+            Line:= PLogLine(FList[i]);
+            if Line.Level < Page.Verbosity then CONTINUE;
+            if Visible >= Page.TopRow then
+              begin
+                Page.Rows[Filled]:= Line^;
+                Inc(Filled);
+                if Filled >= Wanted then BREAK;
+              end;
+            Inc(Visible);
+          end;
+      end;
+  finally
+    releaseReadLock;
+  end;
+
+  SetLength(Page.Rows, Filled);
+  Page.Total:= Total;
+  Page.DroppedSeen:= Dropped;
 end;
 
 

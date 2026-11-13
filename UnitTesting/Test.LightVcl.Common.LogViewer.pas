@@ -79,14 +79,78 @@ type
     { Verbosity Filter Tests }
     [Test]
     procedure TestVerbosityFilter_DefaultValue;
+
+    { Follow Tests }
+    [Test]
+    procedure TestFollow_AtBottom_ShowsTheNewestLine;
+    [Test]
+    procedure TestFollow_ScrolledUp_StaysOnTheSameLines;
+    [Test]
+    procedure TestFollow_BackAtTheBottom_FollowsAgain;
+    [Test]
+    procedure TestFollow_RingDropWhileScrolledUp_KeepsTheSameTopLine;
+    [Test]
+    procedure TestFollow_AutoScrollOff_NeverFollows;
+
+    { Refresh timer + time format Tests }
+    [Test]
+    procedure TestRefreshInterval_DefaultOff_RedrawsAtOnce;
+    [Test]
+    procedure TestRefreshInterval_On_RedrawsOnTheTimer;
   end;
 
 implementation
 
 uses
   System.IOUtils,
-  Vcl.ComCtrls,
+  Winapi.Windows,
+  Vcl.ComCtrls, Vcl.Controls, Vcl.StdCtrls,
   LightVcl.Common.LogViewer;
+
+CONST
+  RowHeight = 22;    { TLogViewer.CreateWnd sets DefaultRowHeight to 22 }
+  PageRows  = 5;     { The test viewer shows 5 data rows under the header }
+
+
+{ A viewer with a window, 5 data rows high, on Form }
+function NewViewer(Form: TForm): TLogViewer;
+begin
+  Result:= TLogViewer.Create(Form);
+  Result.Parent:= Form;
+  Result.Height:= RowHeight * (PageRows + 1);
+  Result.HandleNeeded;
+end;
+
+
+{ The viewer's own scroll bar. Setting its Position is what a user's drag does: it fires OnChange. }
+function ScrollBarOf(Viewer: TLogViewer): TScrollBar;
+VAR i: Integer;
+begin
+  for i:= 0 to Viewer.ControlCount - 1 do
+    if Viewer.Controls[i] is TScrollBar
+    then EXIT(TScrollBar(Viewer.Controls[i]));
+  Result:= NIL;
+  Assert.Fail('The viewer has no scroll bar');
+end;
+
+
+procedure AddLines(Viewer: TLogViewer; First, Last: Integer);
+VAR i: Integer;
+begin
+  for i:= First to Last do
+    Viewer.RamLog.AddInfo('L' + IntToStr(i));
+end;
+
+
+{ The first visible message }
+function TopLine(Viewer: TLogViewer): string;
+VAR Text: string;
+begin
+  Text:= Viewer.VisibleText;
+  if Pos(sLineBreak, Text) > 0
+  then Result:= Copy(Text, 1, Pos(sLineBreak, Text) - 1)
+  else Result:= Text;
+end;
 
 procedure TTestLogViewer.Setup;
 begin
@@ -126,6 +190,8 @@ begin
     Assert.IsFalse(LogViewer.ShowDate, 'ShowDate should default to False');
     Assert.IsTrue(LogViewer.AutoScroll, 'AutoScroll should default to True');
     Assert.AreEqual(lvVerbose, LogViewer.Verbosity, 'Verbosity should default to lvVerbose');
+    Assert.AreEqual('hh:nn', LogViewer.TimeFormat, 'TimeFormat should default to hh:nn, as before the option existed');
+    Assert.AreEqual(0, LogViewer.RefreshInterval, 'The redraw timer should be off by default');
   finally
     FreeAndNil(LogViewer);
   end;
@@ -364,6 +430,150 @@ begin
     FreeAndNil(LogViewer);
   end;
 end;
+
+
+{ Follow Tests }
+
+procedure TTestLogViewer.TestFollow_AtBottom_ShowsTheNewestLine;
+var Viewer: TLogViewer;
+begin
+  Viewer:= NewViewer(FTestForm);
+  try
+    AddLines(Viewer, 1, 50);
+    Assert.IsTrue(Viewer.Following, 'A new viewer follows the newest line');
+    Assert.AreEqual(50, Viewer.LineCount);
+    Assert.AreEqual(50 - PageRows, Viewer.TopRow);
+    Assert.AreEqual('L46' + sLineBreak + 'L47' + sLineBreak + 'L48' + sLineBreak + 'L49' + sLineBreak + 'L50', Viewer.VisibleText);
+  finally
+    FreeAndNil(Viewer);
+  end;
+end;
+
+
+procedure TTestLogViewer.TestFollow_ScrolledUp_StaysOnTheSameLines;
+var Viewer: TLogViewer;
+begin
+  Viewer:= NewViewer(FTestForm);
+  try
+    AddLines(Viewer, 1, 50);
+    ScrollBarOf(Viewer).Position:= 10;     { The user scrolls up }
+    Assert.IsFalse(Viewer.Following, 'A user who scrolled up must not be followed');
+    Assert.AreEqual('L11', TopLine(Viewer));
+
+    AddLines(Viewer, 51, 80);
+    Assert.AreEqual(10, Viewer.TopRow, 'New lines must not move the view of a user who scrolled up');
+    Assert.AreEqual('L11', TopLine(Viewer));
+    Assert.AreEqual(80, Viewer.LineCount);
+  finally
+    FreeAndNil(Viewer);
+  end;
+end;
+
+
+procedure TTestLogViewer.TestFollow_BackAtTheBottom_FollowsAgain;
+var
+  Viewer: TLogViewer;
+  Bar: TScrollBar;
+begin
+  Viewer:= NewViewer(FTestForm);
+  try
+    AddLines(Viewer, 1, 50);
+    Bar:= ScrollBarOf(Viewer);
+    Bar.Position:= 10;
+    Bar.Position:= Bar.Max;                { The user scrolls back to the bottom }
+    Assert.IsTrue(Viewer.Following, 'At the bottom the view must follow again');
+
+    AddLines(Viewer, 51, 51);
+    Assert.AreEqual('L47', TopLine(Viewer), 'The newest line must be in view');
+    Assert.IsTrue(Viewer.VisibleText.EndsWith('L51'));
+  finally
+    FreeAndNil(Viewer);
+  end;
+end;
+
+
+{ The ring drops old lines above the user's view: the view must move back by the dropped lines, so the same line stays on top }
+procedure TTestLogViewer.TestFollow_RingDropWhileScrolledUp_KeepsTheSameTopLine;
+var Viewer: TLogViewer;
+begin
+  Viewer:= NewViewer(FTestForm);
+  try
+    Viewer.RamLog.RingSize:= 100;
+    AddLines(Viewer, 1, 100);
+    ScrollBarOf(Viewer).Position:= 20;
+    Assert.AreEqual('L21', TopLine(Viewer));
+
+    AddLines(Viewer, 101, 101);            { 101 > 100: the ring drops 1 + 10 lines }
+    Assert.AreEqual(90, Viewer.LineCount, 'Precondition: the ring dropped 11 lines');
+    Assert.AreEqual(9, Viewer.TopRow, 'TopRow must move back by the 11 dropped lines');
+    Assert.AreEqual('L21', TopLine(Viewer), 'The same line must stay at the top of the view');
+    Assert.IsFalse(Viewer.Following);
+  finally
+    FreeAndNil(Viewer);
+  end;
+end;
+
+
+procedure TTestLogViewer.TestFollow_AutoScrollOff_NeverFollows;
+var Viewer: TLogViewer;
+begin
+  Viewer:= NewViewer(FTestForm);
+  try
+    Viewer.AutoScroll:= FALSE;
+    AddLines(Viewer, 1, 50);
+    Assert.IsFalse(Viewer.Following);
+    Assert.AreEqual(0, Viewer.TopRow, 'With AutoScroll off the view stays at the top');
+    Assert.AreEqual('L1', TopLine(Viewer));
+  finally
+    FreeAndNil(Viewer);
+  end;
+end;
+
+
+{ Refresh timer + time format Tests }
+
+procedure TTestLogViewer.TestRefreshInterval_DefaultOff_RedrawsAtOnce;
+var Viewer: TLogViewer;
+begin
+  Viewer:= NewViewer(FTestForm);
+  try
+    Assert.AreEqual(0, Viewer.RefreshInterval);
+    AddLines(Viewer, 1, 1);
+    Assert.AreEqual('L1', Viewer.VisibleText, 'Without the timer a new line must be in view at once');
+  finally
+    FreeAndNil(Viewer);
+  end;
+end;
+
+
+procedure TTestLogViewer.TestRefreshInterval_On_RedrawsOnTheTimer;
+var
+  Viewer: TLogViewer;
+  Start: UInt64;
+begin
+  Viewer:= NewViewer(FTestForm);
+  try
+    AddLines(Viewer, 1, 1);
+    Viewer.RefreshInterval:= 50;
+    AddLines(Viewer, 2, 2);
+    Assert.AreEqual('L1', Viewer.VisibleText, 'With the timer on, a new line must wait for the timer');
+
+    Start:= GetTickCount64;
+    while (Viewer.LineCount < 2) AND (GetTickCount64 - Start < 3000) do
+      begin
+        Application.ProcessMessages;
+        Sleep(5);
+      end;
+    Assert.AreEqual('L1' + sLineBreak + 'L2', Viewer.VisibleText, 'The timer must redraw the view');
+
+    AddLines(Viewer, 3, 3);
+    Viewer.RefreshInterval:= 0;            { Switching the timer off redraws what is waiting }
+    Assert.IsTrue(Viewer.VisibleText.EndsWith('L3'));
+  finally
+    FreeAndNil(Viewer);
+  end;
+end;
+
 
 
 initialization

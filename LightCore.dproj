@@ -184,6 +184,7 @@
         <DCCReference Include="LightCore.LogLinesS.pas"/>
         <DCCReference Include="LightCore.LogLinesAbstract.pas"/>
         <DCCReference Include="LightCore.LogLinesM.pas"/>
+        <DCCReference Include="LightCore.LogFile.pas"/>
         <DCCReference Include="LightCore.AppData.pas"/>
         <DCCReference Include="LightCore.Math.pas"/>
         <DCCReference Include="LightCore.Pascal.pas"/>

@@ -184,6 +184,9 @@ type
     procedure TestExternalLog_MultiThreaded_DrawsAndScrolls;
 
     [Test]
+    procedure TestExternalLog_RingDrop_DrawsTheNewestLines;
+
+    [Test]
     procedure TestAssignExternalRamLog_Nil_Raises;
 
     [Test]
@@ -1382,6 +1385,47 @@ begin
 
     FRichLog:= NIL;
     FreeAndNil(RichLog);    { Before the log: an external log must outlive its observers }
+  finally
+    CleanupRichLog;
+    FreeAndNil(ExternalLog);
+  end;
+end;
+
+
+{ TRichLog caches line pointers. The ring drops the oldest lines many times here: the control must keep drawing the newest ones, and keep firing OnError afterwards }
+procedure TTestRichLog.TestExternalLog_RingDrop_DrawsTheNewestLines;
+CONST
+  Ring  = 100;
+  Added = 250;
+var
+  RichLog: TRichLog;
+  ExternalLog: TRamLog;
+  i: Integer;
+begin
+  ExternalLog:= TRamLog.Create(FALSE, NIL, TRUE);
+  try
+    ExternalLog.RingSize:= Ring;
+    RichLog:= TRichLog(makeLog(120));
+    RichLog.OnError:= OnErrorHandler;
+    RichLog.AssignExternalRamLog(ExternalLog);
+
+    for i:= 0 to Added - 1 do
+      ExternalLog.AddInfo('Line ' + IntToStr(i));
+    CheckSynchronize;   { The dropped lines are freed after the refresh }
+
+    Assert.IsTrue(ExternalLog.Lines.Count <= Ring, 'Precondition: the ring dropped lines. Count: ' + IntToStr(ExternalLog.Lines.Count));
+    Assert.IsTrue(ExternalLog.Lines.Count < Ring, 'Precondition: the next line drops nothing. Count: ' + IntToStr(ExternalLog.Lines.Count));
+    Assert.AreEqual('Line ' + IntToStr(Added - 1), LastLine(RichLog), 'AutoScroll: the newest line is drawn at the bottom');
+
+    RichLog.TopEntry:= 0;
+    Assert.AreEqual('Line ' + IntToStr(Added - ExternalLog.Lines.Count), RichLog.Lines[0], 'The first entry is the oldest line the ring kept');
+
+    ExternalLog.AddError('After the drops');
+    Assert.AreEqual(1, FErrorCount, 'A new error after the drops fires OnError');
+    Assert.AreEqual('After the drops', LastLine(RichLog));
+
+    FRichLog:= NIL;
+    FreeAndNil(RichLog);
   finally
     CleanupRichLog;
     FreeAndNil(ExternalLog);

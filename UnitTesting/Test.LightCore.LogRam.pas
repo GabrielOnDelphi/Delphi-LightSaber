@@ -171,6 +171,39 @@ type
     { Multi-threaded Log Tests }
     [Test]
     procedure TestMultiThreadedAddMsg;
+
+    { Ring Tests (RingSize) }
+    [Test]
+    procedure TestRing_OffByDefault;
+    [TestCase('Single', 'False')]
+    [TestCase('Multi',  'True')]
+    procedure TestRing_KeepsTheNewestLines(MultiThreaded: Boolean);
+    [Test]
+    procedure TestRing_DropBumpsResetCountAndDroppedCount;
+    [Test]
+    procedure TestRing_PopulatesEveryObserverBeforeTheFree;
+    [Test]
+    procedure TestRing_NoOverflowFile;
+
+    { DropOldest + ReadPage Tests }
+    [TestCase('Single', 'False')]
+    [TestCase('Multi',  'True')]
+    procedure TestDropOldest_CountsPerLevel(MultiThreaded: Boolean);
+    [TestCase('Single', 'False')]
+    [TestCase('Multi',  'True')]
+    procedure TestReadPage_Follow_ShowsTheNewest(MultiThreaded: Boolean);
+    [Test]
+    procedure TestReadPage_NotFollowing_StaysOnTheSameRowsAfterADrop;
+    [Test]
+    procedure TestReadPage_FirstRead_DoesNotMoveTopRow;
+    [Test]
+    procedure TestReadPage_RowsAreCopies;
+
+    { Daily file Tests }
+    [Test]
+    procedure TestDailyFile_OffByDefault;
+    [Test]
+    procedure TestDailyFile_GetsEveryLine;
   end;
 
   { Mock observer for testing }
@@ -1123,6 +1156,321 @@ begin
   finally
     FreeAndNil(MTLog);
   end;
+end;
+
+
+{ Ring Tests
+
+  RingSize = N keeps the newest lines: past N lines the oldest Excess + N div 10 go, so the count stays between N - N div 10 and N.
+  The dropped lines are freed only after every observer refreshed. }
+
+procedure TTestLogRam.TestRing_OffByDefault;
+begin
+  Assert.AreEqual(0, FLog.RingSize);
+  FLog.MaxEntries:= 100000;
+  for var i:= 1 to 2000 do
+    FLog.AddInfo('Line');
+  Assert.AreEqual(2000, FLog.Lines.Count, 'Without RingSize no line may be dropped');
+  Assert.AreEqual(Int64(0), FLog.Lines.DroppedCount(lvDebug));
+end;
+
+
+procedure TTestLogRam.TestRing_KeepsTheNewestLines(MultiThreaded: Boolean);
+var
+  RingLog: TRamLog;
+  Count: Integer;
+begin
+  RingLog:= TRamLog.Create(False, nil, MultiThreaded);
+  try
+    RingLog.RingSize:= 100;
+    for var i:= 1 to 1000 do
+      begin
+        RingLog.AddInfo('L' + IntToStr(i));
+        Assert.IsTrue(RingLog.Lines.Count <= 100, 'The count may never pass RingSize. After line ' + IntToStr(i));
+      end;
+
+    Count:= RingLog.Lines.Count;
+    Assert.IsTrue(Count >= 90, 'At least RingSize - RingSize div 10 lines must stay. Count: ' + IntToStr(Count));
+    Assert.AreEqual('L1000', RingLog.Lines[Count - 1].Msg, 'The newest line must stay');
+    Assert.AreEqual('L' + IntToStr(1000 - Count + 1), RingLog.Lines[0].Msg, 'The oldest lines must go first, in order');
+    Assert.AreEqual(Int64(1000 - Count), RingLog.Lines.DroppedCount(lvDebug), 'Every dropped line must be counted');
+  finally
+    FreeAndNil(RingLog);
+  end;
+end;
+
+
+procedure TTestLogRam.TestRing_DropBumpsResetCountAndDroppedCount;
+var
+  Before: Integer;
+begin
+  FLog.RingSize:= 10;
+  for var i:= 1 to 10 do
+    FLog.AddInfo('Line');
+  Before:= FLog.Lines.ResetCount;
+
+  FLog.AddInfo('Line 11');     { 11 > 10: drops 1 + 10 div 10 = 2 lines }
+
+  Assert.AreEqual(9, FLog.Lines.Count);
+  Assert.AreEqual(Before + 1, FLog.Lines.ResetCount, 'A drop must bump ResetCount, so a reader that counts lines (TRichLog) reads again from the start');
+  Assert.AreEqual(Int64(2), FLog.Lines.DroppedCount(lvDebug));
+end;
+
+
+{ Like the overflow path, the ring frees the dropped lines right after it refreshed the observers, so EVERY observer must be refreshed there }
+procedure TTestLogRam.TestRing_PopulatesEveryObserverBeforeTheFree;
+var
+  ObserverA, ObserverB: TMockLogObserver;
+  RefA, RefB: ILogObserver;
+  RingLog: TRamLog;
+begin
+  ObserverA:= TMockLogObserver.Create;
+  RefA:= ObserverA;
+  ObserverB:= TMockLogObserver.Create;
+  RefB:= ObserverB;
+
+  RingLog:= TRamLog.Create(False, RefA, False);
+  try
+    RingLog.RegisterLogObserver(RefB);
+    RingLog.RingSize:= 10;
+    for var i:= 1 to 10 do
+      RingLog.AddInfo('Line');
+    ObserverA.PopulateCallCount:= 0;
+    ObserverB.PopulateCallCount:= 0;
+
+    RingLog.AddInfo('Line 11');    { The drop refreshes both observers, then AddInfo notifies them again }
+
+    Assert.AreEqual(9, RingLog.Lines.Count, 'The drop must have happened');
+    Assert.AreEqual(2, ObserverA.PopulateCallCount, 'The first observer must be refreshed by the drop and by the notification');
+    Assert.AreEqual(2, ObserverB.PopulateCallCount, 'The second observer must be refreshed by the drop and by the notification');
+
+    ObserverA.PopulateCallCount:= 0;
+    RingLog.AddInfo('Line 12');    { 10 lines: no drop }
+    Assert.AreEqual(1, ObserverA.PopulateCallCount, 'An Add without a drop must notify once');
+  finally
+    FreeAndNil(RingLog);
+  end;
+end;
+
+
+procedure TTestLogRam.TestRing_NoOverflowFile;
+var
+  RingLog: TRamLog;
+begin
+  RingLog:= TRamLog.Create(False, nil, False);
+  try
+    RingLog.MaxEntries:= 5;
+    RingLog.RingSize:= 20;
+    for var i:= 1 to 50 do
+      RingLog.AddInfo('Line ' + IntToStr(i));
+
+    Assert.IsTrue(RingLog.Lines.Count > 5, 'With the ring on, MaxEntries must not empty the RAM');
+    Assert.IsFalse(FileExists(RingLog.OverflowFile(1)), 'With the ring on, no overflow file may be written');
+  finally
+    if FileExists(RingLog.OverflowFile(1))
+    then System.SysUtils.DeleteFile(RingLog.OverflowFile(1));
+    FreeAndNil(RingLog);
+  end;
+end;
+
+
+{ DropOldest + ReadPage Tests }
+
+procedure TTestLogRam.TestDropOldest_CountsPerLevel(MultiThreaded: Boolean);
+var
+  DropLog: TRamLog;
+  Dropped: TAbstractLogLines;
+begin
+  DropLog:= TRamLog.Create(False, nil, MultiThreaded);
+  try
+    DropLog.AddDebug('D1');
+    DropLog.AddInfo ('I1');
+    DropLog.AddError('E1');
+    DropLog.AddInfo ('I2');
+
+    Dropped:= DropLog.Lines.DropOldest(3);
+    try
+      Assert.AreEqual(3, Dropped.Count, 'The dropped lines must be handed to the caller');
+      Assert.AreEqual('D1', Dropped[0].Msg);
+      Assert.AreEqual('E1', Dropped[2].Msg);
+    finally
+      FreeAndNil(Dropped);
+    end;
+
+    Assert.AreEqual(1, DropLog.Lines.Count);
+    Assert.AreEqual('I2', DropLog.Lines[0].Msg);
+    Assert.AreEqual(Int64(3), DropLog.Lines.DroppedCount(lvDebug));
+    Assert.AreEqual(Int64(2), DropLog.Lines.DroppedCount(lvInfos),  'A filtered count must count only the lines the filter shows');
+    Assert.AreEqual(Int64(1), DropLog.Lines.DroppedCount(lvErrors));
+
+    Dropped:= DropLog.Lines.DropOldest(50);    { More than there are }
+    try
+      Assert.AreEqual(1, Dropped.Count);
+      Assert.AreEqual(0, DropLog.Lines.Count);
+    finally
+      FreeAndNil(Dropped);
+    end;
+  finally
+    FreeAndNil(DropLog);
+  end;
+end;
+
+
+procedure TTestLogRam.TestReadPage_Follow_ShowsTheNewest(MultiThreaded: Boolean);
+var
+  PageLog: TRamLog;
+  Page: RLogPage;
+begin
+  PageLog:= TRamLog.Create(False, nil, MultiThreaded);
+  try
+    for var i:= 1 to 10 do
+      begin
+        PageLog.AddInfo ('I' + IntToStr(i));
+        PageLog.AddDebug('D' + IntToStr(i));    { Hidden by the filter }
+      end;
+
+    Page:= Default(RLogPage);
+    Page.Verbosity:= lvInfos;
+    Page.Follow:= TRUE;
+    Page.DroppedSeen:= -1;
+    SetLength(Page.Rows, 3);
+    PageLog.Lines.ReadPage(Page);
+
+    Assert.AreEqual(10, Page.Total, 'Total counts only the filtered lines');
+    Assert.AreEqual(7,  Page.TopRow);
+    Assert.AreEqual(3,  Length(Page.Rows));
+    Assert.AreEqual('I8',  Page.Rows[0].Msg);
+    Assert.AreEqual('I10', Page.Rows[2].Msg);
+  finally
+    FreeAndNil(PageLog);
+  end;
+end;
+
+
+{ A reader who scrolled up keeps the same lines in view while the ring drops lines above them }
+procedure TTestLogRam.TestReadPage_NotFollowing_StaysOnTheSameRowsAfterADrop;
+var
+  Page: RLogPage;
+  Dropped: TAbstractLogLines;
+begin
+  for var i:= 1 to 20 do
+    FLog.AddInfo('L' + IntToStr(i));
+
+  Page:= Default(RLogPage);
+  Page.Verbosity:= lvDebug;
+  Page.Follow:= FALSE;
+  Page.TopRow:= 5;
+  Page.DroppedSeen:= -1;
+  SetLength(Page.Rows, 4);
+  FLog.Lines.ReadPage(Page);
+  Assert.AreEqual('L6', Page.Rows[0].Msg);
+
+  Dropped:= FLog.Lines.DropOldest(3);
+  FreeAndNil(Dropped);
+  FLog.AddInfo('L21');
+
+  SetLength(Page.Rows, 4);
+  FLog.Lines.ReadPage(Page);
+  Assert.AreEqual(2, Page.TopRow, 'TopRow must move back by the 3 dropped lines');
+  Assert.AreEqual('L6', Page.Rows[0].Msg, 'The same line must stay at the top of the view');
+
+  { A drop larger than TopRow: the view starts at the oldest line left }
+  Dropped:= FLog.Lines.DropOldest(5);
+  FreeAndNil(Dropped);
+  SetLength(Page.Rows, 4);
+  FLog.Lines.ReadPage(Page);
+  Assert.AreEqual(0, Page.TopRow);
+  Assert.AreEqual('L9', Page.Rows[0].Msg);
+end;
+
+
+procedure TTestLogRam.TestReadPage_FirstRead_DoesNotMoveTopRow;
+var
+  Page: RLogPage;
+  Dropped: TAbstractLogLines;
+begin
+  for var i:= 1 to 20 do
+    FLog.AddInfo('L' + IntToStr(i));
+  Dropped:= FLog.Lines.DropOldest(4);    { Dropped before the view ever read: not the view's business }
+  FreeAndNil(Dropped);
+
+  Page:= Default(RLogPage);
+  Page.Verbosity:= lvDebug;
+  Page.TopRow:= 2;
+  Page.DroppedSeen:= -1;
+  SetLength(Page.Rows, 3);
+  FLog.Lines.ReadPage(Page);
+
+  Assert.AreEqual(2, Page.TopRow);
+  Assert.AreEqual('L7', Page.Rows[0].Msg);
+  Assert.AreEqual(Int64(4), Page.DroppedSeen, 'The page must remember the drop count it saw');
+
+  { TopRow past the end is pulled back so the page is full }
+  Page.TopRow:= 100;
+  SetLength(Page.Rows, 3);
+  FLog.Lines.ReadPage(Page);
+  Assert.AreEqual(13, Page.TopRow, '16 lines, 3 rows: the last full page starts at 13');
+end;
+
+
+{ The rows stay valid after the log freed its lines: a view may paint them at any time }
+procedure TTestLogRam.TestReadPage_RowsAreCopies;
+var
+  Page: RLogPage;
+  Dropped: TAbstractLogLines;
+begin
+  FLog.AddInfo('First ' + IntToStr(Random(1000)));
+  FLog.AddWarn('Second');
+
+  Page:= Default(RLogPage);
+  Page.Verbosity:= lvDebug;
+  Page.DroppedSeen:= -1;
+  SetLength(Page.Rows, 5);
+  FLog.Lines.ReadPage(Page);
+  Assert.AreEqual(2, Length(Page.Rows), 'Rows must be cut to the lines filled');
+
+  Dropped:= FLog.Lines.DropOldest(2);
+  FreeAndNil(Dropped);                 { The lines are disposed }
+
+  Assert.IsTrue(Page.Rows[0].Msg.StartsWith('First '), 'A row must not point into the freed line');
+  Assert.AreEqual('Second', Page.Rows[1].Msg);
+  Assert.AreEqual(lvWarnings, Page.Rows[1].Level);
+end;
+
+
+{ Daily file Tests }
+
+procedure TTestLogRam.TestDailyFile_OffByDefault;
+begin
+  Assert.IsNull(FLog.DailyFile, 'A log writes no daily file unless CreateDailyFile is called');
+end;
+
+
+procedure TTestLogRam.TestDailyFile_GetsEveryLine;
+var
+  DayLog: TRamLog;
+  Path, Text: string;
+begin
+  DayLog:= TRamLog.Create(False, nil, True);
+  try
+    DayLog.CreateDailyFile(FTestDir, 'Day ');
+    Path:= DayLog.DailyFile.FileNameOf(Now);
+    DayLog.AddInfo ('Info line');
+    DayLog.AddDebug('Debug line');    { Every level goes to the file: the file is the record, the view filters }
+    DayLog.AddError('Error line');
+    Assert.IsFalse(FileExists(Path), 'Add must not write to the disk');
+
+    DayLog.DailyFile.Flush;
+    Text:= TFile.ReadAllText(Path, TEncoding.UTF8);
+    Assert.Contains(Text, '  Info line'  + #13#10);
+    Assert.Contains(Text, '  Debug line' + #13#10);
+    Assert.Contains(Text, '  Error line' + #13#10);
+
+    DayLog.AddInfo('Written by Destroy');
+  finally
+    FreeAndNil(DayLog);
+  end;
+  Assert.Contains(TFile.ReadAllText(Path, TEncoding.UTF8), '  Written by Destroy', 'Destroy must write the lines still in the buffer');
 end;
 
 

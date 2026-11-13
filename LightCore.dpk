@@ -53,6 +53,7 @@ contains
   LightCore.LogLinesS in 'LightCore.LogLinesS.pas',
   LightCore.LogLinesAbstract in 'LightCore.LogLinesAbstract.pas',
   LightCore.LogLinesM in 'LightCore.LogLinesM.pas',
+  LightCore.LogFile in 'LightCore.LogFile.pas',
   LightCore.AppData in 'LightCore.AppData.pas',
   LightCore.Math in 'LightCore.Math.pas',
   LightCore.Pascal in 'LightCore.Pascal.pas',

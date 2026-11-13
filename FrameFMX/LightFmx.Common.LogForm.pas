@@ -138,7 +138,6 @@ begin
 
   VAR IniFile:= TIniFileEx.Create('Log Settings', AppData.IniFile);
   try
-    IniFile.Write('ShowOnError', AppData.RamLog.ShowOnError);
     IniFile.Write('AutoScroll' , LogViewer.AutoScroll);
     // Phone forces ShowDate/ShowTime to FALSE — don't persist that, or it would clobber the desktop preference.
     if NOT IsPhoneScreen then
@@ -159,7 +158,8 @@ begin
 
   VAR IniFile:= TIniFileEx.Create('Log Settings', AppData.IniFile);
   try
-    AppData.RamLog.ShowOnError:= IniFile.Read('ShowOnError', TRUE);
+    { ShowOnError is not read here: TAppDataCore owns it (INI section [AppData Settings]) and already gave it to RamLog.
+      Reading a second copy here would override a program's AppData.ShowLogOnError:= FALSE when this form is created. }
     LogViewer.AutoScroll      := IniFile.Read('AutoScroll' , TRUE);
 
     LogViewer.ShowTime:= IniFile.Read('ShowTime', TRUE);
@@ -195,7 +195,7 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 procedure TfrmRamLog.chkLogOnErrorChange(Sender: TObject);
 begin
-  AppData.RamLog.ShowOnError:= chkLogOnError.IsChecked;
+  AppData.ShowLogOnError:= chkLogOnError.IsChecked;     // the setter passes it to RamLog; TAppDataCore.SaveSettings stores it
 end;
 
 

@@ -189,7 +189,7 @@ begin
  AppData.StartMinim    := chkStartMinim .Checked;
  AppData.Minimize2Tray := chkTrayIcon   .Checked;
  AppData.HideHint      := spnHideHint   .Value;
- AppData.RamLog.ShowonError   := chkLogOnError .Checked;
+ AppData.ShowLogOnError:= chkLogOnError .Checked;     // through AppData, not RamLog: the setter passes it to RamLog and TAppDataCore.SaveSettings stores it
 
  if radHintsOff     .Checked then AppData.HintType := htOff else
  if radHintsTooltips.Checked then AppData.HintType := htTooltips else

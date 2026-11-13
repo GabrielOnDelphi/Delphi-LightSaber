@@ -1,11 +1,17 @@
 UNIT LightVcl.Common.LogViewer;
 
 {=============================================================================================================
-   2026.11.06
+   2026.11.12
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    A log viewer based on TStringGrid.
    It can easily show up to 1 million entries. Being a good citizen, when it reaches this number it saves existing data to disk and then clears it from RAM.
+   A log with TRamLog.RingSize keeps only its newest lines instead.
+
+   What the view shows
+      The grid holds COPIES of the visible lines (TAbstractLogLines.ReadPage), never pointers into the log, so the log may drop or free lines at any time.
+      AutoScroll = TRUE: the view follows the newest line while it shows the bottom. When the user scrolls up, it stays on the same lines, also while the log drops old ones; scrolling back to the bottom follows again.
+      RefreshInterval > 0: a new line only marks the view as changed; a timer redraws at most once per interval. Use it for a log that gets many lines per second.
 
    How to use it
       Drop a TLogViewer on your form and use it to log messages like this:
@@ -58,18 +64,33 @@ TYPE
      FOwnRamLog   : Boolean;           // Frees RamLog if owned
      FFilteredRowCount: Integer;       // Cached count of filtered rows (drives scrollbar.Max)
      FScrollBar: TScrollBar;
+     FRows        : TArray<RLogLine>;  // Copies of the visible lines, row HeaderOverhead + i = FRows[i]
+     FTopRow      : Integer;           // The filtered line shown in the first data row
+     FFollowing   : Boolean;           // The view shows the bottom, so it follows the newest line (only when AutoScroll)
+     FDroppedSeen : Int64;             // Lines.DroppedCount when the page was read; -1 = read afresh (see RLogPage)
+     FTimeFormat  : string;
+     FRefreshInterval: Integer;
+     FRefreshTimer: TTimer;
+     FDirty       : Boolean;           // A Populate came while RefreshInterval > 0; the timer redraws
      FFormDestroying: Boolean;         { Set TRUE in TfrmRamLog.FormDestroy so already-queued TThread.Queue closures (posted by background-thread log appends) bail out instead of touching a freed viewer.
                                          Distinct from TComponent.Destroying (which only flips once we are inside our own destructor — too late for a closure that has already entered Populate).
                                          Mirrors the same pattern in LightFmx.Common.LogViewer. }
+     procedure setTimeFormat(const Value: string);
+     function  isTimeFormatStored: Boolean;
+     procedure setRefreshInterval(Value: Integer);
+     procedure refreshTimerTimer(Sender: TObject);
+     procedure refreshNow;
+     procedure readPage;
+     function  getVisibleText: string;
+     function  getFollowing: Boolean;
+     function  timeText(Time: TDateTime): string;
      procedure setShowDate(const Value: Boolean);
      procedure setShowTime(const Value: Boolean);
      procedure FixFixedRow;
      procedure resizeColumns;
-     procedure scrollToBottom;
      procedure setVerbFilter(const Value: TLogVerbLvl);
      function  getLineFiltered(Row: Integer): PLogLine;
      procedure scrollBarChange(Sender: TObject);
-     procedure refreshVisibleSlice;
    protected
      procedure CreateWnd; override;
      procedure Resize; override;
@@ -87,6 +108,7 @@ TYPE
      procedure ChangeScrollBarVisibility(aVisible: boolean);
      procedure SaveAsRtf(const FullPath: string);
      property  FormDestroying: Boolean read FFormDestroying write FFormDestroying;
+     property  Grid: THackGrid read FGrid;   { The grid inside the panel: give it the focus with Form.ActiveControl }
 
      function  Count: Integer;
      procedure CopyAll;
@@ -101,6 +123,15 @@ TYPE
 
      property Verbosity    : TLogVerbLvl  read FVerbosity   write SetVerbFilter default lvVerbose;
      property OnVerbChanged: TNotifyEvent read FVerbChanged write FVerbChanged;   { Triggered when verbosity filter level changes }
+
+     property TimeFormat     : string  read FTimeFormat      write setTimeFormat stored isTimeFormatStored;   { FormatDateTime format of the time column (ShowTime). Default 'hh:nn'. }
+     property RefreshInterval: Integer read FRefreshInterval write setRefreshInterval default 0;              { Milliseconds. 0 = redraw at every new line. > 0 = redraw at most once per interval. }
+
+     { Read-only, for GUI tests (Autopilot read_property). Never streamed: they have no setter. }
+     property LineCount  : Integer read FFilteredRowCount;   { Lines that pass the verbosity filter }
+     property TopRow     : Integer read FTopRow;             { Filtered line shown in the first data row }
+     property Following  : Boolean read getFollowing;        { TRUE = the view follows the newest line }
+     property VisibleText: string  read getVisibleText;      { The messages of the visible rows, one per line }
   end;
 
 function Verbosity2Color (Verbosity: TLogVerbLvl; IsDark: Boolean = False): TColor;
@@ -124,6 +155,9 @@ USES
    LightCore, LightCore.Types,
    LightCore.Colors, LightVcl.Common.Clipboard, LightVcl.Common.LogFilter;
 
+CONST
+  DefaultTimeFormat = 'hh:nn';
+
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -143,6 +177,9 @@ begin
   FShowDate   := FALSE;
   FVerbosity  := lvVerbose;
   FAutoScroll := TRUE;
+  FFollowing  := TRUE;
+  FDroppedSeen:= -1;
+  FTimeFormat := DefaultTimeFormat;
 
   FScrollBar         := TScrollBar.Create(Self);
   FScrollBar.Parent  := Self; // Assumes a parent panel
@@ -184,6 +221,8 @@ end;
 
 destructor TLogViewer.Destroy;
 begin
+  FreeAndNil(FRefreshTimer);   { No redraw may start while the viewer goes }
+
   if FOwnRamLog
   then FreeAndNil(FRamLog)
   else
@@ -202,9 +241,14 @@ procedure TLogViewer.Clear;
 begin
   Assert(FRamLog <> NIL, 'Clear: RamLog not assigned!');
 
-  FGrid.RowCount:= HeaderOverhead;  { Reset to header only }
+  FRows:= NIL;
+  FTopRow:= 0;
+  FFollowing:= TRUE;
+  FDroppedSeen:= -1;
   FRamLog.Clear;
+  setUpRows;
   resizeColumns;
+  FGrid.InvalidateGrid;
 end;
 
 
@@ -232,9 +276,6 @@ begin
 
   FGrid.BeginUpdate;
   TRY
-    { Calculate filtered row count (cached for performance) }
-    FFilteredRowCount:= RamLog.Count(FVerbosity > lvDebug, FVerbosity);
-
     { Calculate visible rows based on grid height }
     VisibleRows:= Trunc(ClientHeight / FGrid.DefaultRowHeight) - HeaderOverhead;
     if VisibleRows < 1
@@ -247,37 +288,67 @@ begin
     then NewColCount:= 2
     else NewColCount:= 1;
     FGrid.ColCount:= NewColCount;
-
-    { Configure scrollbar visibility and range.
-      Suppress FScrollBar.OnChange while we mutate Max/Position so we don't trigger a redundant refreshVisibleSlice — the explicit call after EndUpdate covers it.
-
-      Safe to clobber OnChange unconditionally: FScrollBar is a private TScrollBar created in the constructor and never exposed.
-      No external code can assign a different OnChange handler, so restoring scrollBarChange in FINALLY always reinstates the only legitimate value.
-      If FScrollBar is ever made public or its OnChange is exposed, switch to save-and-restore via a local TNotifyEvent. }
-    FScrollBar.OnChange:= NIL;
-    TRY
-      if FFilteredRowCount > VisibleRows
-      then
-        begin
-          FScrollBar.Max:= FFilteredRowCount - VisibleRows;
-          ChangeScrollBarVisibility(TRUE);
-        end
-      else
-        begin
-          FScrollBar.Max:= 0;
-          FScrollBar.Position:= 0;
-          ChangeScrollBarVisibility(FALSE);
-        end;
-      FScrollBar.LargeChange:= VisibleRows;
-    FINALLY
-      FScrollBar.OnChange:= scrollBarChange;
-    END;
   FINALLY
     FGrid.EndUpdate;
   END;
 
-  { Re-fill the visible PLogLine slice now that RowCount and ScrollBar.Max are correct. }
-  refreshVisibleSlice;
+  readPage;   { Now that RowCount is right: the rows, the line count and the scroll bar }
+end;
+
+
+{--------------------------------------------------------------------------------------------------
+   Reads the visible page from the log (copies of the lines, see RLogPage), then sets the scroll bar to match.
+   Following: the page is the newest lines.
+   Not following: the page starts at FTopRow, moved back by the lines the log dropped since the last read, so the user keeps seeing the same lines.
+
+   OnChange of the scroll bar is off while Max and Position change, so this routine does not call itself through scrollBarChange.
+   Safe to clear OnChange without saving it: FScrollBar is private and its only handler is scrollBarChange.
+--------------------------------------------------------------------------------------------------}
+procedure TLogViewer.readPage;
+VAR
+  Page: RLogPage;
+  VisibleRows: Integer;
+begin
+  if NOT HandleAllocated
+  OR NOT Assigned(FRamLog) then EXIT;
+
+  VisibleRows:= FGrid.RowCount - HeaderOverhead;
+  if VisibleRows < 1
+  then VisibleRows:= 1;
+
+  Page:= Default(RLogPage);
+  Page.Verbosity  := FVerbosity;
+  Page.Follow     := FAutoScroll AND FFollowing;
+  Page.TopRow     := FTopRow;
+  Page.DroppedSeen:= FDroppedSeen;
+  SetLength(Page.Rows, VisibleRows);
+  FRamLog.Lines.ReadPage(Page);
+
+  FRows            := Page.Rows;
+  FTopRow          := Page.TopRow;
+  FDroppedSeen     := Page.DroppedSeen;
+  FFilteredRowCount:= Page.Total;
+
+  FScrollBar.OnChange:= NIL;
+  TRY
+    if FFilteredRowCount > VisibleRows
+    then
+      begin
+        FScrollBar.Max:= FFilteredRowCount - VisibleRows;
+        FScrollBar.Position:= FTopRow;
+        ChangeScrollBarVisibility(TRUE);
+      end
+    else
+      begin
+        FScrollBar.Max:= 0;
+        FScrollBar.Position:= 0;
+        FFollowing:= TRUE;          { Every line is in view, so the view shows the bottom }
+        ChangeScrollBarVisibility(FALSE);
+      end;
+    FScrollBar.LargeChange:= VisibleRows;
+  FINALLY
+    FScrollBar.OnChange:= scrollBarChange;
+  END;
 end;
 
 
@@ -287,6 +358,7 @@ begin
   if FVerbosity <> Value then
     begin
       FVerbosity:= Value;
+      FDroppedSeen:= -1;      { A drop count of another filter: read the page afresh }
 
       { Update associated UI element if it exists and needs syncing }
       if (FVerbTrackBar <> NIL)
@@ -298,7 +370,7 @@ begin
       if Assigned(FVerbChanged)
       then FVerbChanged(Self);
 
-      { Refresh the grid content based on the new filter (setUpRows internally calls refreshVisibleSlice). }
+      { Refresh the grid content based on the new filter }
       setUpRows;
       FGrid.InvalidateGrid;
     end;
@@ -333,33 +405,113 @@ end;
 
 { Refreshes the grid display from the RamLog data.
   Called by the ILogObserver interface when log content changes.
-  setUpRows must run first: it updates FFilteredRowCount and FScrollBar.Max, then calls refreshVisibleSlice.
-  scrollToBottom may then change FScrollBar.Position which fires scrollBarChange (refreshes the slice + repaints).
-  If Position doesn't actually change, the slice from setUpRows is still correct.
-  Either way, no extra work needed here.
+  RefreshInterval > 0: only marks the view as changed; refreshTimerTimer redraws. Safe because the grid holds copies, not pointers into the log.
 
   Guard against already-queued TThread.Queue closures firing after the host form's FormDestroy has set FormDestroying:=TRUE — without this guard the closure would touch a viewer that Application has just freed. }
 procedure TLogViewer.Populate;
 begin
-  if FFormDestroying 
+  if FFormDestroying
   OR NOT Assigned(FRamLog) then EXIT;
 
+  if FRefreshInterval > 0
+  then FDirty:= TRUE
+  else refreshNow;
+end;
+
+
+procedure TLogViewer.refreshNow;
+begin
+  FDirty:= FALSE;
   setUpRows;
-
-  if AutoScroll
-  then scrollToBottom;
-
   FGrid.InvalidateGrid;
 end;
 
 
-{ Returns the log line at the specified grid row (after filtering).
-  Returns NIL if the row is invalid, out of bounds, or has no data. }
-function TLogViewer.getLineFiltered(Row: Integer): PLogLine;
+procedure TLogViewer.refreshTimerTimer(Sender: TObject);
 begin
-  Result:= NIL;
-  if (Row < HeaderOverhead) or (Row >= FGrid.RowCount) then EXIT;
-  Result:= PLogLine(FGrid.Objects[0, Row]);
+  if FDirty
+  AND NOT FFormDestroying
+  AND Assigned(FRamLog)
+  then refreshNow;
+end;
+
+
+procedure TLogViewer.setRefreshInterval(Value: Integer);
+begin
+  Assert(Value >= 0, 'TLogViewer.RefreshInterval must be >= 0 (0 = off)');
+  if Value = FRefreshInterval then EXIT;
+  FRefreshInterval:= Value;
+
+  if Value = 0 then
+    begin
+      FreeAndNil(FRefreshTimer);
+      if FDirty AND NOT FFormDestroying AND Assigned(FRamLog)
+      then refreshNow;
+    end
+  else
+    begin
+      if FRefreshTimer = NIL then
+        begin
+          FRefreshTimer:= TTimer.Create(NIL);   { Freed by Destroy, first }
+          FRefreshTimer.OnTimer:= refreshTimerTimer;
+        end;
+      FRefreshTimer.Interval:= Value;
+      FRefreshTimer.Enabled:= TRUE;
+    end;
+end;
+
+
+procedure TLogViewer.setTimeFormat(const Value: string);
+begin
+  if FTimeFormat = Value then EXIT;
+  FTimeFormat:= Value;
+  resizeColumns;
+  FGrid.InvalidateGrid;
+end;
+
+
+function TLogViewer.isTimeFormatStored: Boolean;
+begin
+  Result:= FTimeFormat <> DefaultTimeFormat;
+end;
+
+
+function TLogViewer.timeText(Time: TDateTime): string;
+begin
+  Result:= '';
+  if ShowDate then Result:= DateToStr(Time);
+  if ShowTime then Result:= Result + ' ' + FormatDateTime(FTimeFormat, Time);
+end;
+
+
+function TLogViewer.getFollowing: Boolean;
+begin
+  Result:= FAutoScroll AND FFollowing;
+end;
+
+
+function TLogViewer.getVisibleText: string;
+VAR i: Integer;
+begin
+  Result:= '';
+  for i:= 0 to High(FRows) do
+    begin
+      if i > 0
+      then Result:= Result + sLineBreak;
+      Result:= Result + FlattenLineBreaks(FRows[i].Msg);
+    end;
+end;
+
+
+{ Returns the log line shown at the grid row, or NIL when the row shows no line.
+  The pointer points into the viewer's own copy (FRows): use it at once, before the next refresh. }
+function TLogViewer.getLineFiltered(Row: Integer): PLogLine;
+VAR Index: Integer;
+begin
+  Index:= Row - HeaderOverhead;
+  if (Index < 0) OR (Index >= Length(FRows))
+  then Result:= NIL
+  else Result:= @FRows[Index];
 end;
 
 
@@ -387,9 +539,8 @@ begin
   if ARow = 0
   then EXIT;
 
-  { Data rows - read the cached PLogLine pointer.
-    Set by refreshVisibleSlice for every visible row, NIL otherwise. }
-  CurLine:= PLogLine(FGrid.Objects[0, ARow]);
+  { Data rows - the viewer's copy of the line (FRows), NIL below the last line }
+  CurLine:= getLineFiltered(ARow);
   if CurLine = NIL then
     begin
       FGrid.Canvas.FillRect(ARect);
@@ -400,11 +551,7 @@ begin
   if FGrid.ColCount = 2
   then
     case ACol of
-      0: begin
-           s:= '';
-           if ShowDate then s:= DateToStr(CurLine.Time);
-           if ShowTime then s:= s + ' ' + FormatDateTime('hh:nn', CurLine.Time);
-         end;
+      0: s:= timeText(CurLine.Time);
       1: s:= FlattenLineBreaks(CurLine.Msg);   { A multi-line entry is one grid row }
     else
       raise Exception.Create('GridDrawCell: Invalid column index');
@@ -428,17 +575,6 @@ begin
   if RamLog = NIL  // can it ever be nil?
   then Result:= 0
   else Result:= RamLog.Count(FVerbosity > lvDebug, FVerbosity);
-end;
-
-
-{ Scrolls the view to show the most recent log entries (bottom of the log). }
-procedure TLogViewer.scrollToBottom;
-VAR VisibleRows: Integer;
-begin
-  VisibleRows:= FGrid.RowCount - HeaderOverhead;
-  if FFilteredRowCount > VisibleRows
-  then FScrollBar.Position:= FFilteredRowCount - VisibleRows
-  else FScrollBar.Position:= 0;
 end;
 
 
@@ -532,9 +668,7 @@ begin
          FGrid.Cells[1, 0] := 'Message';
 
          // Adjust as needed for date/time column
-         sTime:= '';
-         if ShowDate then sTime:= DateToStr(Now);
-         if ShowTime then sTime:= sTime+ ' '+  FormatDateTime('hh:nn', Now);
+         sTime:= timeText(Now);
 
          TimeColWidth := FGrid.CalculateColWidth(Length(sTime), sTime);  // Make first col as large as the text
          FGrid.ColWidths[0] := TimeColWidth;
@@ -550,7 +684,7 @@ begin
   resizeColumns;          { Adjust column widths to the new ClientWidth. }
 
   { ClientHeight changed, so the number of visible rows changed too.
-    setUpRows reads ClientHeight to recompute FGrid.RowCount and FScrollBar.Max, and ends by calling refreshVisibleSlice.
+    setUpRows reads ClientHeight to recompute FGrid.RowCount and FScrollBar.Max, and ends by calling readPage.
     Without this call, growing the panel would leave empty rows at the bottom (RowCount stuck at the old value), and shrinking would orphan filled-but-invisible rows.
     Skip when not yet wired (Resize can fire before the constructor finishes assigning FRamLog). }
   if Assigned(FRamLog) 
@@ -770,9 +904,12 @@ begin
 end;
 
 
+{ The user moved the scroll bar: at the bottom the view follows the newest line again, anywhere else it stays on the lines the user chose }
 procedure TLogViewer.scrollBarChange(Sender: TObject);
 begin
-  refreshVisibleSlice;
+  FTopRow:= FScrollBar.Position;
+  FFollowing:= FScrollBar.Position >= FScrollBar.Max;
+  readPage;
   FGrid.InvalidateGrid;
 end;
 
@@ -805,42 +942,6 @@ begin
     else
       raise Exception.Create('Verbosity2Color: Invalid log verbosity level');
     end;
-end;
-
-
-{--------------------------------------------------------------------------------------------------
-   Refills the grid's visible Object slots with PLogLine pointers from the underlying log.
-
-   Delegates the walk to RamLog.Lines.GetFilteredSlice, which holds a single read lock for the entire scan in multithreaded mode -- no per-element lock-acquire tax.
-   The visible slice lives directly in the grid's per-cell Objects array, so GridDrawCell reads it in O(1).
-
-   Caller contract:
-     - Must run AFTER setUpRows has set FGrid.RowCount and FScrollBar.Max for the current filter.
-     - Must run AFTER any change to FScrollBar.Position.
-     - Safe to call before HandleAllocated (early-exits).
---------------------------------------------------------------------------------------------------}
-procedure TLogViewer.refreshVisibleSlice;
-VAR
-  Buf: array of PLogLine;
-  i, Filled, MaxRows, SliceLen: Integer;
-begin
-  if NOT HandleAllocated then EXIT;
-  MaxRows:= FGrid.RowCount;
-
-  { Clear all visible Object slots first so any failure (or empty log) leaves a clean state. }
-  for i:= HeaderOverhead to MaxRows - 1 do
-    FGrid.Objects[0, i]:= NIL;
-
-  if NOT Assigned(RamLog) then EXIT;
-  if NOT Assigned(RamLog.Lines) then EXIT;
-
-  SliceLen:= MaxRows - HeaderOverhead;
-  if SliceLen <= 0 then EXIT;
-
-  SetLength(Buf, SliceLen);
-  Filled:= RamLog.Lines.GetFilteredSlice(FVerbosity, FScrollBar.Position, Buf);
-  for i:= 0 to Filled - 1 do
-    FGrid.Objects[0, HeaderOverhead + i]:= TObject(Buf[i]);
 end;
 
 

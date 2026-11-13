@@ -1,12 +1,16 @@
 ﻿UNIT LightFmx.Common.LogViewer;
 
 {=============================================================================================================
-   2026.07.07
+   2026.11.12
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    A log viewer based on TStringGrid.
    It can easily show up to 1 million entries.
    When it reaches this number it saves the existing data to disk and then clears it from RAM.
+   A log with TRamLog.RingSize keeps only its newest lines instead.
+
+   AutoScroll = TRUE: the view follows the newest line while it shows the bottom.
+   When the user scrolls up, it stays on the same lines, also while the log drops old ones.
 
    How to use it
       1. Standalone: Drop a TLogViewer on your form and use it to log messages:
@@ -68,8 +72,12 @@ TYPE
                                     // Distinct from TComponent.Destroying (which only flips
                                     // once we are inside our own destructor — too late for
                                     // a closure that has already entered Populate).
+     FBottomY      : Single;        // ViewportPosition.Y after the last scroll to the bottom; the view follows while it stays there
+     FDroppedSeen  : Int64;         // Lines.DroppedCount(Verbosity) at the last Populate; -1 = not read yet
      procedure setShowDate(const Value: Boolean);
      procedure setShowTime(const Value: Boolean);
+     function  getFollowing: Boolean;
+     procedure resetFollow;
      procedure resizeColumns;
      procedure scrollToBottom;
      procedure setVerbFilter(const Value: TLogVerbLvl);
@@ -104,7 +112,8 @@ TYPE
    published
      property ShowTime     : Boolean      read FShowTime    write setShowTime default FALSE;
      property ShowDate     : Boolean      read FShowDate    write setShowDate default FALSE;
-     property AutoScroll   : Boolean      read FAutoScroll  write FAutoScroll default TRUE;
+     property AutoScroll   : Boolean      read FAutoScroll  write FAutoScroll default TRUE;   { TRUE = follow the newest line while the view shows the bottom }
+     property Following    : Boolean      read getFollowing;                                 { Read-only, for GUI tests }
 
      property Verbosity    : TLogVerbLvl  read FVerbosity   write SetVerbFilter default lvVerbose;
      property OnVerbChanged: TNotifyEvent read FVerbChanged write FVerbChanged;   { Triggered after the verbosity filter changed }
@@ -140,6 +149,7 @@ begin
   FVerbosity:= lvVerbose;
   FAutoScroll:= TRUE;
   FFilteredRowCount:= 0;
+  FDroppedSeen:= -1;
 
   // Enable row selection by default. Also remove Editing: FMX's DefaultGridOptions
   // includes TGridOption.Editing (unlike VCL, where TStringGrid is read-only by default),
@@ -174,6 +184,7 @@ begin
   RowCount:= 0;
   FFilteredRowCount:= 0;
   SetLength(FVisibleLines, 0);   // Drop dangling pointers; will be repopulated by the Populate callback below.
+  resetFollow;
   FRamLog.Clear;
   // No need to call Populate - RamLog.Clear triggers NotifyLogObserver which calls Populate
 end;
@@ -284,9 +295,7 @@ begin
   finally
     EndUpdate;
   end;
-
-  if FAutoScroll
-  then ScrollToBottom;
+  // Scrolling is Populate's job: it follows the newest line only while the view shows the bottom
 end;
 
 
@@ -295,6 +304,7 @@ begin
   if FVerbosity <> Value then
     begin
       FVerbosity:= Value;
+      FDroppedSeen:= -1;      { The drop count of another filter: do not shift the view by it }
 
       if (FVerbTrackBar <> NIL) then
         if (FVerbTrackBar as TLogVerbFilter).Verbosity <> Self.Verbosity
@@ -328,6 +338,7 @@ begin
 
   FRamLog:= TRamLog.Create(TRUE, Self as ILogObserver);
   FOwnRamLog:= TRUE;
+  resetFollow;
 
   Populate;
 end;
@@ -349,6 +360,7 @@ begin
 
   FOwnRamLog:= FALSE;
   FRamLog:= ExternalLog;
+  resetFollow;
   FRamLog.RegisterLogObserver(Self as ILogObserver);   { Added next to any viewer already observing this log (e.g. the log form of AppData) }
 
   Populate;
@@ -376,13 +388,47 @@ end;
   FormDestroy has set FormDestroying:=TRUE — without this guard the closure would
   touch a viewer that Application has just freed. }
 procedure TLogViewer.Populate;
+VAR
+  Follow: Boolean;
+  Dropped: Int64;
 begin
   if FFormDestroying OR NOT Assigned(FRamLog) then EXIT;
 
-  setUpRows;  // Reconfigures rows/columns based on current filter
+  Follow:= getFollowing;     { Measured BEFORE the new rows change the content height }
+  setUpRows;                 // Reconfigures rows/columns based on current filter
 
-  if AutoScroll
-  then scrollToBottom;
+  { In multi-threaded mode a drop can fall between setUpRows and this read; the view then shifts by one drop chunk too few or too many. Rare and harmless. }
+  Dropped:= FRamLog.Lines.DroppedCount(FVerbosity);
+  if Follow then
+    begin
+      scrollToBottom;
+      FBottomY:= ViewportPosition.Y;     { Where the bottom was put, after the scroll box clamped it }
+    end
+  else
+    if (FDroppedSeen >= 0) AND (Dropped > FDroppedSeen) then
+      { Lines above the user's view were dropped: move up by them, so the same lines stay in view }
+      ViewportPosition:= PointF(ViewportPosition.X, Max(0, ViewportPosition.Y - (Dropped - FDroppedSeen) * RowHeight));
+  FDroppedSeen:= Dropped;
+end;
+
+
+{ TRUE while AutoScroll is on and the view shows the bottom.
+  Two checks, either one is enough:
+    The user did not scroll up from where Populate last put the bottom (FBottomY). Needed because the scroll box may update its content height later than the row count, and a stale height would look like "scrolled up".
+    The view reaches the end of the content. Needed after the window grew: the scroll box then clamps the position below FBottomY. }
+function TLogViewer.getFollowing: Boolean;
+begin
+  Result:= FAutoScroll
+       AND (  (ViewportPosition.Y >= FBottomY - RowHeight / 2)
+           OR (ViewportPosition.Y + ViewportSize.Height >= ContentBounds.Height - RowHeight / 2));
+end;
+
+
+{ A new log, or an empty one: start again at the bottom }
+procedure TLogViewer.resetFollow;
+begin
+  FBottomY:= 0;
+  FDroppedSeen:= -1;
 end;
 
 

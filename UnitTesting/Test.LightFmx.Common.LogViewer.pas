@@ -128,6 +128,14 @@ type
 
     [Test]
     procedure TestMultiLine_ShowTime_MessageColumnFlattened;
+
+    { Follow Tests }
+    [Test]
+    procedure TestFollow_NewViewer_FollowsTheNewestLine;
+    [Test]
+    procedure TestFollow_ScrolledUp_StaysPut;
+    [Test]
+    procedure TestFollow_RingDropWhileScrolledUp_KeepsTheSameLines;
   end;
 
 implementation
@@ -772,6 +780,78 @@ begin
     assertCellText(LogViewer, 1, 0, 'Line A Line B', 'Message column, row 0');
   finally
     FreeAndNil(LogViewer);
+  end;
+end;
+
+
+{ Follow Tests
+  The viewer is 200 pixels high on the 600-pixel test form, so 100 rows of 22 pixels do not fit. }
+
+function NewFollowViewer(Form: TForm): TLogViewer;
+begin
+  Result:= TLogViewer.Create(Form);
+  Result.Parent:= Form;
+  Result.Align:= TAlignLayout.None;
+  Result.SetBounds(0, 0, 400, 200);
+end;
+
+
+procedure AddLines(Viewer: TLogViewer; First, Last: Integer);
+VAR i: Integer;
+begin
+  for i:= First to Last do
+    Viewer.RamLog.AddInfo('L' + IntToStr(i));
+end;
+
+
+procedure TTestFmxLogViewer.TestFollow_NewViewer_FollowsTheNewestLine;
+var Viewer: TLogViewer;
+begin
+  Viewer:= NewFollowViewer(FTestForm);
+  try
+    AddLines(Viewer, 1, 100);
+    Assert.IsTrue(Viewer.Following, 'A new viewer follows the newest line');
+    Assert.IsTrue(Viewer.ViewportPosition.Y > 0, 'Following 100 rows must have scrolled down');
+  finally
+    FreeAndNil(Viewer);
+  end;
+end;
+
+
+procedure TTestFmxLogViewer.TestFollow_ScrolledUp_StaysPut;
+var Viewer: TLogViewer;
+begin
+  Viewer:= NewFollowViewer(FTestForm);
+  try
+    AddLines(Viewer, 1, 100);
+    Assert.IsTrue(Viewer.ContentBounds.Height > Viewer.ViewportSize.Height, 'Precondition: the rows must not fit in the view');
+
+    Viewer.ViewportPosition:= PointF(0, 10 * Viewer.RowHeight);    { The user scrolls up }
+    Assert.IsFalse(Viewer.Following, 'A user who scrolled up must not be followed');
+
+    AddLines(Viewer, 101, 120);
+    Assert.AreEqual(Double(10 * Viewer.RowHeight), Double(Viewer.ViewportPosition.Y), 0.5, 'New lines must not move the view of a user who scrolled up');
+    Assert.IsFalse(Viewer.Following);
+  finally
+    FreeAndNil(Viewer);
+  end;
+end;
+
+
+procedure TTestFmxLogViewer.TestFollow_RingDropWhileScrolledUp_KeepsTheSameLines;
+var Viewer: TLogViewer;
+begin
+  Viewer:= NewFollowViewer(FTestForm);
+  try
+    Viewer.RamLog.RingSize:= 100;
+    AddLines(Viewer, 1, 100);
+    Viewer.ViewportPosition:= PointF(0, 30 * Viewer.RowHeight);
+
+    AddLines(Viewer, 101, 101);           { 101 > 100: the ring drops 1 + 10 lines }
+    Assert.AreEqual(90, Viewer.RowCount, 'Precondition: the ring dropped 11 lines');
+    Assert.AreEqual(Double(19 * Viewer.RowHeight), Double(Viewer.ViewportPosition.Y), 0.5, 'The view must move up by the 11 dropped rows');
+  finally
+    FreeAndNil(Viewer);
   end;
 end;
 
