@@ -43,6 +43,7 @@ TYPE
     function Add       (Value: PLogLine): Integer; override;
 
     function SnapshotAndClear: TAbstractLogLines; override;
+    function DropOldest(Count: Integer): TAbstractLogLines; override;
   end;
 
 
@@ -150,6 +151,22 @@ begin
     RAISE;
   END;
   Result:= Snapshot;
+end;
+
+
+{ See TAbstractLogLines.DropOldest. Caller owns the returned list. }
+function TLogLinesSingleThreaded.DropOldest(Count: Integer): TAbstractLogLines;
+VAR Dropped: TLogLinesSingleThreaded;
+begin
+  Dropped:= TLogLinesSingleThreaded.Create;
+  TRY
+    if moveOldestTo(Dropped, Count) > 0
+    then Inc(FResetCount);
+  EXCEPT
+    FreeAndNil(Dropped);
+    RAISE;
+  END;
+  Result:= Dropped;
 end;
 
 
