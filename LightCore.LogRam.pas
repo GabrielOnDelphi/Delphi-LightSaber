@@ -1,7 +1,7 @@
 UNIT LightCore.LogRam;
 
 {=============================================================================================================
-   2026.11.04
+   2026.11.12
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -9,6 +9,9 @@ UNIT LightCore.LogRam;
    Its data can be displayed by observers (such as TLogViewer in LightVcl.Common.LogViewer.pas or LightFmx.Common.LogViewer.pas), but it can also work alone without being connected to an observer.
    Several observers can show the same log: TAppData (VCL) attaches the hidden log window to AppData.RamLog, and a TLogViewer on the main form can attach to it too.
    It can easily hold up to 1 million entries. Being a good citizen, when it reaches this number it saves existing data to disk (OverflowFile, one file per log) and then clears it from RAM.
+   Two options, both off by default, for a program that runs for months (a server):
+     RingSize        keeps only the newest N lines in RAM, dropping the oldest a chunk at a time (no overflow file).
+     CreateDailyFile also writes every line to a text file per day (LightCore.LogFile.pas).
 
    Verbosity:
      Supports several verbosity levels (verbose, info, warnings, errors, etc)
@@ -33,7 +36,7 @@ INTERFACE
 
 USES
    System.SysUtils, System.DateUtils, System.Classes, System.SyncObjs,
-   LightCore.LogLinesAbstract, LightCore.LogLinesS, LightCore.LogLinesM, LightCore.LogTypes, LightCore.StreamBuff;
+   LightCore.LogLinesAbstract, LightCore.LogLinesS, LightCore.LogLinesM, LightCore.LogTypes, LightCore.StreamBuff, LightCore.LogFile;
 
 TYPE
   { Observer lifetime contract (CRITICAL):
@@ -44,8 +47,8 @@ TYPE
         2. Set a guard flag (e.g., FFormDestroying) and check it in Populate/PopUpWindow so any TThread.Queue closures already posted bail out instead of touching a freed object.
       See FFormDestroying in LightFmx.Common.LogViewer / LightVcl.Common.LogViewer.
 
-    Populate cache-replacement contract (CRITICAL for the overflow-save path):
-      Populate is called from CheckAndSaveToDisk RIGHT BEFORE the snapshot is freed.
+    Populate cache-replacement contract (CRITICAL for the overflow-save path and the ring drop):
+      Populate is called from CheckAndSaveToDisk (freeAfterRefresh) RIGHT BEFORE the snapshot or the dropped lines are freed.
       The overflow path correctness depends on Populate REPLACING any cached PLogLine pointers (e.g., the FVisibleLines slice in TLogViewer) with fresh pointers from the live FRamLog.Lines, SYNCHRONOUSLY before it returns.
       If an implementation defers cache rebuild to a later message-loop tick or to an async paint event, the snapshot will be disposed while the viewer is still holding pointers into it — use-after-free.
       The reference implementation, TLogViewer.Populate in LightFmx.Common.LogViewer, does this synchronously through setUpRows (SetLength(FVisibleLines, ...) + GetFilteredSlice), which is the pattern any new viewer implementation should follow. }
@@ -87,17 +90,23 @@ TYPE
      FMaxEntries   : Integer;            // Maximum number of entries before overflow-save+clear. Default 1_000_000. Tunable via MaxEntries property.
      FNotifyFlag   : INotifyCoalesceFlag; // Coalesces background-thread observer notifications. See INotifyCoalesceFlag for full rationale. Written only by the constructor; read concurrently by every Add path.
      FOverflowCount: Integer;            // Overflow saves done by this log so far. Changed only under FAutoSaveLock.
+     FRingSize     : Integer;            // 0 = off. See the RingSize property.
+     FDailyFile    : TLogDailyFile;      // NIL = off. See CreateDailyFile.
      class var
        FLogsCreated: Integer;            // TRamLog objects created so far in this process. Gives each log its default OverflowName. Changed only through TInterlocked.
      const
        StreamSign         = 'TRamLog';   { Header signature for binary save/load. Unit-private — accessed by SaveSnapshotToFile in the same unit. }
      procedure setMaxEntries  (Value: Integer);
      procedure setSaveInterval(Value: Integer);
+     procedure setRingSize    (Value: Integer);
+     procedure addLine(CONST Msg: string; Level: TLogVerbLvl; Bold, Show: Boolean);
    protected
      function prepareString(CONST Msg: string): string;
      procedure CheckAndSaveToDisk;
+     procedure tryRingDrop;         { Helper for CheckAndSaveToDisk; assumes FAutoSaveLock is held. }
      procedure tryOverflowSave;     { Helper for CheckAndSaveToDisk; assumes FAutoSaveLock is held. }
      procedure tryPeriodicSave;     { Helper for CheckAndSaveToDisk; assumes FAutoSaveLock is held. }
+     procedure freeAfterRefresh(VAR Removed: TAbstractLogLines);   { Frees lines that left the log, after every observer refreshed }
      function GetObserver: ILogObserver;    { Thread-safe read of the NEWEST observer (the one PopUpWindow shows). NIL if none. }
      function GetObservers: TLogObservers;  { Thread-safe copy of every observer, oldest first. Empty if none. }
    public
@@ -159,6 +168,22 @@ TYPE
       Setters Assert a positive value — zero or negative would trigger the corresponding save-and-clear on every Add, which is almost certainly a caller mistake. }
     property MaxEntries  : Integer read FMaxEntries   write setMaxEntries;
     property SaveInterval: Integer read FSaveInterval write setSaveInterval;
+
+    { RING (off by default)
+      0 = off: the log grows up to MaxEntries, then saves itself to an overflow file and empties itself.
+      N > 0 = the log keeps about the newest N lines: when an Add takes it past N, the oldest lines are dropped, a chunk of N div 10 at a time, so the count stays between N - N div 10 and N.
+              No overflow file is written while the ring is on. Keep N below MaxEntries.
+      The dropped lines are disposed only after every observer refreshed (see freeAfterRefresh), so a view that caches PLogLine pointers stays safe.
+      A drop bumps Lines.ResetCount and Lines.DroppedCount. A new value applies at the next Add. }
+    property RingSize: Integer read FRingSize write setRingSize;
+
+    { DAILY TEXT FILE (off by default)
+      CreateDailyFile makes every line of this log also go to a text file, one file per day, in Folder, named Prefix + yyyy-mm-dd + '.log'.
+      The Add* routines only put the line into a buffer; the owner must call DailyFile.Flush from a timer every TLogDailyFile.FlushSeconds seconds. The destructor writes the rest.
+      A failed write adds one warning line to this log. Details and limits: LightCore.LogFile.pas.
+      Call it once, from the main thread, before other threads add lines. }
+    function CreateDailyFile(CONST Folder, Prefix: string): TLogDailyFile;
+    property DailyFile: TLogDailyFile read FDailyFile;   { NIL until CreateDailyFile }
   end;
 
 
@@ -296,6 +321,13 @@ end;
 
 destructor TRamLog.Destroy;
 begin
+  { The daily file goes first: its last flush must not report an error into a log that is half gone }
+  if Assigned(FDailyFile) then
+    begin
+      FDailyFile.OnWriteError:= NIL;
+      FreeAndNil(FDailyFile);   { Writes the rest of the buffer }
+    end;
+
   { Already-queued TThread.Queue closures captured the interface locally (see NotifyLogObserver/PopUpWindow) and will still fire — they rely on the observer's own lifetime guard (e.g., FFormDestroying in TLogViewer).
     See "Observer lifetime contract" above the ILogObserver declaration. }
   if Assigned(FObserverLock) then
@@ -349,6 +381,25 @@ procedure TRamLog.setSaveInterval(Value: Integer);
 begin
   Assert(Value > 0, 'TRamLog.SaveInterval must be > 0 (seconds). A non-positive value would trigger a periodic save on every Add.');
   FSaveInterval:= Value;
+end;
+
+{ No lock taken, like setMaxEntries: the next Add reads the new value. }
+procedure TRamLog.setRingSize(Value: Integer);
+begin
+  Assert(Value >= 0, 'TRamLog.RingSize must be >= 0 (0 = off).');
+  FRingSize:= Value;
+end;
+
+
+function TRamLog.CreateDailyFile(CONST Folder, Prefix: string): TLogDailyFile;
+begin
+  Assert(FDailyFile = NIL, 'TRamLog.CreateDailyFile: called twice');
+  FDailyFile:= TLogDailyFile.Create(Folder, Prefix);
+  FDailyFile.OnWriteError:= procedure(CONST Msg: string)
+                            begin
+                              AddWarn(Msg);
+                            end;
+  Result:= FDailyFile;
 end;
 
 
@@ -523,19 +574,31 @@ begin
 end;
 
 
+{ Every Add* ends here. Show = also call PopUpWindow when ShowOnError is TRUE (warnings and errors). }
+procedure TRamLog.addLine(CONST Msg: string; Level: TLogVerbLvl; Bold, Show: Boolean);
+VAR Prepared: string;
+begin
+  Prepared:= PrepareString(Msg);
+  Lines.AddNewLine(Prepared, Level, Bold);
+  if FDailyFile <> NIL
+  then FDailyFile.Add(Now, Prepared);   { Into a buffer only: no disk access here }
+  CheckAndSaveToDisk;
+
+  if Show
+  then NotifyLogObserverAndShow
+  else NotifyLogObserver;
+end;
+
+
 procedure TRamLog.AddMsg(CONST Msg: string; Bold: Boolean = FALSE);
 begin
-  Lines.AddNewLine(PrepareString(Msg), lvInfos, Bold);
-  CheckAndSaveToDisk;
-  NotifyLogObserver;
+  addLine(Msg, lvInfos, Bold, FALSE);
 end;
 
 
 procedure TRamLog.AddMsgInt(CONST Msg: string; i: Integer; Bold: Boolean = FALSE);
 begin
-  Lines.AddNewLine(PrepareString(Msg) + IntToStr(i), lvInfos, Bold);
-  CheckAndSaveToDisk;
-  NotifyLogObserver;
+  addLine(Msg + IntToStr(i), lvInfos, Bold, FALSE);
 end;
 
 
@@ -551,57 +614,43 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 procedure TRamLog.AddDebug(CONST Msg: string; Bold: Boolean = FALSE);       { Relevance 0 }
 begin
-  Lines.AddNewLine(PrepareString(Msg), lvDebug, Bold);
-  CheckAndSaveToDisk;
-  NotifyLogObserver;
+  addLine(Msg, lvDebug, Bold, FALSE);
 end;
 
 
 procedure TRamLog.AddVerb(CONST Msg: string; Bold: Boolean = FALSE);        { Relevance 1 }
 begin
-  Lines.AddNewLine(PrepareString(Msg), lvVerbose, Bold);
-  CheckAndSaveToDisk;
-  NotifyLogObserver;
+  addLine(Msg, lvVerbose, Bold, FALSE);
 end;
 
 
 procedure TRamLog.AddHint(CONST Msg: string; Bold: Boolean = FALSE);        { Relevance 2 }
 begin
-  Lines.AddNewLine(PrepareString(Msg), lvHints, Bold);
-  CheckAndSaveToDisk;
-  NotifyLogObserver;
+  addLine(Msg, lvHints, Bold, FALSE);
 end;
 
 
 procedure TRamLog.AddInfo(CONST Msg: string; Bold: Boolean = FALSE);        { Relevance 3 }
 begin
-  Lines.AddNewLine(PrepareString(Msg), lvInfos, Bold);
-  CheckAndSaveToDisk;
-  NotifyLogObserver;
+  addLine(Msg, lvInfos, Bold, FALSE);
 end;
 
 
 procedure TRamLog.AddImpo(CONST Msg: string; Bold: Boolean = FALSE);        { Relevance 4 }
 begin
-  Lines.AddNewLine(PrepareString(Msg), lvImportant, Bold);
-  CheckAndSaveToDisk;
-  NotifyLogObserver;
+  addLine(Msg, lvImportant, Bold, FALSE);
 end;
 
 
 procedure TRamLog.AddWarn(CONST Msg: string; Bold: Boolean = FALSE);        { Relevance 5 }
 begin
-  Lines.AddNewLine(PrepareString(Msg), lvWarnings, Bold);
-  CheckAndSaveToDisk;
-  NotifyLogObserverAndShow;
+  addLine(Msg, lvWarnings, Bold, TRUE);
 end;
 
 
 procedure TRamLog.AddError(CONST Msg: string; Bold: Boolean = FALSE);       { Relevance 6 }
 begin
-  Lines.AddNewLine(PrepareString(Msg), lvErrors, Bold);
-  CheckAndSaveToDisk;
-  NotifyLogObserverAndShow;
+  addLine(Msg, lvErrors, Bold, TRUE);
 end;
 
 
@@ -609,6 +658,7 @@ end;
    CHECK AND SAVE TO DISK
 
    Auto-save triggers:
+     0. Ring (RingSize > 0): past RingSize lines the oldest are dropped (tryRingDrop) and no overflow save happens.
      1. When log exceeds MaxEntries (default 1 million; tunable via MaxEntries property) - saves to OverflowFile (a new numbered file per overflow) and clears RAM.
      2. When FSaveInterval seconds have passed since last save (default 60s; tunable via SaveInterval property) - saves to PeriodicLogSave.logbin. Only when PeriodicSave is TRUE (the application log).
 
@@ -627,6 +677,7 @@ procedure TRamLog.CheckAndSaveToDisk;
 begin
   if NOT FAutoSaveLock.TryEnter then EXIT;   { Another thread is already saving — skip. }
   TRY
+    tryRingDrop;
     tryOverflowSave;
     tryPeriodicSave;
   FINALLY
@@ -649,15 +700,12 @@ end;
   See INotifyCoalesceFlag declaration for full rationale. }
 procedure TRamLog.tryOverflowSave;
 VAR
-  Snapshot  : TAbstractLogLines;
-  HandedOff : Boolean;
-  LObservers: TLogObservers;
-  LFlag     : INotifyCoalesceFlag;
+  Snapshot: TAbstractLogLines;
 begin
+  if FRingSize > 0 then EXIT;          { The ring keeps the count below MaxEntries by dropping lines; no overflow file }
   if Lines.Count <= FMaxEntries then EXIT;
 
   Snapshot:= Lines.SnapshotAndClear;   { Atomic — no data can be added between capture and clear }
-  HandedOff:= FALSE;
   Inc(FOverflowCount);                 { Each overflow gets its own file, so a second overflow never overwrites the first }
   TRY
     TRY
@@ -672,57 +720,87 @@ begin
           RAISE;   { Re-raise unknown exception types per project policy }
         end;
     END;
-
-    LObservers:= GetObservers;
-    if Length(LObservers) = 0
-    then begin
-      { No observer to refresh — safe to free the snapshot in the FINALLY below; nobody is caching its pointers. }
-    end
-    else if TThread.CurrentThread.ThreadID = MainThreadID
-    then PopulateEach(LObservers, 0)                   { Synchronous — refresh is done before we return; safe to free in FINALLY. }
-    else
-      begin
-        LFlag:= FNotifyFlag;
-        { Mark HandedOff:=TRUE BEFORE TThread.Queue.
-          If Queue raises (e.g., OOM), the FINALLY's free path is suppressed — we'd rather leak Snapshot than risk a double-free if Queue partially succeeded. }
-        if LFlag.TryAcquire
-        then begin
-          { Hand ownership of Snapshot to the closure.
-            The closure runs Populate on every observer (refreshes each cache via GetFilteredSlice) and then frees the snapshot. }
-          HandedOff:= TRUE;
-          TThread.Queue(NIL, procedure
-            begin
-              LFlag.Release;
-              TRY
-                PopulateEach(LObservers, 0);
-              FINALLY
-                FreeAndNil(Snapshot);   { Free AFTER Populate has refreshed the pointer cache of every observer. }
-              END;
-            end);
-        end
-        else
-          begin
-            { Lost the coalesce race: the flag is 1, so another repaint closure was ACQUIRED — but we cannot assume it is already IN the queue.
-              The winner sets the flag and only then calls TThread.Queue (two separate steps in NotifyLogObserver); it can be preempted between them for the entire duration of our SnapshotAndClear + disk save.
-              A bare "free the snapshot" closure queued now could therefore run BEFORE the winner's Populate lands, disposing records the observer still caches (FGrid.Objects / FVisibleLines) — use-after-free on the next paint.
-
-              So this closure refreshes the pointer cache of every observer ITSELF, then frees — same pattern as the winning branch, minus the flag Release (we do not own the flag; the winner will Release it).
-              The extra Populate is harmless: overflow fires once per MaxEntries adds, so coalescing it buys nothing. }
-            HandedOff:= TRUE;
-            TThread.Queue(NIL, procedure
-              begin
-                TRY
-                  PopulateEach(LObservers, 0);
-                FINALLY
-                  FreeAndNil(Snapshot);   { Free AFTER our own Populate refreshed the pointer cache of every observer. }
-                END;
-              end);
-          end;
-      end;
   FINALLY
-    if NOT HandedOff
-    then FreeAndNil(Snapshot);
+    freeAfterRefresh(Snapshot);        { Also when an unknown exception is re-raised: the lines left the log either way }
   END;
+end;
+
+
+{ Ring: past RingSize lines, drop the oldest ones, a chunk of RingSize div 10 at a time, so a flood of lines drops once per chunk and not once per line. }
+procedure TRamLog.tryRingDrop;
+VAR
+  Size, Excess: Integer;
+  Dropped: TAbstractLogLines;
+begin
+  Size:= FRingSize;                    { One read: the setter may run on another thread }
+  if Size <= 0 then EXIT;
+
+  Excess:= Lines.Count - Size;
+  if Excess <= 0 then EXIT;
+
+  Dropped:= Lines.DropOldest(Excess + Size div 10);
+  freeAfterRefresh(Dropped);
+end;
+
+
+{ Frees Removed (lines that already left Lines, through SnapshotAndClear or DropOldest) only after every observer refreshed.
+  Why: TLogViewer (FMX) and other views cache PLogLine pointers between two refreshes; freeing first would leave them pointing into freed records.
+
+  On the main thread the observers refresh at once, then Removed is freed.
+  On another thread a closure is queued that refreshes them, then frees Removed. Removed is set to NIL before the closure is queued: if TThread.Queue raises, the lines leak instead of being freed twice.
+
+  Two queued branches:
+    Won the coalesce flag: this closure is the one repaint of the burst, so it releases the flag first (see NotifyLogObserver).
+    Lost it: another repaint closure was ACQUIRED, but it may not be IN the queue yet: the winner sets the flag and only then calls TThread.Queue, and it can be preempted between the two steps.
+      A bare "free" closure queued now could run BEFORE the winner's Populate, so this closure refreshes every observer ITSELF, then frees, and leaves the flag to the winner.
+      The extra Populate is harmless: a drop or an overflow happens once per many adds.
+  Closure capture rules: capture locals only; never reference Self (TRamLog may be destroyed before the closure fires). }
+procedure TRamLog.freeAfterRefresh(VAR Removed: TAbstractLogLines);
+VAR
+  LObservers: TLogObservers;
+  LFlag     : INotifyCoalesceFlag;
+  LRemoved  : TAbstractLogLines;
+begin
+  if Removed = NIL then EXIT;
+
+  LObservers:= GetObservers;
+  if Length(LObservers) = 0 then
+    begin
+      FreeAndNil(Removed);             { Nobody caches its pointers }
+      EXIT;
+    end;
+
+  if TThread.CurrentThread.ThreadID = MainThreadID then
+    begin
+      TRY
+        PopulateEach(LObservers, 0);   { Synchronous: every cache is refreshed before the free }
+      FINALLY
+        FreeAndNil(Removed);
+      END;
+      EXIT;
+    end;
+
+  LRemoved:= Removed;
+  Removed:= NIL;
+  LFlag:= FNotifyFlag;
+  if LFlag.TryAcquire
+  then TThread.Queue(NIL, procedure
+         begin
+           LFlag.Release;
+           TRY
+             PopulateEach(LObservers, 0);
+           FINALLY
+             FreeAndNil(LRemoved);     { After Populate refreshed the pointer cache of every observer }
+           END;
+         end)
+  else TThread.Queue(NIL, procedure
+         begin
+           TRY
+             PopulateEach(LObservers, 0);
+           FINALLY
+             FreeAndNil(LRemoved);
+           END;
+         end);
 end;
 
 
