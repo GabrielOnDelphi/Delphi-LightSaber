@@ -262,7 +262,7 @@ External references collected from the old unit headers:
 
 ## 8. Regression tests
 
-`UnitTesting\Test.FormSkinsDisk.pas` and `UnitTesting\Test.FormSkinsRes.pas`, in `Tests_LightVcl.Forms.dproj` (build via the `light-compiler` agent, needs `--define FRAMEWORK_VCL`).
+`UnitTesting\Test.FormSkinsDisk.pas` and `UnitTesting\Test.FormSkinsRes.pas`, in `Tests_LightVcl.Forms.dproj` (build via the `light-compiler` agent; no `--define` is needed, because its `<FrameworkType>VCL</FrameworkType>` defines `FRAMEWORK_VCL`).
 
 They cover, per unit:
 - the ordering guard — `FormSkinsDisk.LoadLastStyle` raises with a main form alive, and does not when `Application.MainForm` is NIL; `FormSkinsRes.LoadLastStyle` must NOT raise with a main form alive;
