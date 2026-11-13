@@ -685,12 +685,29 @@ function IsShiftDown: Boolean;
 function IsAltDown : Boolean;
 ```
 
-## LightCore.LogLinesAbstract (18)
+## LightCore.LogFile (10)
+
+```pascal
+procedure setDaysToKeep(Value: Integer);
+procedure setMaxFileMB (Value: Integer);
+procedure setMaxPending(Value: Integer);
+procedure writeDay(Day: Integer; CONST Texts: TArray<string>);
+procedure reportError(CONST Msg: string);
+function dayOfFileName(CONST FileName: string; out Day: Integer): Boolean;
+procedure Add(Time: TDateTime; CONST Msg: string);
+procedure Flush;
+procedure DeleteOldFiles;
+function FileNameOf(Day: TDateTime): string; { Full path of the file of that day }
+```
+
+## LightCore.LogLinesAbstract (23)
 
 ```pascal
 procedure ReadFromStream_v5(Stream: TLightStream); { Current reader }
 procedure WriteToStream (Stream: TLightStream); { Current writer }
 procedure readFromStream_v5(Stream: TLightStream);
+function moveOldestTo(Target: TAbstractLogLines; Count: Integer): Integer; { Returns the number of lines moved }
+function sumDropped(MinLevel: TLogVerbLvl): Int64; { No lock: the caller holds one }
 function getItem(Index: Integer): PLogLine; virtual; abstract;
 procedure addInternal(Value: PLogLine); inline;
 procedure acquireReadLock; virtual;
@@ -704,11 +721,14 @@ procedure ForEachLocked(Proc: TLogLineProc); virtual;
 function Add (Value: PLogLine): Integer; virtual; abstract;
 function AddNewLine(CONST Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Indent: Integer = 0): PLogLine; virtual; abstract;
 function SnapshotAndClear: TAbstractLogLines; virtual; abstract;
+function DropOldest(Count: Integer): TAbstractLogLines; virtual; abstract;
+function DroppedCount(MinLevel: TLogVerbLvl): Int64; virtual;
+procedure ReadPage(var Page: RLogPage); virtual;
 procedure ReadFromStream(Stream: TLightStream); virtual;
 procedure WriteToStream (Stream: TLightStream); virtual;
 ```
 
-## LightCore.LogLinesM (10)
+## LightCore.LogLinesM (11)
 
 ```pascal
 function getItem(Index: Integer): PLogLine; override;
@@ -719,11 +739,12 @@ function Count: Integer; override;
 function AddNewLine(CONST Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Indent: Integer = 0): PLogLine; override;
 function Add(Value: PLogLine): Integer; override;
 function SnapshotAndClear: TAbstractLogLines; override;
+function DropOldest(Count: Integer): TAbstractLogLines; override;
 procedure ReadFromStream(Stream: TLightStream); override;
 procedure WriteToStream (Stream: TLightStream); override;
 ```
 
-## LightCore.LogLinesS (6)
+## LightCore.LogLinesS (7)
 
 ```pascal
 function getItem(Index: Integer): PLogLine; override;
@@ -732,9 +753,10 @@ function Count: Integer; override;
 function AddNewLine(CONST Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Indent: Integer = 0): PLogLine; override;
 function Add (Value: PLogLine): Integer; override;
 function SnapshotAndClear: TAbstractLogLines; override;
+function DropOldest(Count: Integer): TAbstractLogLines; override;
 ```
 
-## LightCore.LogRam (38)
+## LightCore.LogRam (43)
 
 ```pascal
 procedure Populate;
@@ -743,10 +765,14 @@ function TryAcquire: Boolean; { Atomic 0->1 transition. TRUE = caller won and mu
 procedure Release; { Atomic reset to 0. Called from inside the queued closure on the main thread, BEFORE Populate, so emissions during paint can re-queue. }
 procedure setMaxEntries (Value: Integer);
 procedure setSaveInterval(Value: Integer);
+procedure setRingSize (Value: Integer);
+procedure addLine(CONST Msg: string; Level: TLogVerbLvl; Bold, Show: Boolean);
 function prepareString(CONST Msg: string): string;
 procedure CheckAndSaveToDisk;
+procedure tryRingDrop; { Helper for CheckAndSaveToDisk; assumes FAutoSaveLock is held. }
 procedure tryOverflowSave; { Helper for CheckAndSaveToDisk; assumes FAutoSaveLock is held. }
 procedure tryPeriodicSave; { Helper for CheckAndSaveToDisk; assumes FAutoSaveLock is held. }
+procedure freeAfterRefresh(VAR Removed: TAbstractLogLines); { Frees lines that left the log, after every observer refreshed }
 function GetObserver: ILogObserver; { Thread-safe read of the NEWEST observer (the one PopUpWindow shows). NIL if none. }
 function GetObservers: TLogObservers; { Thread-safe copy of every observer, oldest first. Empty if none. }
 procedure Clear;
@@ -775,6 +801,7 @@ procedure UnregisterLogObserver; overload; { Detaches EVERY observer, e.g. to st
 procedure NotifyLogObserver;
 procedure NotifyLogObserverAndShow;
 procedure PopUpWindow;
+function CreateDailyFile(CONST Folder, Prefix: string): TLogDailyFile;
 ```
 
 ## LightCore.LogTypes (2)
@@ -1899,11 +1926,13 @@ procedure LoadSettings;
 procedure SaveSettings;
 ```
 
-## LightFmx.Common.LogViewer (25)
+## LightFmx.Common.LogViewer (27)
 
 ```pascal
 procedure setShowDate(const Value: Boolean);
 procedure setShowTime(const Value: Boolean);
+function getFollowing: Boolean;
+procedure resetFollow;
 procedure resizeColumns;
 procedure scrollToBottom;
 procedure setVerbFilter(const Value: TLogVerbLvl);
@@ -2439,19 +2468,26 @@ procedure TrackBarChange(Sender: TObject);
 procedure Register;
 ```
 
-## LightVcl.Common.LogViewer (30)
+## LightVcl.Common.LogViewer (37)
 
 ```pascal
 function CalculateColWidth(const ATextLength: Integer; const ACaption: string): Integer;
+procedure setTimeFormat(const Value: string);
+function isTimeFormatStored: Boolean;
+procedure setRefreshInterval(Value: Integer);
+procedure refreshTimerTimer(Sender: TObject);
+procedure refreshNow;
+procedure readPage;
+function getVisibleText: string;
+function getFollowing: Boolean;
+function timeText(Time: TDateTime): string;
 procedure setShowDate(const Value: Boolean);
 procedure setShowTime(const Value: Boolean);
 procedure FixFixedRow;
 procedure resizeColumns;
-procedure scrollToBottom;
 procedure setVerbFilter(const Value: TLogVerbLvl);
 function getLineFiltered(Row: Integer): PLogLine;
 procedure scrollBarChange(Sender: TObject);
-procedure refreshVisibleSlice;
 procedure CreateWnd; override;
 procedure Resize; override;
 procedure setUpRows;
@@ -4223,4 +4259,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_3029 public routines across 237 units._
+_3060 public routines across 238 units._
