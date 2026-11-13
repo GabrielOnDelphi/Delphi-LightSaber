@@ -274,6 +274,7 @@ AppData.RamLog.AddError('Error text');  // Error (auto-pops the log window)
 ```
 
 Full architecture, threading model, observer lifetime contract, and auto-save behavior: see [Docs/Logging.md](Docs/Logging.md).
+Options for a program that runs for weeks, all off by default: `RamLog.RingSize` keeps only the newest lines in RAM, and `RamLog.CreateDailyFile` writes every line to one text file per day (`LightCore.LogFile.pas`). Both `TLogViewer` versions follow the newest line while the bottom is in view, and stay put while scrolled up.
 
 *Exception logger (every-raise capture for post-mortem diagnostics)*
 
