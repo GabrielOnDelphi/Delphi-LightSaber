@@ -139,10 +139,11 @@ A program that runs for weeks (a server) wants the newest lines in RAM, not one 
 ## The daily text file (`CreateDailyFile`, off by default)
 
 `TRamLog.CreateDailyFile(Folder, Prefix)` makes every line of the log also go to a text file, one file per day: `Folder\<Prefix>yyyy-mm-dd.log`, one line per entry, `hh:nn:ss  <message>`, a multi-line message flattened to one line. The writer is `TLogDailyFile` (`LightCore.LogFile.pas`).
-- `Add*` only puts the line into a buffer (`MaxPending` lines, default 20,000; a full buffer drops the newest lines and counts them). The owner calls `DailyFile.Flush` from a timer every `TLogDailyFile.FlushSeconds` (5) seconds, on the main thread. The destructor of the log writes the rest.
+- `Add*` only puts the line into a buffer (`MaxPending` lines, default 20,000; past it the lines are only counted, and the next flush writes one line that says how many were not written). The owner calls `DailyFile.Flush` from a timer every `TLogDailyFile.FlushSeconds` (5) seconds, on the main thread. The destructor of the log writes the rest.
 - `MaxFileMB` (default 100): when the file of a day reaches it, one closing line is written and nothing more that day. A restart counts the real size of the file.
 - `DaysToKeep` (default 30, today included): older files of this prefix are deleted when the value is set and at each day change.
-- `Active` (default TRUE once created): FALSE stops the writing, the lines are not kept.
+- `Active` (default TRUE once created): FALSE makes `Add` ignore the lines; what is already in the buffer is still written by the next flush.
+- A crash loses the lines of at most one flush interval.
 - A failed write adds one warning line to the log (`OnWriteError`), once per failure streak.
 - Call `CreateDailyFile` once, from the main thread, before other threads add lines.
 
