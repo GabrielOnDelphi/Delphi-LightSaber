@@ -68,6 +68,7 @@ TYPE
     function Add(Value: PLogLine): Integer; override;
 
     function  SnapshotAndClear: TAbstractLogLines; override;
+    function  DropOldest(Count: Integer): TAbstractLogLines; override;
 
     procedure ReadFromStream(Stream: TLightStream); override;
     procedure WriteToStream (Stream: TLightStream); override;
@@ -289,6 +290,27 @@ begin
     RAISE;
   END;
   Result:= Snapshot;
+end;
+
+
+{ See TAbstractLogLines.DropOldest. One block move under the write lock, so an Indy thread waiting to add a line waits microseconds. Caller owns the returned list. }
+function TLogLinesMultiThreaded.DropOldest(Count: Integer): TAbstractLogLines;
+VAR Dropped: TLogLinesMultiThreaded;
+begin
+  Dropped:= TLogLinesMultiThreaded.Create;
+  TRY
+    FLock.BeginWrite;
+    try
+      if moveOldestTo(Dropped, Count) > 0
+      then Inc(FResetCount);
+    finally
+      FLock.EndWrite;
+    end;
+  EXCEPT
+    FreeAndNil(Dropped);
+    RAISE;
+  END;
+  Result:= Dropped;
 end;
 
 
