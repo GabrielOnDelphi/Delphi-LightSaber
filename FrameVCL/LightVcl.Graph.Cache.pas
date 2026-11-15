@@ -385,6 +385,7 @@ end;
 { Clears the entire cache. Deletes all thumbnails and resets the database. }
 procedure TCacheObj.ClearCache;
 begin
+ CheckFolderDeletable(CacheFolder);                                                               { Refuse before the lists are cleared, so a refused folder leaves the database and the files on disk in step }
  DbPicts.Clear;
  DbThumbs.Clear;
  EmptyDirectory(CacheFolder);                                                               { Delete all files in the specified folder, but don't delete the folder itself. It will search also in subfolders }
