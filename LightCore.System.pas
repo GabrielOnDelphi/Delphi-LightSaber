@@ -1,7 +1,7 @@
 UNIT LightCore.System;
 
 {=============================================================================================================
-   2026.09.30
+   2026.11.13
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Programmer's helper and System tools
@@ -222,7 +222,9 @@ VAR
 begin
  cnt:= 0;
  Result:= '';
- WHILE EnumDisplaySettings(NIL, cnt, DevMode) DO                                                   {TODO: instead of NIL I have to provide the name of the monitor }
+ FillChar(DevMode, SizeOf(DevMode), 0);
+ DevMode.dmSize:= SizeOf(TDevMode);                                                                { EnumDisplaySettings reads dmSize to know the size of the record }
+ WHILE EnumDisplaySettings(NIL, cnt, DevMode) DO                                                  {TODO: instead of NIL I have to provide the name of the monitor }
   begin
    Result:= Result+ Format('%dx%d %d Colors', [DevMode.dmPelsWidth, DevMode.dmPelsHeight, Int64(1) shl DevMode.dmBitsperPel])+ #13#10;
    Inc(cnt);
@@ -309,13 +311,8 @@ end;
 
 { For home users it shows the computer name (Qosmio) }
 function GetDomainName: String;
-VAR
-  vlDomainName: array[0..30] of WideChar;
-  vlSize: DWORD;
 begin
- vlSize := Length(vlDomainName);
- WinApi.Windows.ExpandEnvironmentStrings(PChar('%USERDOMAIN%'), vlDomainName, vlSize);
- Result:= vlDomainName;
+ Result:= System.SysUtils.GetEnvironmentVariable('USERDOMAIN');
 end;
 
 
@@ -357,10 +354,21 @@ end;
   install font                                             http://www.experts-exchange.com/Programming/Languages/Pascal/Delphi/Q_20906162.html?qid=20906162 }
 
 
+{ Tells every top-level window that the font list changed.
+  SendMessage would block for ever on a window that hangs. SMTO_ABORTIFHUNG skips such a window,
+  and each window gets at most 1 second (https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendmessagetimeoutw). }
+procedure broadcastFontChange;
+begin
+  SendMessageTimeout(HWND_BROADCAST, WM_FONTCHANGE, 0, 0, SMTO_ABORTIFHUNG, 1000, NIL);
+end;
+
+
 { Installs a font permanently into Windows.
   Copies the font file to Windows\Fonts folder and registers it in the registry.
   Requires administrator privileges on modern Windows versions.
-  Returns TRUE if installation was successful. }
+  Returns TRUE if installation was successful.
+  Returns FALSE when the font is already installed (the file is in Windows\Fonts AND its registry value exists).
+  A file that is in Windows\Fonts but has no registry value gets the registry value. }
 function InstallFont(CONST FontFileName: string): Boolean;
 const
   Win9x= 'Software\Microsoft\Windows\CurrentVersion\Fonts';
@@ -369,6 +377,20 @@ var
   CopyToWin: string;
   WindowsPath: array[0..MAX_PATH] of char;
   RegData: TRegistry;
+
+  function fontIsRegistered: Boolean;
+  VAR RegRead: TRegistry;
+  begin
+   RegRead:= TRegistry.Create(KEY_READ);
+   TRY
+     RegRead.RootKey:= HKEY_LOCAL_MACHINE;
+     Result:= (RegRead.OpenKeyReadOnly(WinNT) OR RegRead.OpenKeyReadOnly(Win9x))
+          AND RegRead.ValueExists(ExtractOnlyName(FontFileName));
+   FINALLY
+     FreeAndNil(RegRead);
+   END;
+  end;
+
 begin
  if FontFileName = ''
  then raise Exception.Create('InstallFont: FontFileName parameter cannot be empty');
@@ -376,15 +398,15 @@ begin
  if NOT FileExists(FontFileName)
  then raise Exception.Create('InstallFont: Font file not found: ' + FontFileName);
 
- Result:= FALSE;
  GetWindowsDirectory(WindowsPath, MAX_PATH);
  CopyToWin:= WindowsPath + '\Fonts\' + ExtractFileName(FontFileName);
 
- if NOT FileExists(CopyToWin) then
-  begin
+ if FileExists(CopyToWin) AND fontIsRegistered
+ then EXIT(FALSE);                              { Already installed }
 
    { COPY FONT TO WINDOWS }
-   TFile.Copy(FontFileName, CopyToWin, FALSE);  { Note: Using TFile for compatibility with older code }
+   if NOT FileExists(CopyToWin)
+   then TFile.Copy(FontFileName, CopyToWin, FALSE);  { Note: Using TFile for compatibility with older code }
 
    { WRITE TO REGISTRY }
    RegData := TRegistry.Create;
@@ -411,10 +433,10 @@ begin
    { NOTIFY THE SYSTEM }
    if Result then
     begin
-     AddFontResource(PChar(CopyToWin));   { Register the copy in Windows\Fonts (the registry entry points there) - registering the original path would break the font for this session once the source file (USB stick, temp folder) disappears }
-     SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+     Result:= AddFontResource(PChar(CopyToWin)) > 0;  { Register the copy in Windows\Fonts (the registry entry points there) - registering the original path would break the font for this session once the source file (USB stick, temp folder) disappears. 0 = Windows could not load the font }
+     if Result
+     then broadcastFontChange;
     end;
-  end;
 end;
 
 
@@ -429,9 +451,10 @@ begin
   if NOT FileExists(FontFile)
   then raise Exception.Create('UseUninstalledFont: Font file not found: ' + FontFile);
 
-  AddFontResource(PChar(FontFile));
+  if AddFontResource(PChar(FontFile)) = 0     { 0 = the file is not a font Windows can load }
+  then raise Exception.Create('UseUninstalledFont: AddFontResource failed for ' + FontFile);
   { Alternative: AddFontResourceEx(PChar(FontFile), FR_PRIVATE, nil) - installs font just for the current process }
-  SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+  broadcastFontChange;
   { DON'T FORGET TO RELEASE THE RESOURCE - call FreeUninstalledFont OnFormClose }
 end;
 
@@ -446,7 +469,7 @@ begin
   then raise Exception.Create('FreeUninstalledFont: Font file not found: ' + FontFile);
 
   RemoveFontResource(PChar(FontFile));
-  SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+  broadcastFontChange;
 end;
 
 
