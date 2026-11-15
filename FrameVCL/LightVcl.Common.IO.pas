@@ -1,7 +1,7 @@
 ﻿UNIT LightVcl.Common.IO;
 
 {=============================================================================================================
-   2026.10.01
+   2026.11.14
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Extension for LightCore.IO.pas
@@ -82,7 +82,7 @@ IMPLEMENTATION
 
 USES
   Winapi.ActiveX,
-  LightCore, LightCore.Win.IO, LightCore.IO, LightVcl.Common.Dialogs, LightCore.WinVersion;
+  LightCore, LightCore.AppData, LightCore.Win.IO, LightCore.IO, LightVcl.Common.Dialogs, LightCore.WinVersion;
 
 
 function DirectoryExistMsg(CONST Path: string): Boolean;                                           { Directory Exist }
@@ -149,6 +149,7 @@ begin
      if SilentOverwrite
      then
        begin
+         CheckFolderDeletable(FromFolder);   { Refuse before the copy: DeleteFolder below would refuse anyway, after copying everything }
          FailedCount:= CopyFolder(FromFolder, ToFolder, True);
          if FailedCount > 0
          then MessageError(IntToStr(FailedCount)+ ' file(s) could not be copied to '+ ToFolder+ CRLFw+ 'The source folder was NOT deleted: '+ FromFolder)   { Deleting the source would destroy the files that were never copied }
@@ -156,6 +157,9 @@ begin
        end
      else
        { Move raises an exception if the destination folder already exists, so we have to delete the Destination folder first. But for this we need to ask the user. }
+       if FolderDeleteRefusal(ToFolder) <> ''
+       then MessageError('Cannot move '+ FromFolder +'. Destination folder already exists and cannot be deleted ('+ FolderDeleteRefusal(ToFolder)+ '): '+ ToFolder)
+       else
        if MesajYesNo('Cannot move '+ FromFolder +'. Destination folder already exists:'+ ToFolder+ CRLFw+
                      'Press Yes to delete Destination folder. Press No to cancel the opperation.') then
          begin
@@ -291,7 +295,8 @@ end;
    Deletes a file or folder to the Recycle Bin using Windows Shell API (SHFileOperation).
 
    Parameters:
-     ItemName        - Full path to the file or folder to delete. Cannot be empty.
+     ItemName        - The file or folder to delete, or several of them separated by #0. Cannot be empty.
+                       A relative path is expanded to a full path first.
      DeleteToRecycle - If True, moves to Recycle Bin (FOF_ALLOWUNDO). If False, permanently deletes.
      ShowConfirm     - If True, shows Windows confirmation dialog before deletion.
      TotalSilence    - If True, suppresses all UI (FOF_NO_UI) including progress dialogs and errors.
@@ -299,16 +304,46 @@ end;
 
    Returns: True if deletion succeeded, False otherwise.
 
-   Note: UNC paths may not work correctly - the file might be moved to the remote computer's
-         Recycle Bin rather than the local one, or the operation may fail silently.
+   Deletes nothing, logs the reason and returns False when RecycleItemRefusal (LightCore.IO) refuses ItemName:
+   a protected folder (FolderDeleteRefusal), a folder that is a junction, a wildcard over a protected folder.
+   One refused path refuses the whole list. To show the user why, call RecycleItemRefusal first.
+   On a drive with no Recycle Bin (DriveHasRecycleBin is False: a network path, a removable drive, a subst drive)
+   SHFileOperation deletes for good and still reports success. RecycleItem deletes there too, and logs a warning.
+   A caller that must ask the user first calls DriveHasRecycleBin before RecycleItem.
+   Not checked: a Recycle Bin that the user switched off, and an item larger than the Recycle Bin can hold.
 --------------------------------------------------------------------------------------------------}
 function RecycleItem(CONST ItemName: string; CONST DeleteToRecycle: Boolean= TRUE; CONST ShowConfirm: Boolean= TRUE; CONST TotalSilence: Boolean= FALSE): Boolean;
 VAR
    SHFileOpStruct: TSHFileOpStruct;
    WndHandle: HWND;
+   PathList, Refusal, Path, NoBin: string;
+   i, Start: Integer;
 begin
  if ItemName = ''
  then raise Exception.Create('RecycleItem: ItemName parameter cannot be empty');
+
+ Refusal:= RecycleItemRefusal(ItemName, PathList);
+ if Refusal <> '' then
+  begin
+   AppDataCore.LogWarn('RecycleItem refused '+ Refusal+ '. Nothing was deleted.');
+   EXIT(FALSE);
+  end;
+
+ { # A path on a drive with no Recycle Bin is deleted for good: the log says so }
+ if DeleteToRecycle then
+  begin
+   Start:= 1;
+   for i:= 1 to Length(PathList) do
+    if PathList[i] = #0 then
+     begin
+      Path:= Copy(PathList, Start, i - Start);
+      Start:= i + 1;
+      if Path = '' then Continue;    { The second #0 that ends the list }
+      NoBin:= NoRecycleBinReason(Path);
+      if NoBin <> ''
+      then AppDataCore.LogWarn('RecycleItem: "'+ Path+ '" will be deleted for good, not recycled: '+ NoBin);
+     end;
+  end;
 
  FillChar(SHFileOpStruct, SizeOf(SHFileOpStruct), #0);
 
@@ -319,9 +354,8 @@ begin
 
  SHFileOpStruct.wnd              := WndHandle;
  SHFileOpStruct.wFunc            := FO_DELETE;
- { pFrom requires double-null termination. PChar adds one null; we add another.
-   This format supports multiple files, each separated by a single null, with double-null at end. }
- SHFileOpStruct.pFrom            := PChar(ItemName + #0);
+ { pFrom requires double-null termination: each path ends with #0, and a second #0 ends the list. RecycleItemRefusal built PathList in that form. }
+ SHFileOpStruct.pFrom            := PChar(PathList);
  SHFileOpStruct.pTo              := NIL;
  SHFileOpStruct.hNameMappings    := NIL;
 
