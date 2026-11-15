@@ -1,7 +1,7 @@
 UNIT LightCore.HTML;
 
 {-------------------------------------------------------------------------------------------------------------
-   2026.07.07
+   2026.11.13
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -86,6 +86,16 @@ function FixHtmlFormatings(Body: TStringList): string;
 VAR
    i: Integer;
    s, s2: string;
+
+  { Removes exactly one CRLF from the end. RemoveLastEnter removes up to 2 CR/LF characters, which on POSIX (CRLF = LF) also eats the empty line before. }
+  function removeOneLineBreak(CONST Text: string): string;
+  begin
+   if (Length(Text) >= Length(CRLF))
+   AND (Copy(Text, Length(Text)- Length(CRLF)+ 1, Length(CRLF)) = CRLF)
+   then Result:= Copy(Text, 1, Length(Text)- Length(CRLF))
+   else Result:= Text;
+  end;
+
 begin
  Result:= '';
  for i:= 0 to Body.Count- 1 DO
@@ -109,12 +119,13 @@ begin
    OR (s2= '</h3')
    OR (s2= '</h4')
    OR (s2= '</h5')
+   OR (s2= '</h6')
    OR (s2= '</ti')
-   then Result:= RemoveLastEnter(Result)+ s+ CRLF
+   then Result:= removeOneLineBreak(Result)+ s+ CRLF
    else Result:= Result+ s+ CRLF;
   end;
 
- Result:= RemoveLastEnter(Result);
+ Result:= removeOneLineBreak(Result);
 end;
 
 
@@ -223,13 +234,14 @@ end;
 
 
 
+{ The 4 inputs are plain text: they are HTML-escaped here. }
 function GenerateHTMLHeader(CONST Title, MetaDescription, Keywords, CssFile: string): string;
 begin
  Result:=
   '<HTML><HEAD>'+ CRLF
- +'<title>'+ Title+'</title>'+ CRLF+CRLF
- +'<meta name="description" content="'+ MetaDescription+'" />'+ CRLF
- +'<meta name="Keywords"    content="'+ Keywords+'" />'+ CRLF
+ +'<title>'+ HtmlEscape(Title)+'</title>'+ CRLF+CRLF
+ +'<meta name="description" content="'+ HtmlEscape(MetaDescription)+'" />'+ CRLF
+ +'<meta name="Keywords"    content="'+ HtmlEscape(Keywords)+'" />'+ CRLF
 
  +' <meta name="ROBOTS"               content="NOODP, ALL" />'+ CRLF
  +' <meta http-equiv="Content-Type"   content="text/html; charset=iso-8859-1" />'+ CRLF
@@ -237,7 +249,7 @@ begin
  +' <meta http-equiv="Page-Exit"      content="blendTrans(Duration=0.4)" />'+ CRLF;
 
  if CssFile<> ''
- then Result:= Result+ ' <link href="'+ CssFile+ '" rel="stylesheet" type="text/css" />'+ CRLF;
+ then Result:= Result+ ' <link href="'+ HtmlEscape(CssFile)+ '" rel="stylesheet" type="text/css" />'+ CRLF;
 
  Result:= Result+ ' <link rel="shortcut icon"         HREF ="favicon.ico" />'+ CRLF
                 + '</HEAD>'+ CRLF
@@ -302,17 +314,29 @@ begin
   if (Link = '')
   OR CheckHttpStart(Link)                              { URL is complete. Leave it like this }
   OR NOT FirstCharIs(Link, '/')                        { URL is relative to document. Leave it like this }
+  OR (Copy(Link, 1, 2) = '//')                         { Protocol-relative URL (//cdn.example.com/x.js) points to another host. Leave it like this }
   then Result:= Link
   else
    begin
     Result:= '';
     Depth:= CountAppearance('/', UrlRemoveHttp(MasterPageUrl))-1;
 
-    for i:= 1 to Depth DO
-      Result:= Result+ '../';
+    if Depth < 1
+    then
+     begin
+      { The master page sits in the root: the link only loses its leading '/' }
+      Result:= Copy(Link, 2, MaxInt);
+      if Result = ''
+      then Result:= './';
+     end
+    else
+     begin
+      for i:= 1 to Depth DO
+        Result:= Result+ '../';
 
-    Result:= RemoveLastChar(Result);
-    Result:= Result+ Link;
+      Result:= RemoveLastChar(Result);
+      Result:= Result+ Link;
+     end;
    end;
 end;
 
@@ -323,23 +347,24 @@ end;
   HTML URL  is the location of server of that page }
 function MakeLinksRelativeToRoot(CONST HTMLBody, HtmlUrl: string): string;
 VAR
-   Tag, url: string;
+   Tag, url, Lower: string;
    Offset, iEnd, iStart1, iStart2: Integer;
 begin
  Result:= HTMLBody;
+ Lower:= LowerCase(Result);   { Tag names are case-insensitive: search in a lowercase copy. LowerCase maps only A..Z, so the positions in Lower are the positions in Result. }
 
  { Process <a> tags }
  Offset:= 1;
  REPEAT
-   iStart1:= PosEx('<a ', Result, Offset);
+   iStart1:= PosEx('<a ', Lower, Offset);
 
    if iStart1> 0 then
     begin
-     iStart2:= PosEx(' href', Result, iStart1+2);
+     iStart2:= PosEx(' href', Lower, iStart1+2);
      if iStart2> 0
      then
       begin
-        iEnd:= PosEx('>', Result, iStart1+7);
+        iEnd:= PosEx('>', Lower, iStart1+7);
 
         if (iEnd> 0) AND (iStart2< iend)
         then
@@ -358,6 +383,7 @@ begin
             offset:= iEnd+1;  {todo-optimization: here instead of 1 I should use the number of extra characters added (for example '../../../' means that I inserted 9 extra chars }
 
             Result:= System.Copy(Result, 1, iStart1-1) + Tag + Copy(Result, iEnd+1, MaxInt);
+            Lower:= LowerCase(Result);
            end;
          end
         else
@@ -372,15 +398,15 @@ begin
  { Process <img> tags }
  Offset:= 1;
  REPEAT
-   iStart1:= PosEx('<img ', Result, Offset);
+   iStart1:= PosEx('<img ', Lower, Offset);
 
    if iStart1> 0 then
     begin
-     iStart2:= PosEx(' src', Result, iStart1+2);
+     iStart2:= PosEx(' src', Lower, iStart1+2);
      if iStart2> 0
      then
       begin
-        iEnd:= PosEx('>', Result, iStart1+6);
+        iEnd:= PosEx('>', Lower, iStart1+6);
 
         if (iEnd> 0) AND (iStart2< iend)
         then
@@ -399,6 +425,7 @@ begin
             offset:= iEnd+1;  {todo-optimization: here instead of 1 I should use the number of extra characters added (for example '../../../' means that I inserted 9 extra chars }
 
             Result:= System.Copy(Result, 1, iStart1-1) + Tag + Copy(Result, iEnd+1, MaxInt);
+            Lower:= LowerCase(Result);
            end;
          end
         else
@@ -467,49 +494,113 @@ end;
 
 
 
-{ Boundary-aware lookup for an HTML attribute name.
+{ Finds the value of the attribute Attrib in HtmlTag.
+  Returns FALSE when the attribute is missing or its value is malformed.
+  On TRUE: ValStart is the first character of the value, ValEnd the last one (ValEnd = ValStart-1 for an empty value),
+  Quote is the quote character around the value, or #0 for an unquoted value (target=_blank).
 
-  Returns the 1-based position where Attrib starts in HtmlTag, or 0 if not found.
-  A match counts only when:
-    (a) the substring "Attrib" (case-insensitive) is followed by '=' or ' =' or ' ' before '='
-    (b) the char immediately before "Attrib" is a word boundary (start-of-string, space, tab, '<', '/' or quote)
-  Without (b) we'd match 'href' inside 'hreflang', or 'target' inside 'data-target'. }
-function FindAttribStart(CONST HtmlTag, Attrib: string): Integer;
+  The name matches case-insensitively, and only when:
+    (a) the character before it is a boundary: start of the string, whitespace, '<', '/' or the closing quote of the previous value
+    (b) it is followed by '=' (whitespace is allowed around '=')
+  Without (a) we'd match 'href' inside 'hreflang', or 'target' inside 'data-target'.
+  The value after every '=' is skipped, so a name inside another attribute's value (title="see href=x") never matches.
+  A quoted value ends at the next quote of the same kind, so "Gabriel's book" keeps its apostrophe.
+  An unquoted value ends at whitespace or '>'. An unquoted value that holds a quote is malformed. }
+function locateAttribValue(CONST HtmlTag, Attrib: string; OUT ValStart, ValEnd: Integer; OUT Quote: Char): Boolean;
+CONST
+   WhiteSpace = [' ', #9, #13, #10];
 VAR
    LowTag, LowAttrib: string;
-   Cand, AfterName, TagLen, AttrLen: Integer;
+   i, k, TagLen, AttrLen: Integer;
    PrevCh: Char;
-begin
- Result:= 0;
- LowTag:= LowerCase(HtmlTag);
- LowAttrib:= LowerCase(Attrib);
- TagLen:= Length(LowTag);
- AttrLen:= Length(LowAttrib);
- if (AttrLen= 0) OR (TagLen< AttrLen) then EXIT;
+   IsName: Boolean;
 
- Cand:= 1;
- REPEAT
-   Cand:= PosEx(LowAttrib, LowTag, Cand);
-   if Cand= 0 then EXIT;
+  { Reads the value that starts at k, the first character after '='. }
+  function readValue(k: Integer): Boolean;
+  VAR q: Integer;
+  begin
+   while (k <= TagLen) AND CharInSet(HtmlTag[k], WhiteSpace) DO
+     Inc(k);
+   if k > TagLen then EXIT(FALSE);
 
-   { (b) word-boundary check on the char BEFORE the match }
-   if Cand= 1
-   then PrevCh:= ' '
-   else PrevCh:= LowTag[Cand- 1];
-
-   if CharInSet(PrevCh, [' ', #9, '<', '/', '"', ''''])
+   if CharInSet(HtmlTag[k], ['"', ''''])
    then
     begin
-     { (a) the next non-space char after the name must be '=' }
-     AfterName:= Cand+ AttrLen;
-     while (AfterName<= TagLen) AND (LowTag[AfterName]= ' ') DO
-       Inc(AfterName);
-     if (AfterName<= TagLen) AND (LowTag[AfterName]= '=')
-     then EXIT(Cand);
+     Quote:= HtmlTag[k];
+     ValStart:= k+ 1;
+     q:= PosEx(Quote, HtmlTag, ValStart);
+     if q = 0 then EXIT(FALSE);                       { Unterminated quote }
+     ValEnd:= q- 1;
+    end
+   else
+    begin
+     Quote:= #0;
+     ValStart:= k;
+     q:= k;
+     while (q <= TagLen) AND NOT CharInSet(HtmlTag[q], WhiteSpace+ ['>']) DO
+      begin
+       if CharInSet(HtmlTag[q], ['"', '''']) then EXIT(FALSE);
+       Inc(q);
+      end;
+     ValEnd:= q- 1;
+     if ValEnd < ValStart then EXIT(FALSE);           { '=' followed by '>': no value }
+    end;
+   Result:= TRUE;
+  end;
+
+begin
+ Result:= FALSE;
+ ValStart:= 0;
+ ValEnd  := -1;
+ Quote   := #0;
+
+ LowTag   := LowerCase(HtmlTag);
+ LowAttrib:= LowerCase(Trim(Attrib));     { Trim: callers pass ' src' too (AID cImgList.pas) }
+ TagLen   := Length(LowTag);
+ AttrLen  := Length(LowAttrib);
+ if (AttrLen= 0) OR (TagLen< AttrLen) then EXIT;
+
+ i:= 1;
+ while i <= TagLen DO
+  begin
+   if HtmlTag[i] = '=' then
+    begin
+     { Skip the value of an attribute that is not ours }
+     if readValue(i+ 1)
+     then
+      begin
+       if Quote = #0
+       then i:= ValEnd+ 1
+       else i:= ValEnd+ 2;                            { Past the closing quote }
+      end
+     else Inc(i);
+     Continue;
     end;
 
-   Inc(Cand);                                                                                            { advance past this false match and keep scanning }
- UNTIL Cand> TagLen;
+   { (a) word-boundary check on the char BEFORE the match }
+   if i= 1
+   then PrevCh:= ' '
+   else PrevCh:= HtmlTag[i- 1];
+
+   IsName:= CharInSet(PrevCh, WhiteSpace+ ['<', '/', '"', ''''])
+        AND (Copy(LowTag, i, AttrLen) = LowAttrib);
+
+   if IsName then
+    begin
+     { (b) the next non-space char after the name must be '=' }
+     k:= i+ AttrLen;
+     while (k <= TagLen) AND CharInSet(HtmlTag[k], WhiteSpace) DO
+       Inc(k);
+     if (k <= TagLen) AND (HtmlTag[k]= '=')
+     then EXIT(readValue(k+ 1));
+    end;
+
+   Inc(i);
+  end;
+
+ ValStart:= 0;
+ ValEnd  := -1;
+ Quote   := #0;
 end;
 
 
@@ -517,96 +608,46 @@ end;
    EXTRACT Attrib
 
    Extract the value of a user defined Attrib from a single HTML line (if you provide an entire HTML body then the function will only return the first Attrib found).
-   Works with multiple spaces between = and the "value"
-   Works with single and double quotes.
+   Works with whitespace around the = sign.
+   Works with single quotes, double quotes and unquoted values (target=_blank).
+   Returns '' when the attribute is missing.
 
    Usage:
          ExtractAttribValue('<a href="www.x.com/img.jpg"', 'href')
 --------------------------------------------------------------------------------------------------}
 function ExtractAttribValue(CONST HtmlTag, Attrib: string): string;
 VAR
-   iTag, Equal, QStart, QEnd: Integer;
+   ValStart, ValEnd: Integer;
+   Quote: Char;
 begin
- Result:= '';
-
- iTag:= FindAttribStart(HtmlTag, Attrib);
- if iTag= 0 then EXIT;
-
- Equal:= PosEx('=', HtmlTag, iTag+ Length(Attrib));
- if Equal = 0 then EXIT;
-
- { We don't know if ' or " is used so we look for both }
- QStart := FindQuoteStart(HtmlTag, iTag+1);
-
- {This fixes: IE nu pune quotes arround 'blank'. Example:  target=_blank }
- if QStart < 1 then QStart:= Equal+1;
-
- QEnd := FindQuoteEnd(HtmlTag, QStart+1);
- if QEnd> 0
- then Result:= LightCore.CopyTo(HtmlTag, QStart+1, QEnd-1);               { +1 -1 to remove the quotes }
+ if locateAttribValue(HtmlTag, Attrib, ValStart, ValEnd, Quote)
+ then Result:= Copy(HtmlTag, ValStart, ValEnd- ValStart+ 1)
+ else Result:= '';
 end;
 
 
-{This fixes: IE does not put quotes arround 'blank'. Example:  target=_blank }
+{ TO BE DELETED - ExtractAttribValue also reads unquoted values (target=_blank), so this routine is a plain call to it.
+  Call ExtractAttribValue directly. }
 function ExtractAttribValueIE(CONST HtmlTag, Attrib: string): string;
-
-  function FindQuoteEndIE(CONST HtmlTag: string; StartAt: Integer): Integer;
-  begin
-   { We don't know if ' or " is used so we look for both }
-   Result:= PosEx('"' , HtmlTag, StartAt);
-   if Result > 0 then EXIT;
-
-   Result:= PosEx('''', HtmlTag, StartAt);
-   if Result > 0 then EXIT;
-
-   Result:= PosEx('>', HtmlTag, StartAt);
-   if Result > 0 then EXIT;
-
-   Result:= PosEx(' ', HtmlTag, StartAt);
-   if Result > 0 then EXIT;
-  end;
-
-VAR iTag, QStart, QEnd: Integer;
 begin
- Result:= '';
-
- iTag:= FindAttribStart(HtmlTag, Attrib);
- if iTag= 0 then EXIT;
-
- iTag:= PosEx('=', HtmlTag, iTag+ Length(Attrib));     { find its corresponding = sign }
- if iTag= 0 then EXIT;
-
- { We don't know if ' or " is used so we look for both }
- QStart := FindQuoteStart(HtmlTag, iTag+1);
-
- if QStart < 1 then QStart:= iTag;
-
- QEnd := FindQuoteEndIE(HtmlTag, QStart+1);
- if QEnd> 0
- then Result:= LightCore.CopyTo(HtmlTag, QStart+1, QEnd-1);               { +1 -1 to remove the quotes }
+ Result:= ExtractAttribValue(HtmlTag, Attrib);
 end;
 
 
+{ Replaces the value of Attrib with NewValue. An unquoted value is written back inside double quotes.
+  Returns '' when the attribute is missing. }
 function ReplaceAttribValue(HtmlTag, Attrib, NewValue: string): string;
-VAR iTag, QStart, QEnd: Integer;
+VAR
+   ValStart, ValEnd: Integer;
+   Quote: Char;
 begin
- Result:= '';
+ if NOT locateAttribValue(HtmlTag, Attrib, ValStart, ValEnd, Quote)
+ then EXIT('');
 
- iTag:= FindAttribStart(HtmlTag, Attrib);
- if iTag= 0 then EXIT;
-
- iTag:= PosEx('=', HtmlTag, iTag+ Length(Attrib));     { find its corresponding = sign }
- if iTag= 0 then EXIT;
-
- { We don't know if ' or " is used so we look for both }
- QStart := FindQuoteStart(HtmlTag, iTag+1);
- if QStart= 0 then EXIT;
-
- QEnd := FindQuoteEnd(HtmlTag, QStart+1);
- if QEnd= 0 then EXIT;
-
- Delete(HtmlTag, QStart+1, QEnd- QStart- 1);  { -1 to keep the quotes }
- insert(NewValue, HtmlTag, QStart+1);               { +1 -1 to remove the quotes }
+ Delete(HtmlTag, ValStart, ValEnd- ValStart+ 1);
+ if Quote = #0
+ then Insert('"'+ NewValue+ '"', HtmlTag, ValStart)
+ else Insert(NewValue, HtmlTag, ValStart);
  Result:= HtmlTag;
 end;
 
@@ -761,11 +802,14 @@ end;
 ---------------------------------------------------------------------------------------------------}
 function ExtractURLsText(Text: string; AdreseExtrase: TStringlist): Integer;       //old name ExtractWebLinks
 CONST
-   PadHttp= 7;
-   PadWww = 4;
+   PadHttp = 7;
+   PadHttps= 8;
+   PadWww  = 4;
+   { The characters that end an URL: SeparatorsHTTP without '&', ':' and '~', which are legal inside an URL (query a=1&b=2, port :8080, user folder /~name) }
+   UrlEnd = [' ', '`', '!', '$', '^', '*', '(', ')', '[', ']', '{', '}', ';', '''', '"', '<', '>', ',', '\', '|', #10, #13, #9];
 VAR
    cnt, Pad: integer;
-   StartPos, PosHttp, PosWww, EndPos: integer;
+   StartPos, PosHttp, PosHttps, PosWww, EndPos: integer;
 begin
  { Do NOT lowercase the text: PosInsensitive already searches case-insensitively, and lowercasing
    would return mangled URLs (paths are case-sensitive on most web servers). }
@@ -774,29 +818,29 @@ begin
 
  while (StartPos> 0) AND (StartPos< length(Text)) DO
   begin
-   { Search the 'http' and 'www' strings }
+   { Search the 'http', 'https' and 'www' strings }
    Text    := system.COPY (Text, StartPos, high(Integer));
    PosHttp := PosInsensitive ('http://', Text);                                    { asta poate sa returneze si 0, asa ca trebuie sa o verific mai jos sa nu fie 0 }
+   PosHttps:= PosInsensitive ('https://', Text);
    PosWww  := PosInsensitive ('www.', Text);
 
-   { Finds out which appears first }
-   if (PosHttp > 0) AND ((PosWww = 0) OR (PosHttp < PosWww))
-   then
+   { Finds out which appears first. StartPos stays 0 when none is found, which ends the loop. }
+   StartPos:= 0;
+   Pad:= 0;
+   if PosHttp > 0 then
     begin
-     StartPos := PosHttp;
+     StartPos:= PosHttp;
      Pad:= PadHttp;
-    end
-   else
-   if PosWww > 0
-   then
+    end;
+   if (PosHttps > 0) AND ((StartPos = 0) OR (PosHttps < StartPos)) then
     begin
-     StartPos := PosWww;
+     StartPos:= PosHttps;
+     Pad:= PadHttps;
+    end;
+   if (PosWww > 0) AND ((StartPos = 0) OR (PosWww < StartPos)) then
+    begin
+     StartPos:= PosWww;
      Pad:= PadWww;
-    end
-   else
-    begin
-     StartPos := 0;   { Neither found, exit loop }
-     Pad:= 0;
     end;
 
    if StartPos> 0 then                                                             { daca e o adrese web valida, atunci}
@@ -804,14 +848,18 @@ begin
     then StartPos:= 0                                                              { Bare 'www.'/'http://' prefix at the very END of the text (no URL body follows). Stop here: the FOR below would not execute at all and the WHILE would re-scan the same slice forever (infinite loop) }
     else
      for cnt:= (StartPos+ Pad) to length(Text) DO
-       if CharInSet(Text[cnt], SeparatorsHTTP)                                     { Look for separators }
+       if CharInSet(Text[cnt], UrlEnd)                                             { Look for separators }
        OR (cnt= length(Text))                                                      { OR end of file }
        then
         begin
           { I have found also its end }
-          if CharInSet(Text[cnt], SeparatorsHTTP)
+          if CharInSet(Text[cnt], UrlEnd)
           then EndPos:= cnt-1                                                      { Stop before the separator }
           else EndPos:= cnt;                                                       { URL runs to the very end of the text - keep its last char }
+
+          { ':' is not in UrlEnd (it is legal in 'host:8080'), but an URL never ends in ':' - in 'see www.x.com: now' the colon belongs to the sentence }
+          while (EndPos > StartPos) AND (Text[EndPos] = ':') DO
+            Dec(EndPos);
 
           { Add it to list }
           Inc(Result);
@@ -858,12 +906,16 @@ end;
 
 
 
+{ 'rel' holds a list of words separated by whitespace (rel="nofollow noopener"). TRUE when one of them is 'nofollow'. }
 function LinkHasNoFollow(CONST Link: string): Boolean;
 VAR s: string;
 begin
  if Link= '' then EXIT(FALSE);
  s:= AnsiLowerCase(ExtractAttribValue(Link, 'rel'));
- Result:= s= 'nofollow';
+ s:= StringReplace(s, #9,  ' ', [rfReplaceAll]);
+ s:= StringReplace(s, #13, ' ', [rfReplaceAll]);
+ s:= StringReplace(s, #10, ' ', [rfReplaceAll]);
+ Result:= Pos(' nofollow ', ' '+ s+ ' ') > 0;
 end;
 
 
@@ -871,7 +923,7 @@ function LinkOpensInNewWind(CONST Link: string): Boolean;
 VAR s: string;
 begin
  if Link= '' then EXIT(FALSE);
- s:= AnsiLowerCase(ExtractAttribValueIE(Link, 'target'));
+ s:= AnsiLowerCase(ExtractAttribValue(Link, 'target'));
  Result:= s= '_blank';
 end;
 
@@ -881,13 +933,20 @@ end;
 
 { META }
 function LineIsMeta(CONST HtmlLine, MetaName: string): Boolean;  { Returns true if this line is the specified 'meta'. For example: <meta name="Keywords" content="">  }
-VAR s: string;
+VAR
+   s: string;
+   ValStart, ValEnd: Integer;
+   Quote: Char;
 begin
- s:= ExtractTextBetween(HtmlLine, '<', '>');        { Example of line:  <meta name="Keywords" content=""> }
- Result:= (PosInsensitive(MetaName, s) > 11)
-      AND (PosInsensitive('meta', s) < 3)
-      AND (PosInsensitive('name', s) > 5)
-      AND (PosInsensitive('content', s) > 14);
+ s:= TrimLeft(ExtractTextBetween(HtmlLine, '<', '>'));        { Example of line:  <meta name="Keywords" content=""> }
+
+ { The tag must be 'meta', its 'name' must be MetaName, and it must have a 'content' attribute (the attributes can come in any order) }
+ Result:= (MetaName <> '')
+      AND (Length(s) > 4)
+      AND SameText(Copy(s, 1, 4), 'meta')
+      AND CharInSet(s[5], [' ', #9, #13, #10])
+      AND SameText(ExtractAttribValue(s, 'name'), MetaName)
+      AND locateAttribValue(s, 'content', ValStart, ValEnd, Quote);
 end;
 
 
