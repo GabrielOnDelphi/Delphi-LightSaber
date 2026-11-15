@@ -360,20 +360,22 @@ type
     constructor Create(Source: TFoundTiffDirectory);
   end;
 
-  { The offsets of the directories that one walk of the main chain (TTiffParserEnumerator) has returned.
-    Every directory of that walk holds the same list, so the walk can see an offset it has already visited. }
+  { A list of directory offsets already visited.
+    TTiffParserEnumerator keeps one per walk of the main chain: every directory of that walk holds the same list
+    (FChainOffsets), so the walk can see an offset it has already visited.
+    TTiffDirectoryRewriter.Create keeps one per rewrite of a directory tree (TSubDirRewriteCallback). }
   IVisitedOffsets = interface
-    function Add(Offset: LongInt): Boolean;
+    function Add(Offset: Int64): Boolean;
   end;
 
   TVisitedOffsets = class(TInterfacedObject, IVisitedOffsets)
   strict private
     FCount: Integer;
-    FOffsets: array of LongInt;
+    FOffsets: array of Int64;
   public
     { Adds Offset to the list.
       Returns False, and adds nothing, when the list already holds Offset. }
-    function Add(Offset: LongInt): Boolean;
+    function Add(Offset: Int64): Boolean;
   end;
 
   TFoundTiffDirectory = class(TInterfacedObject, ITiffDirectory, IFoundTiffDirectory)
@@ -386,6 +388,7 @@ type
   protected
     FMoreToFollow: Boolean;
     FChainOffsets: IVisitedOffsets;  { Set only for a directory of the main chain }
+    FOffset: Int64;                  { Where the directory starts, relative to the parser's BasePosition }
     constructor Create(const AParser: ITiffParser; const AParent: ITiffDirectory; AIndex: Integer;
       const Tags: TTiffTagInfoDynArray; const LoadErrors: TMetadataLoadErrors); overload;
     function GetEnumerator: ITiffDirectoryEnumerator;
@@ -477,6 +480,39 @@ type
     procedure WriteData(Stream: TStream; Endianness: TEndianness); override;
     property Directory: TTiffDirectoryRewriter read FDirectory;
   end;
+
+  { The state of one rewrite of a directory tree, handed down the recursion of TTiffDirectoryRewriter.Create
+    inside the callback, because the interface section gives that constructor no other parameter.
+    A damaged file can point a sub-directory back to itself or to a parent, so following every pointer would recurse
+    until the stack overflows; a crafted file can also nest distinct sub-directories very deep. }
+  ISubDirRewriteState = interface
+    ['{0B60E2F8-2929-46F5-B3B6-15E5F33A65BC}']
+    function GetCallback: ITiffRewriteCallback;
+    function GetDepth: Integer;
+    function GetVisited: IVisitedOffsets;
+  end;
+
+  { Passes every call on to the caller's callback (which can be nil) and carries the state of the rewrite }
+  TSubDirRewriteCallback = class(TInterfacedObject, ITiffRewriteCallback, ISubDirRewriteState)
+  strict private
+    FCallback: ITiffRewriteCallback;
+    FDepth: Integer;                  { 1 for a sub-directory of the top directory }
+    FVisited: IVisitedOffsets;        { Offsets of every directory of the tree rewritten so far }
+  protected
+    { ITiffRewriteCallback }
+    procedure AddNewTags(Rewriter: TTiffDirectoryRewriter);
+    procedure RewritingOldTag(const Source: ITiffDirectory; TagID: TTiffTagID;
+      DataType: TTiffDataType; var Rewrite: Boolean);
+    { ISubDirRewriteState }
+    function GetCallback: ITiffRewriteCallback;
+    function GetDepth: Integer;
+    function GetVisited: IVisitedOffsets;
+  public
+    constructor Create(const ACallback: ITiffRewriteCallback; const AVisited: IVisitedOffsets; ADepth: Integer);
+  end;
+
+const
+  MaxSubDirDepth = 32;  { Sub-directories nested deeper than this are written as plain tags, not followed }
 
 { TTiffTag }
 
@@ -998,6 +1034,7 @@ begin
   inherited Create;
   FTags := LoadTiffDirectory(AParser.Stream, AParser.Endianness,
     AParser.BasePosition, AOffset, AInternalOffset, FLoadErrors);
+  FOffset := AOffset;
   FIndex := AIndex;
   FParser := AParser;
   FParent := AParent;
@@ -1017,13 +1054,19 @@ end;
 class function TFoundTiffDirectory.TryCreate(const AParser: ITiffParser;
   const AParent: ITiffDirectory; AIndex: Integer; const AOffset: Int64; out Instance: IFoundTiffDirectory): Boolean;
 var
+  NewDir: TFoundTiffDirectory;
   Tags: TTiffTagInfoDynArray;
   LoadErrors: TMetadataLoadErrors;
 begin
   Tags := LoadTiffDirectory(AParser.Stream, AParser.Endianness,
     AParser.BasePosition, AOffset, 0, LoadErrors);
   Result := (LoadErrors = []) or (Length(Tags) > 2);
-  if Result then Instance := TFoundTiffDirectory.Create(AParser, AParent, AIndex, Tags, LoadErrors);
+  if Result then
+  begin
+    NewDir := TFoundTiffDirectory.Create(AParser, AParent, AIndex, Tags, LoadErrors);
+    NewDir.FOffset := AOffset;
+    Instance := NewDir;
+  end;
 end;
 
 function TFoundTiffDirectory.GetEnumerator: ITiffDirectoryEnumerator;
@@ -1148,7 +1191,7 @@ end;
 
 { TVisitedOffsets }
 
-function TVisitedOffsets.Add(Offset: LongInt): Boolean;
+function TVisitedOffsets.Add(Offset: Int64): Boolean;
 var
   I: Integer;
 begin
@@ -1435,6 +1478,43 @@ begin
   Stream.WriteLongWord(Directory.NewIFDOffset, Endianness);
 end;
 
+{ TSubDirRewriteCallback }
+
+constructor TSubDirRewriteCallback.Create(const ACallback: ITiffRewriteCallback;
+  const AVisited: IVisitedOffsets; ADepth: Integer);
+begin
+  inherited Create;
+  FCallback := ACallback;
+  FVisited := AVisited;
+  FDepth := ADepth;
+end;
+
+procedure TSubDirRewriteCallback.AddNewTags(Rewriter: TTiffDirectoryRewriter);
+begin
+  if FCallback <> nil then FCallback.AddNewTags(Rewriter);
+end;
+
+procedure TSubDirRewriteCallback.RewritingOldTag(const Source: ITiffDirectory;
+  TagID: TTiffTagID; DataType: TTiffDataType; var Rewrite: Boolean);
+begin
+  if FCallback <> nil then FCallback.RewritingOldTag(Source, TagID, DataType, Rewrite);
+end;
+
+function TSubDirRewriteCallback.GetCallback: ITiffRewriteCallback;
+begin
+  Result := FCallback;
+end;
+
+function TSubDirRewriteCallback.GetDepth: Integer;
+begin
+  Result := FDepth;
+end;
+
+function TSubDirRewriteCallback.GetVisited: IVisitedOffsets;
+begin
+  Result := FVisited;
+end;
+
 { TTiffDirectoryRewriter }
 
 constructor TTiffDirectoryRewriter.Create(const Source: ITiffDirectory;
@@ -1449,12 +1529,17 @@ constructor TTiffDirectoryRewriter.Create(const Source: ITiffDirectory;
       Callback.RewritingOldTag(Source, TagID, DataType, Result);
   end;
 var
+  Depth: Integer;
   ExtTag: ITiffTag;
   I, TagIndex: Integer;
   IntDirectory: IFoundTiffDirectory;
+  State: ISubDirRewriteState;
+  SubCallback: ITiffRewriteCallback;
   SubDir: IFoundTiffDirectory;
   SubRewriter: TTiffDirectoryRewriter;
   TagPtr: PTiffTagInfo;
+  UserCallback: ITiffRewriteCallback;
+  Visited: IVisitedOffsets;
 begin
   inherited Create;
   FSource := Source;
@@ -1465,17 +1550,36 @@ begin
   if not FRewriteSource or (Source = nil) then Exit;
   if Supports(Source, IFoundTiffDirectory, IntDirectory) then
   begin
+    { The top directory of a rewrite starts a new list of visited offsets; a sub-directory gets the list of its tree.
+      A sub-directory already in the list, or nested deeper than MaxSubDirDepth, is not followed:
+      its tag is written as a plain tag, with its value unchanged, as for a tag that holds no directory. }
+    if Supports(Callback, ISubDirRewriteState, State) then
+    begin
+      UserCallback := State.GetCallback;
+      Visited := State.GetVisited;
+      Depth := State.GetDepth;
+    end
+    else
+    begin
+      UserCallback := Callback;
+      Visited := TVisitedOffsets.Create;
+      Visited.Add((IntDirectory as TFoundTiffDirectory).FOffset);
+      Depth := 0;
+    end;
     FSourceInfo := IntDirectory.TagInfo;
     FSourceParser := IntDirectory.Parser;
     TagPtr := PTiffTagInfo(FSourceInfo);
     for I := 0 to High(FSourceInfo) do
     begin
       if RewriteOldTag(TagPtr.ID, TagPtr.DataType, TagPtr.ElementCount, TagIndex) then
-        if not FSourceParser.ParseSubDirectory(Source, TagPtr^, SubDir) then
+        if not FSourceParser.ParseSubDirectory(Source, TagPtr^, SubDir) or
+           (Depth >= MaxSubDirDepth) or
+           not Visited.Add((SubDir as TFoundTiffDirectory).FOffset) then
           FTagsToWrite.Insert(TagIndex, TInternaTiffTagToWrite.Create(Self, FSourceParser, TagPtr^))
         else
         begin
-          SubRewriter := TTiffDirectoryRewriter.Create(SubDir, Callback);
+          SubCallback := TSubDirRewriteCallback.Create(UserCallback, Visited, Depth + 1);
+          SubRewriter := TTiffDirectoryRewriter.Create(SubDir, SubCallback);
           if SubRewriter.RewriteSource then
             FTagsToWrite.Insert(TagIndex, TTiffSubDirToWrite.Create(Self, TagPtr.ID, SubRewriter))
           else
@@ -1749,7 +1853,9 @@ end;
 procedure TSimpleTiffRewriteCallbackImpl.RewritingOldTag(const Source: ITiffDirectory;
   TagID: TTiffTagID; DataType: TTiffDataType; var Rewrite: Boolean);
 begin
-  if (TagID = FMetadataTagID) and (Source.Parent = nil) or (Source.Index <> 0) then
+  { The same directory test as AddNewTags: only IFD 0 of the main chain carries the metadata tag.
+    A sub-directory has its offset tag ID as Index, and a second page has Index 1: their tags are all kept. }
+  if (TagID = FMetadataTagID) and (Source.Parent = nil) and (Source.Index = 0) then
     Rewrite := False; //for the case of when Owner.Empty returned True and the TIFF file already contained metadata of the kind Owner implements
 end;
 
