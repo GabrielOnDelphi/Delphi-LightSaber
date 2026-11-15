@@ -1,7 +1,7 @@
 UNIT LightCore.Internet;
 
 {-------------------------------------------------------------------------------------------------------------
-   2026.10.01
+   2026.11.13
    www.GabrielMoraru.com
 
    URL utils / URL parsing and validation
@@ -172,9 +172,9 @@ USES
    , Winapi.WinInet   { ParseURL, PCConnected2Internet }
    , Winapi.WinSock   { GetLocalIP, ResolveAddress, IsPortOpened }
    {$ENDIF}
-   {$IFDEF MACOS}
+   {$IFDEF MACOS}{$IFNDEF IOS}
    , Macapi.AppKit, Macapi.Helpers, Macapi.Foundation
-   {$ENDIF}
+   {$ENDIF}{$ENDIF}
    {$IFDEF ANDROID}
    , Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Net, Androidapi.JNI.JavaTypes, Androidapi.Helpers, Androidapi.JNI.App
    {$ENDIF}
@@ -267,40 +267,59 @@ end;
 
 
 
+{ Returns the URL without its query (?a=1) and fragment (#top). }
+function cutQueryAndFragment(CONST URL: string): string;
+VAR i: Integer;
+begin
+  for i:= 1 to Length(URL) DO
+    if CharInSet(URL[i], ['?', '#'])
+    then EXIT(System.Copy(URL, 1, i- 1));
+  Result:= URL;
+end;
+
+
+
 { Returns True if the URL appears to point to a web page (HTML/PHP/ASP).
-  Returns True for: /1/2/3.html, domain.com/, domain.com, #
-  Returns False for: /1/2/3.zip (downloadable files) }
+  Returns True for: /1/2/3.html, /page.php?id=1, domain.com/, domain.com, domain.com?x=1, #
+  Returns False for: /1/2/3.zip, /a.zip?from=index.php, /a.html.zip (downloadable files) }
 function IsWebPage(CONST URL: string): Boolean;
 VAR
-   sURL: string;
+   Base, sURL, Ext: string;
    i: Integer;
 begin
   if URL = '#' then EXIT(TRUE);
 
+  { The query and the fragment say nothing about the file type }
+  Base:= cutQueryAndFragment(URL);
+  if (Base = '') AND (URL <> '')
+  then EXIT(TRUE);                                                   { '?p=2' or '#top': a link to the same page }
+
   { URLs ending with '/' point to a folder (and implicitly to index.html).
     Example: 'www.test.com/175754/' }
-  if LastChar(URL) = '/' then EXIT(TRUE);
+  if LastChar(Base) = '/' then EXIT(TRUE);
 
   { Domain-only URLs are web pages.
     IMPORTANT: This check must come after the trailing slash check
     because UrlExtractProtAndDomain cannot handle 'domain.com/' (only 'domain.com'). }
-  if UrlExtractProtAndDomain(URL) = URL
+  if UrlExtractProtAndDomain(Base) = Base
   then EXIT(TRUE);
 
   { Extract the last segment of the URL.
     It could be a filename (e.g., /download/setup.zip) or a folder (e.g., /download). }
-  i:= LastPos('/', URL);
+  i:= LastPos('/', Base);
   if i > 0
-  then sURL:= System.Copy(URL, i + 1, MaxInt)
-  else sURL:= URL;
+  then sURL:= System.Copy(Base, i + 1, MaxInt)
+  else sURL:= Base;
 
   { If no dot found, it's likely a folder path, not a file }
-  if Pos('.', sURL) < 1 then EXIT(TRUE);
+  i:= LastPos('.', sURL);
+  if i < 1 then EXIT(TRUE);
 
-  { Check for common web page extensions }
-  Result:= (PosInsensitive('.htm', sURL) > 0)
-        OR (PosInsensitive('.asp', sURL) > 0)
-        OR (PosInsensitive('.php', sURL) > 0);
+  { Check the LAST extension (a.html.zip is a zip) against the common web page extensions: htm, html, asp, aspx, php, php5... }
+  Ext:= LowerCase(System.Copy(sURL, i+ 1, MaxInt));
+  Result:= (Copy(Ext, 1, 3) = 'htm')
+        OR (Copy(Ext, 1, 3) = 'asp')
+        OR (Copy(Ext, 1, 3) = 'php');
 end;
 
 
@@ -313,26 +332,24 @@ end;
      https://sub.500px.org/photo/m%8  -> https://sub.500px.org
      www.example.com/page             -> www.example.com  }
 function UrlExtractProtAndDomain(CONST URL: string): string;
-VAR StartAt, FirstSlash: integer;
+VAR StartAt, i: integer;
 begin
   if URL= ''
   then raise exception.Create('Empty URL.');
   Result:= URL;
 
-  StartAt:= PosInsensitive('http://', Result);
-  if StartAt > 0
+  { Test '= 1' (prefix): an embedded protocol (web.archive.org/web/2020/http://x.com) is part of the path }
+  if PosInsensitive('http://', Result) = 1
   then StartAt:= 8
   else
-   begin
-     StartAt:= PosInsensitive('https://', Result);
-     if StartAt > 0
-     then StartAt:= 9
-     else StartAt:= 1;
-   end;
+    if PosInsensitive('https://', Result) = 1
+    then StartAt:= 9
+    else StartAt:= 1;
 
-  FirstSlash:= PosEx('/', URL, StartAt);
-  if FirstSlash> 0
-  then Result:= system.COPY(URL, 1, FirstSlash-1);
+  { The domain ends at the first '/', '?' or '#' }
+  for i:= StartAt to Length(URL) DO
+    if CharInSet(URL[i], ['/', '?', '#'])
+    then EXIT(system.COPY(URL, 1, i-1));
 end;
 
 
@@ -366,6 +383,9 @@ begin
   Result:= UrlExtractDomainRelaxed(URL);
   Result:= Urlremoveport(Result);
 
+  { An IP address has no subdomain to remove: 192.168.1.1 stays whole }
+  if ValidateIpAddress(Result) then EXIT;
+
   { Remove www }
   if CountAppearance('.', Result) > 1
   then Result:= LightCore.CopyFrom(Result, '.', maxint, FALSE);
@@ -377,14 +397,15 @@ function UrlRemoveStart(CONST URL: string): string;         { http://www.stuff.c
 begin
   Result:= URL;
 
+  { Delete by the position PosInsensitive found: 'WWW.' and 'HTTP://' are matched case-insensitively }
   if CheckWwwStart(Result)
-  then Result:= LightCore.CopyFrom(Result, 'www.', MaxInt, FALSE)
+  then Delete(Result, 1, PosInsensitive('www.', Result)+ 3)
   else
     if (PosInsensitive('http://' , Result) = 1)
-    then Result:= LightCore.CopyFrom(Result, 'http://', MaxInt, FALSE)
+    then Delete(Result, 1, 7)
     else
       if (PosInsensitive('https://' , Result) = 1)
-      then Result:= LightCore.CopyFrom(Result, 'https://', MaxInt, FALSE);
+      then Delete(Result, 1, 8);
 
   Assert(Result<> '', 'Empty in UrlRemoveStart');
 end;
@@ -439,6 +460,8 @@ begin
   Resource:= ReplaceString(Resource, '%20', ' ');
   Resource:= RemoveFirstChar(Resource, '/');
   Resource:= ReplaceCharF(Resource, '/', '_');
+  Resource:= ReplaceCharF(Resource, ':', '_');   { ExtractOnlyName reads ':' and '\' as path delimiters (File:Foo.jpg would become Foo) }
+  Resource:= ReplaceCharF(Resource, '\', '_');
 
   Result:= ExtractonlyName(Resource);
   if UniqueChars > 0
@@ -446,7 +469,7 @@ begin
   else Result:= Result + ExtractFileExt(Resource);
 
   Result:= UrlExtractDomain(URL) + '_' + Result;
-  Result:= CorrectFolder(Result, '_');  { Replace invalid Windows filename chars }
+  Result:= CorrectFilename(Result, '_');  { Replace invalid Windows filename chars }
 end;
 
 
@@ -472,9 +495,16 @@ end;
 
 
 function UrlExtractFilePath(CONST Url: string): string;
-var i: Integer;
+var i, SchemeEnd: Integer;
 begin
   i := LastDelimiter('/', Url);
+
+  { The only slashes are those of 'scheme://': the URL is a bare host (http://example.com), whose path is '/'.
+    The query and fragment are dropped: http://example.com?x=1 -> http://example.com/ }
+  SchemeEnd:= Pos('://', Url);
+  if (SchemeEnd > 0) AND (LastDelimiter('/', cutQueryAndFragment(Url)) = SchemeEnd+ 2)
+  then EXIT(cutQueryAndFragment(Url)+ '/');
+
   if i > 0
   then Result := Copy(Url, 1, i)
   else Result := Url;
@@ -494,7 +524,8 @@ end;
 function UrlExtractFileName(CONST URL: string; CleanServerCommands: Boolean= TRUE): string;   { Ex: www.stuff.com/test/img.jpg?uniq=0 -> 'img.jpg' }
 VAR I: Integer;
 begin
-  I := LastDelimiter('/:', URL);
+  { Search the last '/' or ':' only before the query and the fragment: a '/' or ':' inside them (?t=12:30) is not a path delimiter }
+  I := LastDelimiter('/:', cutQueryAndFragment(URL));
   Result := system.COPY(URL, I + 1, MaxInt);
 
   if CleanServerCommands
@@ -513,32 +544,65 @@ end;
 
 
 
+{ Finds the colon of the port in URL, and the end of the host part.
+  The host part starts after 'scheme://' (or at 1 when there is no scheme) and ends before the first '/', '?' or '#'.
+  The port colon is searched only inside the host part, so a colon in the path or query (?t=12:30) is never taken for a port.
+  Returns 0 in PortColon when the URL has no port. HostEnd is the last character of the host part. }
+procedure locatePort(CONST URL: string; OUT PortColon, HostEnd: Integer);
+VAR
+  HostStart, SchemeEnd, i: Integer;
+begin
+  PortColon:= 0;
+
+  { 'scheme://' counts only when no '/', '?' or '#' comes before it (www.a.com/redir?to=http://b.com has no scheme) }
+  HostStart:= 1;
+  SchemeEnd:= Pos('://', URL);
+  if SchemeEnd > 0 then
+   begin
+    HostStart:= SchemeEnd+ 3;
+    for i:= 1 to SchemeEnd- 1 DO
+      if CharInSet(URL[i], ['/', '?', '#']) then
+       begin
+        HostStart:= 1;
+        Break;
+       end;
+   end;
+
+  HostEnd:= Length(URL);
+  for i:= HostStart to Length(URL) DO
+    if CharInSet(URL[i], ['/', '?', '#']) then
+     begin
+      HostEnd:= i- 1;
+      Break;
+     end;
+
+  { The port colon comes after the user info (user:password@host:port) }
+  for i:= HostEnd downto HostStart DO
+    if URL[i] = '@' then
+     begin
+      HostStart:= i+ 1;
+      Break;
+     end;
+
+  for i:= HostStart to HostEnd DO
+    if URL[i] = ':' then
+     begin
+      PortColon:= i;
+      Break;
+     end;
+end;
+
+
 { Removes port from URL while preserving the path.
   Example: http://www.Domain.com:8080/path -> http://www.Domain.com/path }
 function UrlRemovePort(CONST URL: string): string;
 VAR
-  iPortStart, iPortEnd: Integer;
+  PortColon, HostEnd: Integer;
 begin
-  iPortStart:= Pos(':', URL);
-  if iPortStart > 0
-  then begin
-    { Skip the colon in 'http://' or 'https://' }
-    if (iPortStart + 1 <= Length(URL)) AND (URL[iPortStart + 1] = '/')
-    then iPortStart:= PosEx(':', URL, iPortStart + 1);
-
-    if iPortStart > 0
-    then begin
-      { Find the end of port number (first slash or end of string) }
-      iPortEnd:= PosEx('/', URL, iPortStart + 1);
-      if iPortEnd > 0
-      then Result:= System.Copy(URL, 1, iPortStart - 1) + System.Copy(URL, iPortEnd, MaxInt)
-      else Result:= System.Copy(URL, 1, iPortStart - 1);  { No path after port }
-    end
-    else
-      Result:= URL;  { No port in this URL }
-  end
-  else
-    Result:= URL;
+  locatePort(URL, PortColon, HostEnd);
+  if PortColon = 0
+  then Result:= URL   { No port in this URL }
+  else Result:= System.Copy(URL, 1, PortColon- 1) + System.Copy(URL, HostEnd+ 1, MaxInt);
 end;
 
 
@@ -547,31 +611,12 @@ end;
   Returns 0 if no port is specified. }
 function UrlExtractPort(CONST URL: string): Integer;
 VAR
-  sURL: string;
-  iPos: Integer;
+  PortColon, HostEnd: Integer;
 begin
-  iPos:= Pos(':', URL);
-  if iPos > 0
-  then 
-    begin
-     { Skip the colon in 'http://' or 'https://' }
-     if (iPos + 1 <= Length(URL)) AND (URL[iPos + 1] = '/')
-     then iPos:= PosEx(':', URL, iPos + 1);
-
-     if iPos > 0
-     then
-       begin
-         sURL:= System.Copy(URL, iPos + 1, MaxInt);
-         iPos:= Pos('/', sURL);
-         if iPos > 0
-         then sURL:= Copy(sURL, 1, iPos - 1);
-         Result:= StrToIntDef(sURL, 0);
-       end
-     else
-       Result:= 0;  { No port in this URL }
-    end
-  else
-    Result:= 0;
+  locatePort(URL, PortColon, HostEnd);
+  if PortColon = 0
+  then Result:= 0     { No port in this URL }
+  else Result:= StrToIntDef(System.Copy(URL, PortColon+ 1, HostEnd- PortColon), 0);
 end;
 
 
@@ -682,13 +727,15 @@ end;
   Example (MainURL = 'www.test.com/images/'):
      'www.test.com/images/1.jpg'     -> True
      'www.test.com/images/sub/2.jpg' -> True
-     'www.test.com/art/1.jpg'        -> False }
+     'www.test.com/art/1.jpg'        -> False
+  MainURL without a trailing '/' ('www.test.com/images') gets one, so 'www.test.com/images2/1.jpg' is not inside it. }
 function FileIsInFolder(CONST MainURL, aFile: string): Boolean;
 VAR
-  FilePath: string;
+  FilePath, Folder: string;
 begin
+  Folder:= TrailLinuxPath(MainURL);
   FilePath:= UrlExtractFilePath(aFile);
-  Result:= System.Copy(FilePath, 1, Length(MainURL)) = MainURL;
+  Result:= System.Copy(FilePath, 1, Length(Folder)) = Folder;
 end;
 
 
@@ -702,11 +749,30 @@ begin
 end;
 
 
+{ TRUE when URL starts with a scheme other than http(s): 'mailto:', 'javascript:', 'ftp:'.
+  A scheme is a letter followed by letters, digits, '+' or '-', then ':'. 'www.x.com:8080' has a '.' so it is not a scheme. }
+function hasOtherScheme(CONST URL: string): Boolean;
+VAR i: Integer;
+begin
+  if (URL = '') OR NOT CharInSet(URL[1], ['a'..'z', 'A'..'Z']) then EXIT(FALSE);
+  for i:= 2 to Length(URL) DO
+    if URL[i] = ':'
+    then EXIT(TRUE)
+    else
+      if NOT CharInSet(URL[i], ['a'..'z', 'A'..'Z', '0'..'9', '+', '-'])
+      then EXIT(FALSE);
+  Result:= FALSE;
+end;
+
+
 { Expands a relative URL to an absolute URL using MainUrl as the base.
-  Handles three cases:
-    1. ShortUrl already has http(s):// - returned as-is
-    2. ShortUrl starts with '/' - appended to domain only
-    3. ShortUrl is relative - appended to full base path
+  Handles these cases:
+    1. ShortUrl already has http(s):// or another scheme (mailto:) - returned as-is
+    2. ShortUrl starts with '//' (protocol-relative) - gets the scheme of MainUrl (http: when MainUrl has none)
+    3. ShortUrl starts with '/' - appended to domain only
+    4. ShortUrl starts with '?' - replaces the query and fragment of MainUrl
+    5. ShortUrl starts with '#' - replaces the fragment of MainUrl
+    6. ShortUrl is relative - appended to the folder of MainUrl
 
   Examples (MainUrl = 'www.dnabaser.com/tools/'):
     'download/'       -> 'www.dnabaser.com/tools/download/'
@@ -714,17 +780,32 @@ end;
     'http://other.com'-> 'http://other.com' }
 function ExpandURL(CONST ShortUrl, MainUrl: string): string;
 VAR
-   Base: string;
+   i: Integer;
 begin
   Assert(ShortUrl <> '', 'ExpandURL: ShortUrl is empty');
-  Base:= UrlExtractProtAndDomain(MainUrl);
 
-  if CheckHttpStart(ShortUrl)
-  then Result:= ShortUrl  { Already absolute URL }
+  if CheckHttpStart(ShortUrl) OR hasOtherScheme(ShortUrl)
+  then EXIT(ShortUrl);                                            { Already absolute URL }
+
+  if Copy(ShortUrl, 1, 2) = '//' then
+   begin
+    if PosInsensitive('https://', MainUrl) = 1
+    then EXIT('https:'+ ShortUrl)
+    else EXIT('http:' + ShortUrl);
+   end;
+
+  case ShortUrl[1] of
+    '/': Result:= UrlExtractProtAndDomain(MainUrl) + ShortUrl;    { Root-relative: append to domain }
+    '?': Result:= cutQueryAndFragment(MainUrl) + ShortUrl;
+    '#': begin
+          i:= Pos('#', MainUrl);
+          if i > 0
+          then Result:= System.Copy(MainUrl, 1, i- 1) + ShortUrl
+          else Result:= MainUrl + ShortUrl;
+         end;
   else
-    if FirstCharIs(ShortUrl, '/')
-    then Result:= Base + ShortUrl           { Root-relative: append to domain }
-    else Result:= TrailLinuxPath(Base) + ShortUrl;  { Path-relative: append to base }
+    Result:= TrailLinuxPath(UrlExtractFilePath(cutQueryAndFragment(MainUrl))) + ShortUrl;  { Path-relative: append to the folder of MainUrl }
+  end;
 end;
 
 
@@ -838,7 +919,8 @@ begin
     Inc(i);
   Port:= System.Copy(Port, 1, i - 1);
 
-  if (IP <> '') AND (Port <> '')
+  { The digit scan above accepts garbage such as '1.2.3.4xx' or 'proxy.site.com' as an IP }
+  if ValidateIpAddress(IP) AND ValidatePort(Port)
   then Result:= IP + ':' + Port;
 end;
 
@@ -1010,11 +1092,18 @@ end;
 
 
 
+{ A port is 1 to 5 decimal digits, value 0..65535.
+  The digit check comes first because StrToIntDef also accepts '$50', '0x50', ' 80' and '+80'. }
 function ValidatePort(CONST Port: string): Boolean;
-VAR iPort: Integer;
+VAR i: Integer;
 begin
-  iPort:= StrToIntDef(Port, -1);
-  Result:= (iPort>= 0) AND (iPort < 65536);
+  if (Length(Port) < 1) OR (Length(Port) > 5) then EXIT(FALSE);
+
+  for i:= 1 to Length(Port) DO
+    if NOT CharInSet(Port[i], ['0'..'9'])
+    then EXIT(FALSE);
+
+  Result:= StrToInt(Port) < 65536;
 end;
 
 
@@ -1100,7 +1189,7 @@ VAR
    ByteOrd: Integer;
    Utf8: UTF8String;
 CONST
-   UnsafeChars = ['*', '#', '%', '<', '>', ' ', '[', ']', '\', '@'];
+   UnsafeChars = ['*', '#', '%', '<', '>', ' ', '[', ']', '\', '@', '"', '{', '}', '|', '^', '`'];
 begin
   Result:= '';
   Utf8:= UTF8Encode(URL);
@@ -1124,9 +1213,10 @@ end;
 
 { Opens URL in the default browser. Cross-platform. }
 procedure OpenURL(const URL: string);
-{$IFDEF MACOS}
+{ MACOS is also defined on iOS, so the macOS-only code (AppKit) sits inside IFNDEF IOS }
+{$IFDEF MACOS}{$IFNDEF IOS}
 var NSURL_: NSURL;
-{$ENDIF}
+{$ENDIF}{$ENDIF}
 begin
   if URL.IsEmpty then Exit;
 
@@ -1134,10 +1224,10 @@ begin
   ShellExecute(0, 'open', PChar(URL), NIL, NIL, SW_SHOWNORMAL);
   {$ENDIF}
 
-  {$IFDEF MACOS}
+  {$IFDEF MACOS}{$IFNDEF IOS}
   NSURL_:= TNSURL.Wrap(TNSURL.OCClass.URLWithString(StrToNSStr(URL)));
   TNSWorkspace.Wrap(TNSWorkspace.OCClass.sharedWorkspace).openURL(NSURL_);
-  {$ENDIF}
+  {$ENDIF}{$ENDIF}
 
   {$IFDEF ANDROID}
   TAndroidHelper.Activity.startActivity(
@@ -1146,8 +1236,8 @@ begin
   {$ENDIF}
 
   {$IFDEF IOS}
-  TUIApplication.Wrap(TUIApplication.OCClass.sharedApplication)
-    .openURL(TNSURL.Wrap(TNSURL.OCClass.URLWithString(StrToNSStr(URL))));
+  { The 3-parameter openURL, the same call as the RTL makes in c:\Delphi\Delphi 13\source\fmx\FMX.PhoneDialer.iOS.pas }
+  TUIApplication.Wrap(TUIApplication.OCClass.sharedApplication).openURL(StrToNSUrl(URL), nil, nil);
   {$ENDIF}
 end;
 
