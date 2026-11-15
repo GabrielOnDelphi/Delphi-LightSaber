@@ -41,6 +41,7 @@ uses
   LightVcl.Common.Dialogs in '..\FrameVCL\LightVcl.Common.Dialogs.pas',
   LightVcl.Common.EllipsisText in '..\FrameVCL\LightVcl.Common.EllipsisText.pas',
   Test.LightVcl.Common.IO in 'Test.LightVcl.Common.IO.pas',
+  Test.LightVcl.Common.IO.RecycleItem in 'Test.LightVcl.Common.IO.RecycleItem.pas',
   Test.LightVcl.Common.ExecuteProc in 'Test.LightVcl.Common.ExecuteProc.pas',
   LightVcl.Common.ExecuteProc in '..\FrameVCL\LightVcl.Common.ExecuteProc.pas',
   Test.LightVcl.Common.ExecuteShell in 'Test.LightVcl.Common.ExecuteShell.pas',

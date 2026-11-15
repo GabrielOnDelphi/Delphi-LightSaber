@@ -53,6 +53,8 @@ uses
   Test.LightCore.INIFileQuick in 'Test.LightCore.INIFileQuick.pas',
   Test.LightCore.MRU in 'Test.LightCore.MRU.pas',
   Test.LightCore.IO in 'Test.LightCore.IO.pas',
+  Test.LightCore.IO.DeleteGuard in 'Test.LightCore.IO.DeleteGuard.pas',
+  Test.LightCore.IO.RecycleCheck in 'Test.LightCore.IO.RecycleCheck.pas',
   Test.LightCore.EncodeMime in 'Test.LightCore.EncodeMime.pas',
   Test.LightCore.Download in 'Test.LightCore.Download.pas',
   Test.LightCore.Download.Thread in 'Test.LightCore.Download.Thread.pas',
@@ -192,7 +194,7 @@ uses
   {$IFDEF MSWINDOWS}
   LightCore.Win.SystemPermissions in '..\LightCore.Win.SystemPermissions.pas',
   {$ENDIF}
-  ciUpdaterRec in '..\Updater\ciUpdaterRec.pas';
+  ciUpdaterRec in '..\ciUpdaterRec.pas';
 
 {$IFNDEF TESTINSIGHT}
 var

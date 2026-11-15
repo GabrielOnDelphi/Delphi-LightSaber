@@ -164,6 +164,57 @@ type
     procedure TestGenerateHTMLHeader;
   end;
 
+
+  { Regression tests for the bugs that the review runs of the effort test found.
+    The list: C:\Projects\LightSaber\ToDo\Effort test - real bugs, live check.md.
+    Every expected value is traced by hand from what the HTML markup means, never from the code under test. }
+  [TestFixture]
+  TTestHtmlRegression = class
+  public
+    [Test]
+    procedure ExtractAttribValue_UnquotedValue;                { X1a }
+    [Test]
+    procedure ExtractAttribValue_OtherQuoteKindInsideValue;    { X1b }
+    [Test]
+    procedure ExtractAttribValue_UnquotedThenQuotedAttribute;  { X1o, HD1 }
+    [Test]
+    procedure ExtractAttribValue_NameInsideOtherValue;         { X1t }
+    [Test]
+    procedure ExtractAttribValue_LineBreakAndTab;              { X1j }
+    [Test]
+    procedure ReplaceAttribValue_UnquotedThenQuotedAttribute;  { X1o }
+    [Test]
+    procedure ReplaceAttribValue_OtherQuoteKindInsideValue;    { X1b }
+    [Test]
+    procedure LinkOpensInNewWind_MixedQuotes;                  { X1c }
+    [Test]
+    procedure ExtractAttribValueIE_UnquotedBeforeOtherAttrib;  { X1c }
+    [Test]
+    procedure MakeLinkRelativeToRoot_ProtocolRelative;         { X1d }
+    [Test]
+    procedure MakeLinkRelativeToRoot_RootPage;                 { X1n }
+    [Test]
+    procedure MakeLinksRelativeToRoot_UpperCaseTags;           { X1l }
+    [Test]
+    procedure LineIsMeta_MetaWordAbsent;                       { X1e }
+    [Test]
+    procedure LineIsMeta_NameOnlyInsideContent;                { X1e2 }
+    [Test]
+    procedure LineIsMeta_ContentBeforeName;                    { X1e3 }
+    [Test]
+    procedure LinkHasNoFollow_TokenList;                       { X1f }
+    [Test]
+    procedure GenerateHTMLHeader_EscapesText;                  { X1k }
+    [Test]
+    procedure ExtractURLsText_Https;                           { X1m }
+    [Test]
+    procedure ExtractURLsText_QueryAndPort;                    { X1p }
+    [Test]
+    procedure FixHtmlFormatings_JoinsH6;                       { X1w }
+    [Test]
+    procedure FixHtmlFormatings_EmptyLineBeforeClosingTag;     { X1v - the Windows path; the POSIX path cannot run here }
+  end;
+
 implementation
 
 uses
@@ -630,7 +681,188 @@ begin
 end;
 
 
+
+
+{ TTestHtmlRegression }
+
+procedure TTestHtmlRegression.ExtractAttribValue_UnquotedValue;
+begin
+  Assert.AreEqual('_blank', ExtractAttribValue('<a target=_blank>', 'target'));
+  Assert.AreEqual('/x', ExtractAttribValue('<a href=/x>', 'href'));
+end;
+
+procedure TTestHtmlRegression.ExtractAttribValue_OtherQuoteKindInsideValue;
+begin
+  Assert.AreEqual('Gabriel''s book', ExtractAttribValue('<img alt="Gabriel''s book">', 'alt'));
+  Assert.AreEqual('say "hi"', ExtractAttribValue('<img alt=''say "hi"''>', 'alt'));
+end;
+
+procedure TTestHtmlRegression.ExtractAttribValue_UnquotedThenQuotedAttribute;
+begin
+  Assert.AreEqual('x', ExtractAttribValue('<a href=x class="test">', 'href'));
+  Assert.AreEqual('pic.png', ExtractAttribValue('<IMG src=pic.png alt="Photo">', 'src'));
+end;
+
+procedure TTestHtmlRegression.ExtractAttribValue_NameInsideOtherValue;
+begin
+  Assert.AreEqual('/x', ExtractAttribValue('<a title="href=bad" href="/x">', 'href'));
+  Assert.AreEqual('/y', ExtractAttribValue('<a title="see href=x" href="/y">', 'href'));
+end;
+
+procedure TTestHtmlRegression.ExtractAttribValue_LineBreakAndTab;
+begin
+  Assert.AreEqual('x', ExtractAttribValue('<a class="c"'+ #13#10+ 'href="x">', 'href'));
+  Assert.AreEqual('x', ExtractAttribValue('<a href'+ #9+ '="x">', 'href'));
+  Assert.AreEqual('p.png', ExtractAttribValue('<img src="p.png">', ' src'));   { Name with a leading space, as AID passes it }
+end;
+
+procedure TTestHtmlRegression.ReplaceAttribValue_UnquotedThenQuotedAttribute;
+begin
+  Assert.AreEqual('<IMG src="NEW" alt="Photo">', ReplaceAttribValue('<IMG src=pic.png alt="Photo">', 'src', 'NEW'));
+end;
+
+procedure TTestHtmlRegression.ReplaceAttribValue_OtherQuoteKindInsideValue;
+begin
+  Assert.AreEqual('<img alt="X">', ReplaceAttribValue('<img alt="Gabriel''s book">', 'alt', 'X'));
+end;
+
+procedure TTestHtmlRegression.LinkOpensInNewWind_MixedQuotes;
+begin
+  Assert.IsTrue(LinkOpensInNewWind('<a target=''_blank'' href="x">'));
+end;
+
+procedure TTestHtmlRegression.ExtractAttribValueIE_UnquotedBeforeOtherAttrib;
+begin
+  Assert.AreEqual('_blank', ExtractAttribValueIE('<a target=_blank href="x">', 'target'));
+  Assert.AreEqual('_blank', ExtractAttribValueIE('<a target=_blank class=x>', 'target'));
+end;
+
+procedure TTestHtmlRegression.MakeLinkRelativeToRoot_ProtocolRelative;
+begin
+  { '//host/path' points to another host: there is nothing to make relative }
+  Assert.AreEqual('//cdn.example.com/lib.js', MakeLinkRelativeToRoot('/x/master/index.html', '//cdn.example.com/lib.js'));
+end;
+
+procedure TTestHtmlRegression.MakeLinkRelativeToRoot_RootPage;
+begin
+  { A page in the site root reaches /x/a.html as x/a.html }
+  Assert.AreEqual('x/a.html', MakeLinkRelativeToRoot('/index.html', '/x/a.html'));
+  { The documented case of the header comment stays as it is }
+  Assert.AreEqual('../../x/slave/index2.html', MakeLinkRelativeToRoot('/x/master/index.html', '/x/slave/index2.html'));
+end;
+
+procedure TTestHtmlRegression.MakeLinksRelativeToRoot_UpperCaseTags;
+begin
+  { Depth of /a/b/p.html is 2, so /x becomes ../../x }
+  Assert.AreEqual('<A HREF="../../x">t</A>',     MakeLinksRelativeToRoot('<A HREF="/x">t</A>', '/a/b/p.html'));
+  Assert.AreEqual('<IMG SRC="../../i.png">',     MakeLinksRelativeToRoot('<IMG SRC="/i.png">', '/a/b/p.html'));
+end;
+
+procedure TTestHtmlRegression.LineIsMeta_MetaWordAbsent;
+begin
+  Assert.IsFalse(LineIsMeta('<link name="Keywords" content="x">', 'Keywords'));
+end;
+
+procedure TTestHtmlRegression.LineIsMeta_NameOnlyInsideContent;
+begin
+  Assert.IsFalse(LineIsMeta('<meta name="description" content="Best keywords tool">', 'Keywords'));
+end;
+
+procedure TTestHtmlRegression.LineIsMeta_ContentBeforeName;
+begin
+  Assert.IsTrue(LineIsMeta('<meta content="x" name="Keywords">', 'Keywords'));
+end;
+
+procedure TTestHtmlRegression.LinkHasNoFollow_TokenList;
+begin
+  { rel holds a space-separated list of link types }
+  Assert.IsTrue (LinkHasNoFollow('<a href="u" rel="nofollow noopener">'));
+  Assert.IsTrue (LinkHasNoFollow('<a href="u" rel="noopener NoFollow">'));
+  Assert.IsFalse(LinkHasNoFollow('<a href="u" rel="noopener">'));
+end;
+
+procedure TTestHtmlRegression.GenerateHTMLHeader_EscapesText;
+var
+  Header: string;
+begin
+  Header:= GenerateHTMLHeader('Tom & Jerry', 'The "best" tool', 'a<b', 'x.css');
+  Assert.IsTrue(Pos('<title>Tom &amp; Jerry</title>', Header) > 0, Header);
+  Assert.IsTrue(Pos('content="The &quot;best&quot; tool"', Header) > 0, Header);
+  Assert.IsTrue(Pos('content="a&lt;b"', Header) > 0, Header);
+end;
+
+procedure TTestHtmlRegression.ExtractURLsText_Https;
+var
+  TSL: TStringList;
+begin
+  TSL:= TStringList.Create;
+  TRY
+    Assert.AreEqual(1, ExtractURLsText('see https://example.com/p now', TSL));
+    Assert.AreEqual('https://example.com/p', TSL[0]);
+
+    TSL.Clear;
+    Assert.AreEqual(1, ExtractURLsText('go https://www.x.com/p end', TSL));
+    Assert.AreEqual('https://www.x.com/p', TSL[0]);
+  FINALLY
+    FreeAndNil(TSL);
+  END;
+end;
+
+procedure TTestHtmlRegression.ExtractURLsText_QueryAndPort;
+var
+  TSL: TStringList;
+begin
+  TSL:= TStringList.Create;
+  TRY
+    Assert.AreEqual(1, ExtractURLsText('go http://x.com/a?b=1&c=2 end', TSL));
+    Assert.AreEqual('http://x.com/a?b=1&c=2', TSL[0]);
+
+    TSL.Clear;
+    Assert.AreEqual(1, ExtractURLsText('go http://x.com:8080/p end', TSL));
+    Assert.AreEqual('http://x.com:8080/p', TSL[0]);
+
+    { The colon that ends a sentence is not part of the URL }
+    TSL.Clear;
+    Assert.AreEqual(1, ExtractURLsText('see www.x.com: now', TSL));
+    Assert.AreEqual('www.x.com', TSL[0]);
+  FINALLY
+    FreeAndNil(TSL);
+  END;
+end;
+
+procedure TTestHtmlRegression.FixHtmlFormatings_JoinsH6;
+var
+  Body: TStringList;
+begin
+  Body:= TStringList.Create;
+  TRY
+    Body.Add('<h6>Title');
+    Body.Add('</h6>');
+    Assert.AreEqual('<h6>Title</h6>', FixHtmlFormatings(Body));
+  FINALLY
+    FreeAndNil(Body);
+  END;
+end;
+
+procedure TTestHtmlRegression.FixHtmlFormatings_EmptyLineBeforeClosingTag;
+var
+  Body: TStringList;
+begin
+  { The closing tag takes the place of ONE line break: the empty line is consumed, 'abc' keeps its own line }
+  Body:= TStringList.Create;
+  TRY
+    Body.Add('abc');
+    Body.Add('');
+    Body.Add('</p>');
+    Assert.AreEqual('abc'+ sLineBreak+ '</p>', FixHtmlFormatings(Body));
+  FINALLY
+    FreeAndNil(Body);
+  END;
+end;
+
+
 initialization
   TDUnitX.RegisterTestFixture(TTestLightCoreHTML);
+  TDUnitX.RegisterTestFixture(TTestHtmlRegression);
 
 end.

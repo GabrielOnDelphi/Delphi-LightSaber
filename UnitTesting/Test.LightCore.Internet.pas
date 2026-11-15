@@ -276,6 +276,45 @@ type
     procedure TestUrlExtractFilePath(const URL, Expected: string);
   end;
 
+
+  { Regression tests for the bugs that the review runs of the effort test found.
+    The list: C:\Projects\LightSaber\ToDo\Effort test - real bugs, live check.md.
+    Every expected value is traced by hand from what the URL means (RFC 3986), never from the code under test. }
+  [TestFixture]
+  TTestInternetRegression = class
+  public
+    [Test]
+    procedure UrlExtractProtAndDomain_EmbeddedHttp;     { X2a }
+    [Test]
+    procedure UrlExtractProtAndDomain_QueryNoPath;      { X2t }
+    [Test]
+    procedure UrlPort_ColonInQuery;                     { X2b }
+    [Test]
+    procedure ExpandURL_PathRelativeToFolder;           { X2d }
+    [Test]
+    procedure ExpandURL_SpecialForms;                   { X2d2 }
+    [Test]
+    procedure UrlRemoveStart_UpperCase;                 { X2e }
+    [Test]
+    procedure UrlExtractFileName_ColonInQuery;          { X2f }
+    [Test]
+    procedure UrlExtractFilePath_HostOnly;              { X2g }
+    [Test]
+    procedure ExtractProxyFrom_RejectsNonIp;            { X2h }
+    [Test]
+    procedure UrlExtractDomain_IpHost;                  { X2j2 }
+    [Test]
+    procedure UrlEncode_UnsafeAscii;                    { X2l }
+    [Test]
+    procedure ValidatePort_DecimalOnly;                 { X2m }
+    [Test]
+    procedure GenerateLocalFilenameFromURL_InvalidChars;{ X2o }
+    [Test]
+    procedure FileIsInFolder_NoTrailingSlash;           { X2w }
+    [Test]
+    procedure IsWebPage_QueryAndDoubleExtension;        { X2x }
+  end;
+
 implementation
 
 procedure TTestInternet.Setup;
@@ -658,8 +697,125 @@ end;
 {$ENDIF}
 
 
+
+
+{ TTestInternetRegression }
+
+procedure TTestInternetRegression.UrlExtractProtAndDomain_EmbeddedHttp;
+begin
+  Assert.AreEqual('https://web.archive.org', UrlExtractProtAndDomain('https://web.archive.org/web/2020/http://example.com/'));
+end;
+
+procedure TTestInternetRegression.UrlExtractProtAndDomain_QueryNoPath;
+begin
+  Assert.AreEqual('http://a.com', UrlExtractProtAndDomain('http://a.com?x=1'));
+  Assert.AreEqual('http://a.com', UrlExtractProtAndDomain('http://a.com#top'));
+  Assert.AreEqual('a.com', UrlExtractDomain('http://a.com?x=1'));
+end;
+
+procedure TTestInternetRegression.UrlPort_ColonInQuery;
+begin
+  Assert.AreEqual(0, UrlExtractPort('http://example.com/img.php?t=12:30'));
+  Assert.AreEqual('http://example.com/img.php?t=12:30', UrlRemovePort('http://example.com/img.php?t=12:30'));
+  Assert.AreEqual(8080, UrlExtractPort('http://example.com:8080/img.php?t=12:30'));
+  Assert.AreEqual('http://example.com/img.php?t=12:30', UrlRemovePort('http://example.com:8080/img.php?t=12:30'));
+end;
+
+procedure TTestInternetRegression.ExpandURL_PathRelativeToFolder;
+begin
+  { The example of the routine's own header comment }
+  Assert.AreEqual('www.dnabaser.com/tools/download/', ExpandURL('download/', 'www.dnabaser.com/tools/'));
+  Assert.AreEqual('http://example.com/folder/b.html', ExpandURL('b.html', 'http://example.com/folder/page.html'));
+end;
+
+procedure TTestInternetRegression.ExpandURL_SpecialForms;
+CONST
+  Main = 'http://example.com/folder/page.html';
+begin
+  Assert.AreEqual('http://cdn.x.com/a.js',                      ExpandURL('//cdn.x.com/a.js', Main));
+  Assert.AreEqual('https://cdn.x.com/a.js',                     ExpandURL('//cdn.x.com/a.js', 'https://example.com/'));
+  Assert.AreEqual('http://example.com/folder/page.html?p=2',    ExpandURL('?p=2', Main));
+  Assert.AreEqual('http://example.com/folder/page.html#top',    ExpandURL('#top', Main));
+  Assert.AreEqual('http://example.com/page.html?p=2',           ExpandURL('?p=2', 'http://example.com/page.html?a=1#f'));
+  Assert.AreEqual('http://example.com/page.html?a=1#top',       ExpandURL('#top', 'http://example.com/page.html?a=1#f'));
+  Assert.AreEqual('mailto:a@b.c',                               ExpandURL('mailto:a@b.c', Main));
+end;
+
+procedure TTestInternetRegression.UrlRemoveStart_UpperCase;
+begin
+  Assert.AreEqual('Example.com',   UrlRemoveStart('WWW.Example.com'));
+  Assert.AreEqual('Example.com/a', UrlRemoveStart('HTTP://Example.com/a'));
+end;
+
+procedure TTestInternetRegression.UrlExtractFileName_ColonInQuery;
+begin
+  Assert.AreEqual('photo.jpg', UrlExtractFileName('http://x.com/photo.jpg?t=12:30'));
+  Assert.AreEqual('photo.jpg?t=12:30', UrlExtractFileName('http://x.com/photo.jpg?t=12:30', FALSE));
+end;
+
+procedure TTestInternetRegression.UrlExtractFilePath_HostOnly;
+begin
+  Assert.AreEqual('http://example.com/', UrlExtractFilePath('http://example.com'));
+  Assert.AreEqual('http://example.com/', UrlExtractFilePath('http://example.com?x=1'));
+  Assert.AreEqual('http://example.com/', GetReferer('http://example.com'));
+end;
+
+procedure TTestInternetRegression.ExtractProxyFrom_RejectsNonIp;
+begin
+  Assert.AreEqual('', ExtractProxyFrom('1.2.3.4xx:80'));
+  Assert.AreEqual('', ExtractProxyFrom('www.proxy.site.com:80'));
+  { The example of the routine's own header comment }
+  Assert.AreEqual('1.210.03.23:80', ExtractProxyFrom('xxxxx1.210.03.23:80xxxx'));
+end;
+
+procedure TTestInternetRegression.UrlExtractDomain_IpHost;
+begin
+  Assert.AreEqual('192.168.1.1', UrlExtractDomain('http://192.168.1.1/'));
+  Assert.IsFalse(SameWebSite('http://192.168.1.1/', 'http://10.168.1.1/'));
+end;
+
+procedure TTestInternetRegression.UrlEncode_UnsafeAscii;
+begin
+  // Hex codes from the ASCII table: " 22, brace-open 7B, brace-close 7D, | 7C, ^ 5E, backtick 60
+  Assert.AreEqual('my%20%22file%22.jpg', UrlEncode('my "file".jpg'));
+  Assert.AreEqual('%7B%7D%7C%5E%60', UrlEncode('{}|^`'));
+end;
+
+procedure TTestInternetRegression.ValidatePort_DecimalOnly;
+begin
+  Assert.IsFalse(ValidatePort('$50'));
+  Assert.IsFalse(ValidatePort('0x50'));
+  Assert.IsFalse(ValidatePort(' 80'));
+  Assert.IsFalse(ValidatePort('+80'));
+  Assert.IsFalse(ValidatePort(''));
+  Assert.IsTrue (ValidatePort('80'));
+end;
+
+procedure TTestInternetRegression.GenerateLocalFilenameFromURL_InvalidChars;
+begin
+  { '*' and ':' are not allowed in a Windows file name }
+  Assert.AreEqual('x.com_a_b.jpg',           GenerateLocalFilenameFromURL('http://x.com/a*b.jpg', 0));
+  Assert.AreEqual('x.com_wiki_File_Foo.jpg', GenerateLocalFilenameFromURL('http://x.com/wiki/File:Foo.jpg', 0));
+end;
+
+procedure TTestInternetRegression.FileIsInFolder_NoTrailingSlash;
+begin
+  Assert.IsFalse(FileIsInFolder('www.test.com/images', 'www.test.com/images2/1.jpg'));
+  Assert.IsTrue (FileIsInFolder('www.test.com/images', 'www.test.com/images/1.jpg'));
+end;
+
+procedure TTestInternetRegression.IsWebPage_QueryAndDoubleExtension;
+begin
+  Assert.IsFalse(IsWebPage('http://x.com/a.zip?from=index.php'));
+  Assert.IsFalse(IsWebPage('http://x.com/a.html.zip'));
+  Assert.IsTrue (IsWebPage('http://x.com/page.php?id=1'));
+  Assert.IsTrue (IsWebPage('http://a.com?x=1'));
+end;
+
+
 initialization
   TDUnitX.RegisterTestFixture(TTestInternet);
+  TDUnitX.RegisterTestFixture(TTestInternetRegression);
   {$IFDEF MSWINDOWS}
   TDUnitX.RegisterTestFixture(TTestInternetWin);
   {$ENDIF}

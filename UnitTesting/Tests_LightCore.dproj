@@ -172,6 +172,8 @@
         <DCCReference Include="Test.LightCore.INIFileQuick.pas"/>
         <DCCReference Include="Test.LightCore.MRU.pas"/>
         <DCCReference Include="Test.LightCore.IO.pas"/>
+        <DCCReference Include="Test.LightCore.IO.DeleteGuard.pas"/>
+        <DCCReference Include="Test.LightCore.IO.RecycleCheck.pas"/>
         <DCCReference Include="Test.LightCore.EncodeMime.pas"/>
         <DCCReference Include="Test.LightCore.Download.pas"/>
         <DCCReference Include="Test.LightCore.Download.Thread.pas"/>
@@ -201,7 +203,7 @@
         <DCCReference Include="..\LightCore.SvgShapes.pas"/>
         <DCCReference Include="Test.LightCore.FramePacer.pas"/>
         <DCCReference Include="..\LightCore.FramePacer.pas"/>
-        <DCCReference Include="..\Updater\ciUpdaterRec.pas"/>
+        <DCCReference Include="..\ciUpdaterRec.pas"/>
         <DCCReference Include="..\LightCore.pas"/>
         <DCCReference Include="..\LightCore.Types.pas"/>
         <DCCReference Include="..\LightCore.EncodeCRC.pas"/>
