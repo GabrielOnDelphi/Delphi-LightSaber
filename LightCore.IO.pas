@@ -1,7 +1,7 @@
 ﻿UNIT LightCore.IO;
 
 {=============================================================================================================
-   2026.10.05
+   2026.11.14
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -388,10 +388,22 @@ CONST
 {--------------------------------------------------------------------------------------------------
    DELETE
 --------------------------------------------------------------------------------------------------}
- procedure EmptyDirectory     (CONST Path: string);                                                          { Delete all files in the specified folder, but don't delete the folder itself. It will search also in subfolders }
- procedure DeleteFolder       (CONST Path: string);
+TYPE
+  EProtectedFolder = class(Exception);   { DeleteFolder, EmptyDirectory or CheckFolderDeletable refused a path. The reason is in the message }
+
+ function  FolderDeleteRefusal(CONST Path: string): string;                                                  { Why DeleteFolder and EmptyDirectory refuse Path, or '' when they accept it. Deletes nothing }
+ procedure CheckFolderDeletable(CONST Path: string);                                                         { Raises EProtectedFolder when FolderDeleteRefusal gives a reason }
+ procedure EmptyDirectory     (CONST Path: string);                                                          { Delete all files in the specified folder, but don't delete the folder itself. It will search also in subfolders. Deletes for good: for the user's files use RecycleItem (LightVcl.Common.IO), which deletes for good only on a drive with no Recycle Bin (DriveHasRecycleBin) }
+ procedure DeleteFolder       (CONST Path: string);                                                          { Deletes for good: for the user's files use RecycleItem (LightVcl.Common.IO), which deletes for good only on a drive with no Recycle Bin (DriveHasRecycleBin) }
  procedure RemoveEmptyFolders (CONST RootFolder: string);                                                    { Not tested! Delete all empty folders / sub-folders (any sub level) under the provided "rootFolder" }
  function  TryDeleteFile      (CONST FileName: string): Boolean;
+
+ {$IFDEF MSWINDOWS}
+ function  NoRecycleBinReason (CONST Path: string): string;                                                  { Why a delete of Path would not reach a Recycle Bin, or '' when it would. Only a drive letter of a fixed disk, not made by subst, passes. Deletes nothing }
+ function  DriveHasRecycleBin (CONST Path: string): Boolean;                                                 { TRUE when NoRecycleBinReason gives no reason. Deletes nothing }
+ function  RecycleItemRefusal (CONST ItemName: string): string; overload;                                     { Why RecycleItem (LightVcl.Common.IO) refuses ItemName, or '' when it accepts it. The drive is not checked: see DriveHasRecycleBin. Deletes nothing }
+ function  RecycleItemRefusal (CONST ItemName: string; OUT PathList: string): string; overload;                { The same, and PathList receives the full paths in the form SHFileOperation.pFrom needs }
+ {$ENDIF}
 
 {--------------------------------------------------------------------------------------------------
    FILE SIZE
@@ -2255,6 +2267,7 @@ end;
 procedure MoveFolder(CONST FromFolder, ToFolder: String; SilentOverwrite: Boolean);
 VAR FailedCount: Integer;
 begin
+  CheckFolderDeletable(FromFolder);   { Refuse before the copy: DeleteFolder below would refuse anyway, after copying everything }
   FailedCount:= CopyFolder(FromFolder, ToFolder, SilentOverwrite);
   if FailedCount > 0
   then RAISE Exception.Create('MoveFolder: '+ IntToStr(FailedCount)+ ' file(s) could not be copied to '+ ToFolder+ CRLFw+ 'The source folder was NOT deleted: '+ FromFolder);  { Deleting the source here would destroy the files that were never copied! }
@@ -2282,6 +2295,7 @@ end;
 { This is obsolete. Very slow. Intoarce un numar care arata cate fisiere nu au fost copiate (probleme) }
 function MoveFolderSlow(CONST FromFolder, ToFolder: String; Overwrite: boolean): integer;
 begin
+ CheckFolderDeletable(FromFolder);   { Refuse before the copy: DeleteFolder below would refuse anyway, after copying everything }
  Result:= CopyFolder(FromFolder, ToFolder, Overwrite);
  if Result = 0
  then DeleteFolder(FromFolder);   { Keep the source if anything failed to copy — deleting it would destroy the files that were never copied }
@@ -2414,13 +2428,265 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
+   DELETE FOLDER - THE GUARD
+   A delete made by compiled code (a program, a DUnitX test) passes no hook of Claude Code,
+   so DeleteFolder and EmptyDirectory test the path themselves.
+   The same list as protectedReason in C:\Projects\Projects System\RecycleBin.exe\RecycleBin.dpr.
+--------------------------------------------------------------------------------------------------}
+{$IFDEF MSWINDOWS}
+{ Path with every 8.3 short name expanded (C:\PROGRA~1 -> C:\Program Files), so a short name cannot slip past the tests.
+  Returns Path unchanged when Windows cannot expand it, for example because the path does not exist. }
+function guardLongPath(CONST Path: string): string;
+VAR Len: DWORD;
+begin
+  Len:= GetLongPathName(PChar(Path), NIL, 0);   { the size needed, terminating null included }
+  if Len = 0 then EXIT(Path);
+  SetLength(Result, Len);
+  Len:= GetLongPathName(PChar(Path), PChar(Result), Len);   { the length copied, null not included }
+  if (Len = 0) OR (Len >= DWORD(Length(Result))) then EXIT(Path);
+  SetLength(Result, Len);
+end;
+
+
+{ Path in the one shape the tests compare: no \\?\ or \\.\ prefix, an administrative share (\\host\c$\Windows)
+  written as its drive (c:\Windows), no trailing backslash. With ExpandShortNames, also the long names (reads the disk). }
+function guardComparable(CONST Path: string; ExpandShortNames: Boolean): string;
+VAR
+  Rest: string;
+  SlashPos: Integer;
+begin
+  if ExpandShortNames
+  then Result:= guardLongPath(Path)
+  else Result:= Path;
+
+  { # Strip the long-path prefix }
+  if SameText(System.Copy(Result, 1, 8), '\\?\UNC\')
+  then Result:= '\\' + System.Copy(Result, 9, MaxInt)
+  else
+    if (System.Copy(Result, 1, 4) = '\\?\') OR (System.Copy(Result, 1, 4) = '\\.\')
+    then Result:= System.Copy(Result, 5, MaxInt);
+
+  { # \\host\X$ is drive X: of that host }
+  if System.Copy(Result, 1, 2) = '\\' then
+   begin
+    Rest:= System.Copy(Result, 3, MaxInt);
+    SlashPos:= Pos(PathDelim, Rest);
+    if SlashPos > 0 then
+     begin
+      Rest:= System.Copy(Rest, SlashPos + 1, MaxInt);   { X$ or X$\folder }
+      if (Length(Rest) >= 2) AND CharInSet(Rest[1], ['a'..'z', 'A'..'Z']) AND (Rest[2] = '$')
+      AND ((Length(Rest) = 2) OR (Rest[3] = PathDelim))
+      then Result:= Rest[1] + ':\' + System.Copy(Rest, 4, MaxInt);
+     end;
+   end;
+
+  Result:= ExcludeTrailingPathDelimiter(Result);
+end;
+
+
+{ True when Path is Folder itself or lies inside it. Both come from guardComparable. }
+function guardSameOrInside(CONST Path, Folder: string): Boolean;
+begin
+  Result:= SameText(Path, Folder)
+        OR SameText(System.Copy(Path, 1, Length(Folder) + 1), Folder + PathDelim);
+end;
+
+
+{ The Windows folder, the program folders and ProgramData, read from the environment (a Windows on another drive is covered),
+  plus the standard C: locations for a process started with an empty environment.
+  A 32-bit process reads "Program Files (x86)" from %ProgramFiles%, a 64-bit one "Program Files"; %ProgramW6432% and %ProgramFiles(x86)% fill the other one. }
+function guardSystemFolders: TArray<string>;
+VAR List: TArray<string>;
+
+  procedure add(CONST Folder: string);
+  begin
+    if Folder <> ''
+    then List:= List + [guardComparable(ExpandFileName(Folder), TRUE)];
+  end;
+
+begin
+  add(GetEnvironmentVariable('SystemRoot'));
+  add(GetEnvironmentVariable('windir'));
+  add(GetEnvironmentVariable('ProgramFiles'));
+  add(GetEnvironmentVariable('ProgramFiles(x86)'));
+  add(GetEnvironmentVariable('ProgramW6432'));
+  add(GetEnvironmentVariable('ProgramData'));
+  add('C:\Windows');
+  add('C:\Program Files');
+  add('C:\Program Files (x86)');
+  add('C:\ProgramData');
+  Result:= List;
+end;
+
+
+{ The folder that holds the user profiles (C:\Users), read from the profile paths in the environment, plus the standard C:\Users. }
+function guardUsersFolders: TArray<string>;
+VAR List: TArray<string>;
+
+  procedure addParentOf(CONST Profile: string);
+  begin
+    if Profile <> ''
+    then List:= List + [ExtractFileDir(guardComparable(ExpandFileName(Profile), TRUE))];
+  end;
+
+begin
+  addParentOf(GetEnvironmentVariable('USERPROFILE'));
+  addParentOf(GetEnvironmentVariable('PUBLIC'));
+  List:= List + [guardComparable('C:\Users', TRUE)];
+  Result:= List;
+end;
+
+
+{ Why Bare must never be deleted, or ''. Bare comes from guardComparable. }
+function guardRefusalOf(CONST Bare: string): string;
+VAR Drive, Parent, Folder: string;
+begin
+  Drive:= ExtractFileDrive(Bare);
+
+  { # Drive root, share root, and a folder directly under one }
+  if Drive = '' then EXIT('the path names no drive and no share');
+  if SameText(Bare, Drive) then
+    if System.Copy(Drive, 1, 2) = '\\'
+    then EXIT('a share root')
+    else EXIT('a drive root');
+  Parent:= ExcludeTrailingPathDelimiter(ExtractFileDir(Bare));
+  if SameText(Parent, Drive) then EXIT('a folder directly under a drive root or a share root');
+
+  { # System folders and every folder that holds one. A folder INSIDE one (C:\Windows\Temp\x) is not refused }
+  for Folder in guardSystemFolders do
+    if guardSameOrInside(Folder, Bare) then EXIT('a system folder, or a folder that holds one');
+
+  { # The Users folder, every folder that holds it, every profile folder in it, and every folder directly inside a profile }
+  for Folder in guardUsersFolders do
+   begin
+    if guardSameOrInside(Folder, Bare) then EXIT('the Users folder, or a folder that holds it');
+    if SameText(Parent, Folder) then EXIT('a user profile folder');
+    if SameText(ExcludeTrailingPathDelimiter(ExtractFileDir(Parent)), Folder) then EXIT('a folder directly inside a user profile');
+   end;
+
+  Result:= '';
+end;
+
+
+{ True when Folder itself carries FILE_ATTRIBUTE_REPARSE_POINT: a junction, a directory symbolic link, a mounted folder.
+  GetFileAttributes returns the attributes of the link, not of its target:
+  https://learn.microsoft.com/en-us/windows/win32/fileio/symbolic-link-effects-on-file-systems-functions }
+function isLinkFolder(CONST Folder: string): Boolean;
+VAR Attr: DWORD;
+begin
+  Attr:= GetFileAttributes(PChar(Folder));
+  Result:= (Attr <> INVALID_FILE_ATTRIBUTES) AND ((Attr AND FILE_ATTRIBUTE_REPARSE_POINT) <> 0);
+end;
+
+
+{ Deletes everything inside Folder, then Folder itself. Best effort, like TDirectory.Delete: a failure on one entry does not stop the others.
+  An entry that carries FILE_ATTRIBUTE_REPARSE_POINT (a junction, a symbolic link) is removed as a link and NEVER entered,
+  so the files of its target survive. TDirectory.Delete enters every entry that has faDirectory, links included
+  (WalkThroughDirectory in c:\Delphi\Delphi 13\source\rtl\common\System.IOUtils.pas).
+  The attribute: https://learn.microsoft.com/en-us/windows/win32/fileio/file-attribute-constants
+  RemoveDirectory removes a junction "regardless of whether the target directory is empty or not":
+  https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-removedirectoryw
+  DeleteFile on a symbolic link deletes the link, not the target:
+  https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-deletefilew }
+procedure deleteTreeNoLinks(CONST Folder: string);
+VAR
+  SearchRec: TSearchRec;
+  Entry: string;
+  IsDir, IsLink: Boolean;
+begin
+  if FindFirst(IncludeTrailingPathDelimiter(Folder) + '*', faAnyFile, SearchRec) = 0 then
+  TRY
+    REPEAT
+      if (SearchRec.Name = '.') OR (SearchRec.Name = '..') then Continue;
+      Entry := IncludeTrailingPathDelimiter(Folder) + SearchRec.Name;
+      IsDir := (Cardinal(SearchRec.Attr) AND FILE_ATTRIBUTE_DIRECTORY) <> 0;       { On Windows, Attr is FindData.dwFileAttributes (FindMatchingFile, System.SysUtils.pas) }
+      IsLink:= (Cardinal(SearchRec.Attr) AND FILE_ATTRIBUTE_REPARSE_POINT) <> 0;
+
+      if IsLink then
+        if IsDir
+        then RemoveDirectory(PChar(Entry))      { a junction or a directory symbolic link: the link goes, the target stays }
+        else Winapi.Windows.DeleteFile(PChar(Entry))
+      else
+        if IsDir
+        then deleteTreeNoLinks(Entry)
+        else
+         begin
+          SetFileAttributes(PChar(Entry), FILE_ATTRIBUTE_NORMAL);   { clear read-only, hidden, system, as TDirectory.Delete does }
+          Winapi.Windows.DeleteFile(PChar(Entry));
+         end;
+    UNTIL FindNext(SearchRec) <> 0;
+  FINALLY
+    System.SysUtils.FindClose(SearchRec);
+  END;
+
+  SetFileAttributes(PChar(Folder), FILE_ATTRIBUTE_NORMAL);
+  RemoveDirectory(PChar(Folder));
+end;
+
+{$ELSE}
+
+{ Off Windows: the root folder, a folder directly under it, and the home folder with every folder that holds it.
+  A folder INSIDE the home folder is not refused: on Android the home folder is the app's own storage. }
+function guardRefusalOfPosix(CONST Full: string): string;
+VAR Bare, Parent, Home: string;
+begin
+  Bare:= ExcludeTrailingPathDelimiter(Full);
+  if (Bare = '') OR (Bare = PathDelim) then EXIT('the root folder');
+  Parent:= ExtractFileDir(Bare);
+  if (Parent = '') OR (Parent = PathDelim) then EXIT('a folder directly under the root folder');
+  Home:= ExcludeTrailingPathDelimiter(TPath.GetHomePath);
+  if (Home <> '') AND ((Home = Bare) OR StartsStr(Bare + PathDelim, Home))
+  then EXIT('the home folder, or a folder that holds it');
+  Result:= '';
+end;
+{$ENDIF}
+
+
+{ Why DeleteFolder and EmptyDirectory refuse Path, or '' when they accept it. Deletes nothing, writes nothing.
+  Refused on Windows: an empty path, a drive root, a share root, a folder directly under one (C:\Projects),
+  the Windows folder, Program Files, Program Files (x86), ProgramData, the Users folder, a user profile,
+  a folder directly inside a profile (C:\Users\Name\Documents), and every folder that holds one of these.
+  Path is tested as written and again with its 8.3 short names expanded. A path that does not exist is tested too. }
+function FolderDeleteRefusal(CONST Path: string): string;
+VAR Full: string;
+begin
+  if Trim(Path) = '' then EXIT('the path is empty');
+  Full:= ExpandFileName(Path);
+  {$IFDEF MSWINDOWS}
+  Result:= guardRefusalOf(guardComparable(Full, FALSE));
+  if Result = ''
+  then Result:= guardRefusalOf(guardComparable(Full, TRUE));
+  {$ELSE}
+  Result:= guardRefusalOfPosix(Full);
+  {$ENDIF}
+end;
+
+
+procedure CheckFolderDeletable(CONST Path: string);
+VAR Reason: string;
+begin
+  Reason:= FolderDeleteRefusal(Path);
+  if Reason <> ''
+  then RAISE EProtectedFolder.Create('Refused to delete "'+ Path+ '": '+ Reason+ '. Nothing was deleted.');
+end;
+
+
+
+
+{--------------------------------------------------------------------------------------------------
    DELETE FOLDER
 --------------------------------------------------------------------------------------------------}
 { Empties a directory by deleting everything inside and recreating the empty folder.
   Deletes all files AND subfolders, then recreates the empty root folder.
+  Deletes for good: nothing goes to the Recycle Bin. Use it only for a folder the program made itself (temp, cache, test).
+  For the user's own files use RecycleItem in FrameVCL\LightVcl.Common.IO.pas, which sends them to the Recycle Bin.
+  On a drive that has none (DriveHasRecycleBin) RecycleItem deletes for good too.
   Works with UNC paths.
+  Raises EProtectedFolder, before any file call, on a path that FolderDeleteRefusal refuses, and on a folder that is itself
+  a junction or a symbolic link (its content belongs to another folder).
+  A junction or symbolic link inside the folder is removed as a link; the files of its target survive (see deleteTreeNoLinks).
 
-  IMPORTANT: TDirectory.Delete is asynchronous on Windows!
+  IMPORTANT: the delete is asynchronous on Windows!
   The RemoveDirectory API marks directories for deletion on close, so the call may return before deletion actually completes.
   This function polls up to 6 seconds waiting for deletion.
   Raises exception if deletion times out or directory cannot be recreated.
@@ -2429,30 +2695,57 @@ procedure EmptyDirectory(const Path: string);
 CONST
   MaxWaitTime = 6000;  { Maximum time to wait for directory deletion (ms) }
 VAR
+  Folder: string;
   Stopwatch: TStopwatch;
 begin
-  if System.SysUtils.DirectoryExists(Path) then
+  CheckFolderDeletable(Path);
+  Folder:= ExcludeTrailingPathDelimiter(ExpandFileName(Path));   { the same path the guard tested }
+
+  if System.SysUtils.DirectoryExists(Folder) then
   begin
-    TDirectory.Delete(Path, True);
+    {$IFDEF MSWINDOWS}
+    if isLinkFolder(Folder)
+    then RAISE EProtectedFolder.Create('EmptyDirectory refused "'+ Path+ '": the folder is a junction or a symbolic link, so its content belongs to another folder. Nothing was deleted.');
+    deleteTreeNoLinks(Folder);
+    {$ELSE}
+    TDirectory.Delete(Folder, True);
+    {$ENDIF}
+
     Stopwatch := TStopwatch.StartNew;
-    while System.SysUtils.DirectoryExists(Path) do
+    while System.SysUtils.DirectoryExists(Folder) do
     begin
       Sleep(10);   // Time to wait between checks (in milliseconds)
       if Stopwatch.ElapsedMilliseconds >= MaxWaitTime then
         RAISE Exception.Create('EmptyDirectory - Directory deletion timed out after '+ IntToStr(MaxWaitTime)+ ' ms');
     end;
-    if NOT ForceDirectoriesB(Path)
+    if NOT ForceDirectoriesB(Folder)
     then RAISE Exception.Create('EmptyDirectory - Cannot reconstruct directory!');
   end;
 end;
 
 
 { DeleteFolder should be silent if folder not found.
-  Works with UNC paths. }
+  Deletes for good: nothing goes to the Recycle Bin. Use it only for a folder the program made itself (temp, cache, test).
+  For the user's own files use RecycleItem in FrameVCL\LightVcl.Common.IO.pas, which sends them to the Recycle Bin.
+  On a drive that has none (DriveHasRecycleBin) RecycleItem deletes for good too.
+  Works with UNC paths.
+  Raises EProtectedFolder, before any file call, on a path that FolderDeleteRefusal refuses - also when that path does not exist.
+  When the folder is itself a junction or a symbolic link, only the link is removed.
+  A junction or symbolic link inside the folder is removed as a link; the files of its target survive (see deleteTreeNoLinks). }
 procedure DeleteFolder(CONST Path: string);
+VAR Folder: string;
 begin
- if DirectoryExists(Path)
- then TDirectory.Delete(Path, TRUE);
+  CheckFolderDeletable(Path);
+  Folder:= ExcludeTrailingPathDelimiter(ExpandFileName(Path));   { the same path the guard tested }
+  if NOT DirectoryExists(Folder) then EXIT;
+
+  {$IFDEF MSWINDOWS}
+  if isLinkFolder(Folder)
+  then RemoveDirectory(PChar(Folder))
+  else deleteTreeNoLinks(Folder);
+  {$ELSE}
+  TDirectory.Delete(Folder, TRUE);
+  {$ENDIF}
 end;
 
 
@@ -2565,6 +2858,173 @@ begin
     Result := False;
   end;
 end;
+
+
+
+
+{$IFDEF MSWINDOWS}
+{--------------------------------------------------------------------------------------------------
+   RECYCLE BIN CHECKS
+   What RecycleItem (FrameVCL\LightVcl.Common.IO.pas) checks before it calls SHFileOperation. They delete nothing.
+   The drive check is ported from C:\Projects\Projects System\RecycleBin.exe\RecycleBin.dpr (noRecycleBinReason, isSubstDrive).
+--------------------------------------------------------------------------------------------------}
+
+{ Why the drive letter Letter ('R:') is not a real volume, or '' when it is one.
+  A subst letter reports DRIVE_FIXED, so GetDriveType cannot tell it apart. QueryDosDevice returns the folder it points to
+  with the \??\ prefix, while a real volume returns \Device\HarddiskVolumeN (measured with RecycleBin.exe).
+  https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-querydosdevicew }
+function dosDeviceRefusal(CONST Letter: string): string;
+VAR Target: array[0..MAX_PATH] of Char;
+begin
+  if Winapi.Windows.QueryDosDevice(PChar(Letter), @Target[0], Length(Target)) = 0
+  then EXIT('Windows does not know drive '+ Letter);   { fail closed }
+  if Copy(string(PChar(@Target[0])), 1, 4) = '\??\'
+  then EXIT('drive '+ Letter+ ' was made by subst');
+  Result:= '';
+end;
+
+
+{ Why a delete of Path would not reach a Recycle Bin, or '' when it would. Deletes nothing. A relative Path is expanded first.
+  A whitelist: only a drive letter of a fixed disk that is not made by subst passes, so a drive type nobody tested fails closed.
+  Refused: a UNC path, a mapped network drive, a removable drive, a CD-ROM, a RAM disk, a subst letter, a letter Windows does not know.
+  On such a drive SHFileOperation with FOF_ALLOWUNDO deletes for good and still returns success (measured on a subst drive with RecycleBin.exe).
+  Not checked: a Recycle Bin that the user switched off, and an item larger than the Recycle Bin can hold.
+  Drive types: https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getdrivetypew
+  The volume that holds a path, junctions and mounted folders followed, invalid trailing path elements ignored:
+  https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getvolumepathnamew }
+function NoRecycleBinReason(CONST Path: string): string;
+VAR
+  Bare, Letter, Volume: string;
+begin
+  if Trim(Path) = '' then EXIT('the path is empty');
+  Bare:= ExpandFileName(Path);
+  if ((Copy(Bare, 1, 4) = '\\?\') OR (Copy(Bare, 1, 4) = '\\.\'))
+  AND (Length(Bare) >= 6) AND (Bare[6] = DriveDelim)
+  then Bare:= Copy(Bare, 5, MaxInt);
+
+  { # A drive letter, nothing else }
+  if (Length(Bare) < 3) OR NOT CharInSet(Bare[1], ['a'..'z', 'A'..'Z']) OR (Bare[2] <> DriveDelim) OR (Bare[3] <> PathDelim)
+  then EXIT('the path is not on a drive letter: a network path or a device path');
+  Letter:= Copy(Bare, 1, 2);
+
+  { # The drive letter itself }
+  Result:= dosDeviceRefusal(Letter);
+  if Result <> '' then EXIT;
+  if Winapi.Windows.GetDriveType(PChar(Letter + PathDelim)) <> DRIVE_FIXED
+  then EXIT('drive '+ Letter+ ' is not a fixed disk (network, removable, CD-ROM or RAM disk)');
+
+  { # The volume that really holds the path, behind a junction or a mounted folder }
+  SetLength(Volume, Length(Bare) + MAX_PATH);
+  if NOT Winapi.Windows.GetVolumePathName(PChar(Bare), PChar(Volume), Length(Volume))
+  then EXIT('Windows cannot tell which volume holds the path');
+  Volume:= IncludeTrailingPathDelimiter(string(PChar(Volume)));
+  if (Length(Volume) = 3) AND (Volume[2] = DriveDelim) then
+   begin
+    Result:= dosDeviceRefusal(Copy(Volume, 1, 2));
+    if Result <> ''
+    then EXIT('the path leads to another drive: '+ Result);
+   end;
+  if Winapi.Windows.GetDriveType(PChar(Volume)) <> DRIVE_FIXED
+  then EXIT('the path leads to '+ Volume+ ', which is not a fixed disk');
+
+  Result:= '';
+end;
+
+
+function DriveHasRecycleBin(CONST Path: string): Boolean;
+begin
+  Result:= NoRecycleBinReason(Path) = '';
+end;
+
+
+{ Why RecycleItem (FrameVCL\LightVcl.Common.IO.pas) refuses ItemName, or '' when it accepts it. Deletes nothing.
+  ItemName is one path, or several paths separated by #0 (the list form of SHFileOperation.pFrom). Empty pieces are skipped.
+  One refused path refuses the whole list.
+  Refused:
+    - a list with no path in it;
+    - a path with the \\?\ or \\.\ prefix: the SHFILEOPSTRUCT page says SHFileOperation fails on any path with the \\?\ prefix
+      (RecycleBin.exe measured error code 124);
+    - a folder that FolderDeleteRefusal refuses, and a folder that is itself a junction or a symbolic link
+      (EmptyDirectory refuses such a folder too; what the Shell recycles then is not tested);
+    - a wildcard (* or ?) outside the file name ("unpredictable results", Microsoft), and a wildcard whose folder
+      FolderDeleteRefusal refuses (C:\Users\Name\*).
+  The drive is not checked: on a drive with no Recycle Bin (NoRecycleBinReason) the caller decides; RecycleItem then deletes for good.
+  A FILE is not given to FolderDeleteRefusal, which would refuse a file directly under a drive root.
+  A path that does not exist is not refused: SHFileOperation then fails, and RecycleItem returns FALSE.
+  PathList receives the accepted paths, each one expanded to a full path, without a trailing backslash, and ended with #0,
+  plus the second #0 that ends the list. Microsoft: "If pFrom is set to a file name without a full path, deleting the file
+  with FO_DELETE does not move it to the Recycle Bin, even if the FOF_ALLOWUNDO flag is set."
+  https://learn.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-shfileopstructw }
+function RecycleItemRefusal(CONST ItemName: string; OUT PathList: string): string;
+VAR
+  Piece, Full, Folder, Reason: string;
+  i, Start: Integer;
+begin
+  PathList:= '';
+  Start:= 1;
+  for i:= 1 to Length(ItemName) + 1 do
+    if (i > Length(ItemName)) OR (ItemName[i] = #0) then
+     begin
+      Piece:= Copy(ItemName, Start, i - Start);
+      Start:= i + 1;
+      if Trim(Piece) = '' then Continue;
+
+      Full:= ExpandFileName(Piece);
+      if Length(Full) > 3                                 { 'C:\' keeps its backslash: 'C:' alone names the current folder of drive C }
+      then Full:= ExcludeTrailingPathDelimiter(Full);
+
+      if (Copy(Full, 1, 4) = '\\?\') OR (Copy(Full, 1, 4) = '\\.\') then
+       begin
+        PathList:= '';
+        EXIT('"'+ Full+ '": SHFileOperation does not accept the \\?\ or \\.\ prefix');
+       end;
+
+      { # Wildcards: the folder whose content they name gets the folder guard }
+      Reason:= '';
+      if (Pos('*', Full) > 0) OR (Pos('?', Full) > 0) then
+       begin
+        Folder:= ExtractFileDir(Full);
+        if (Pos('*', Folder) > 0) OR (Pos('?', Folder) > 0)
+        then Reason:= 'a wildcard outside the file name'
+        else
+         begin
+          Reason:= FolderDeleteRefusal(Folder);
+          if Reason <> ''
+          then Reason:= 'the wildcard names the content of '+ Folder+ ', which is '+ Reason;
+         end;
+       end
+      else
+        { # Folders. The RTL routine, not DirectoryExists of this unit, which answers FALSE for a path ending in a space and would skip the guard }
+        if System.SysUtils.DirectoryExists(Full) then
+         begin
+          Reason:= FolderDeleteRefusal(Full);
+          if (Reason = '') AND isLinkFolder(Full)
+          then Reason:= 'the folder is a junction or a symbolic link';
+         end;
+
+      if Reason <> '' then
+       begin
+        PathList:= '';
+        EXIT('"'+ Full+ '": '+ Reason);
+       end;
+
+      PathList:= PathList+ Full+ #0;
+     end;
+
+  if PathList = ''
+  then EXIT('the item name holds no path');
+
+  PathList:= PathList+ #0;
+  Result:= '';
+end;
+
+
+function RecycleItemRefusal(CONST ItemName: string): string;
+VAR PathList: string;
+begin
+  Result:= RecycleItemRefusal(ItemName, PathList);
+end;
+{$ENDIF}
 
 
 
