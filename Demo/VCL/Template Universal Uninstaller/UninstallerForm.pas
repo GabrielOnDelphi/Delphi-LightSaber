@@ -429,7 +429,7 @@ CONST
    DevFolders : array[0..2] of string = ('.git', '__history', '__recovery');    { __history and __recovery are written by the Delphi IDE, so they mark a source folder even when its root holds no source file }
 VAR
    SourceFiles: TStringList;
-   Mask, Sub: string;
+   Mask, Sub, Refusal: string;
 begin
  if (Folder = '') OR NOT DirectoryExists(Folder)
  then EXIT('The folder does not exist.');
@@ -439,6 +439,10 @@ begin
 
  if FolderIsSpecial(Folder)
  then EXIT('This is a Windows special folder.');
+
+ Refusal:= RecycleItemRefusal(Folder);       { The check RecycleItem runs: a protected folder (also a folder directly under a drive root), a junction }
+ if Refusal <> ''
+ then EXIT('This folder cannot be sent to the Recycle Bin: '+ Refusal+ '. Delete it yourself.');
 
  if NOT FileExists(Trail(Folder)+ 'System\'+ UninstallerExe)
  then EXIT('This folder does not hold an installation of '+ UninstalledDisplayName+ ': System\'+ UninstallerExe+ ' is missing.');

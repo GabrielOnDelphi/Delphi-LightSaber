@@ -85,8 +85,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
     <DCC_RemoteDebug>false</DCC_RemoteDebug>
-    <VerInfo_Build>61</VerInfo_Build>
-    <VerInfo_Keys>CompanyName=GM;FileDescription=Gabriel Moraru;FileVersion=0.1.0.61;InternalName=Template;LegalCopyright=Gabriel Moraru;LegalTrademarks=Gabriel Moraru;OriginalFilename=;ProductName=Demo app;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
+    <VerInfo_Build>62</VerInfo_Build>
+    <VerInfo_Keys>CompanyName=GM;FileDescription=Gabriel Moraru;FileVersion=0.1.0.62;InternalName=Template;LegalCopyright=Gabriel Moraru;LegalTrademarks=Gabriel Moraru;OriginalFilename=;ProductName=Demo app;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Cfg_2)'!=''">
     <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -106,8 +106,8 @@
     <DCCReference Include="..\..\..\FrameVCL\LightVcl.Visual.AppData.pas" />
     <DCCReference Include="..\..\..\LightCore.AppData.pas" />
     <DCCReference Include="..\..\..\FrameVCL\FormSkinsDisk.pas" />
-    <DCCReference Include="..\..\..\Updater\ciUpdater.pas" />
-    <DCCReference Include="..\..\..\Updater\ciUpdaterRec.pas" />
+    <DCCReference Include="..\..\..\ciUpdater.pas" />
+    <DCCReference Include="..\..\..\ciUpdaterRec.pas" />
     <DCCReference Include="..\..\..\FrameVCL\AutoTranslator\FormTranslSelector.pas" />
     <DCCReference Include="..\..\..\FrameVCL\AutoTranslator\FormTranslEditor.pas" />
     <DCCReference Include="..\..\..\FrameVCL\AutoTranslator\LightVcl.TranslatorAPI.pas" />
