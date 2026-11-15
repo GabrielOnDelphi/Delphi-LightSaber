@@ -631,14 +631,14 @@ function BackupFileDate (CONST FileName: string; TimeStamp: Boolean= TRUE; Overw
 function BackupFileDate (CONST FileName, DestFolder: string; TimeStamp: Boolean= TRUE; Overwrite: Boolean = TRUE): Boolean; overload;
 function FolderDeleteRefusal(CONST Path: string): string; { Why DeleteFolder and EmptyDirectory refuse Path, or '' when they accept it. Deletes nothing }
 procedure CheckFolderDeletable(CONST Path: string); { Raises EProtectedFolder when FolderDeleteRefusal gives a reason }
-procedure EmptyDirectory (CONST Path: string); { Delete all files in the specified folder, but don't delete the folder itself. It will search also in subfolders. Deletes for good: for the user's files use RecycleItem (LightVcl.Common.IO), which refuses a drive with no Recycle Bin (DriveHasRecycleBin) }
-procedure DeleteFolder (CONST Path: string); { Deletes for good: for the user's files use RecycleItem (LightVcl.Common.IO), which refuses a drive with no Recycle Bin (DriveHasRecycleBin) }
+procedure EmptyDirectory (CONST Path: string); { Delete all files in the specified folder, but don't delete the folder itself. It will search also in subfolders. Deletes for good: for the user's files use RecycleItem (LightVcl.Common.IO), which deletes for good only on a drive with no Recycle Bin (DriveHasRecycleBin) }
+procedure DeleteFolder (CONST Path: string); { Deletes for good: for the user's files use RecycleItem (LightVcl.Common.IO), which deletes for good only on a drive with no Recycle Bin (DriveHasRecycleBin) }
 procedure RemoveEmptyFolders (CONST RootFolder: string); { Not tested! Delete all empty folders / sub-folders (any sub level) under the provided "rootFolder" }
 function TryDeleteFile (CONST FileName: string): Boolean;
 function NoRecycleBinReason (CONST Path: string): string; { Why a delete of Path would not reach a Recycle Bin, or '' when it would. Only a drive letter of a fixed disk, not made by subst, passes. Deletes nothing }
 function DriveHasRecycleBin (CONST Path: string): Boolean; { TRUE when NoRecycleBinReason gives no reason. Deletes nothing }
-function RecycleItemRefusal (CONST ItemName: string; CONST DeleteToRecycle: Boolean= TRUE): string; overload; { Why RecycleItem (LightVcl.Common.IO) refuses ItemName, or '' when it accepts it. Deletes nothing }
-function RecycleItemRefusal (CONST ItemName: string; CONST DeleteToRecycle: Boolean; OUT PathList: string): string; overload; { The same, and PathList receives the full paths in the form SHFileOperation.pFrom needs }
+function RecycleItemRefusal (CONST ItemName: string): string; overload; { Why RecycleItem (LightVcl.Common.IO) refuses ItemName, or '' when it accepts it. The drive is not checked: see DriveHasRecycleBin. Deletes nothing }
+function RecycleItemRefusal (CONST ItemName: string; OUT PathList: string): string; overload; { The same, and PathList receives the full paths in the form SHFileOperation.pFrom needs }
 function GetFileSize (CONST FileName: string): Int64;
 function GetFileSizeFormat(CONST FileName: string): string; { Same as GetFileSize but returns the size in b/kb/mb/etc }
 function GetFolderSize (CONST Folder: string; CONST FileType: string= '*.*'; DigSubdirectories: Boolean= TRUE): Int64;
