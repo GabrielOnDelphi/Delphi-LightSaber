@@ -139,6 +139,10 @@ Temp/
 Temp - */
 Work in progress/
 
+# Hand-made backups: "<file> - before <change> <date>.<ext>" and "<file> - after <A>, before <B> <date>.<ext>"
+* - before *
+* - after *
+
 # Total Commander file comments
 descript.ion
 
