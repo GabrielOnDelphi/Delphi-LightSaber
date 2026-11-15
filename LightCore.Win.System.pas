@@ -106,7 +106,7 @@ var
   Buf: array[0..511] of WideChar; // Use WideChar for Unicode support.
   BufSize: ULONG;                 // ULONG matches the parameter type.
   Secur32: HMODULE;
-  GetUserNameEx: function(NameFormat: Cardinal; lpNameBuffer: LPWSTR; var nSize: ULONG): BOOL; stdcall;
+  GetUserNameEx: function(NameFormat: Cardinal; lpNameBuffer: LPWSTR; var nSize: ULONG): ByteBool; stdcall;   { GetUserNameExW returns BOOLEAN (1 byte), not BOOL (4 bytes) }
 begin
   Result := '';
   Secur32 := LoadLibrary('secur32.dll'); // Explicitly load the library.
