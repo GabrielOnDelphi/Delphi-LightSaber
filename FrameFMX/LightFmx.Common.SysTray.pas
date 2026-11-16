@@ -1,12 +1,18 @@
 ﻿unit LightFmx.Common.SysTray;
 
 {======================================================================================================
-   2026.07
+   2026.11.16
    www.GabrielMoraru.com
 
    System tray icon via Win32 Shell_NotifyIcon + AllocateHWnd message window.
 
    FMX does NOT expose the main form's HWND message loop, so we create a dedicated hidden helper window with AllocateHWnd to receive WM_TRAYICON notifications.
+
+   HookForm subclasses the form window and ApplicationHWND with comctl32's SetWindowSubclass, never by replacing GWL_WNDPROC.
+   FMX puts its own subclass on top of ours: TWindowsHint (FMX.Controls.Win.pas) adds a TTF_SUBCLASS tooltip to the form window once the form is shown.
+   A GWL_WNDPROC subclass cannot be taken out from under another one: its stub would stay in the chain after this object is freed,
+   and destroying the form window would call through the freed object (in a Debug build, a jump to $80808080, FastMM's fill of freed memory).
+   RemoveWindowSubclass takes out only our entry, wherever it sits. https://learn.microsoft.com/en-us/windows/win32/controls/subclassing-overview
 
    Icon:         16×16 GDI bitmap (solid color or sparkline).
    Context menu: Win32 TrackPopupMenu (avoids FMX thread/modal issues).
@@ -60,17 +66,18 @@ type
     FLastLeftClickTick: UInt64;   // GetTickCount64 of last actioned left-click; debounces a double-click's 2nd WM_LBUTTONUP
     FInstalled:   Boolean;
     FHookedHWnd:  HWND;
-    FOldFormProc: Pointer;
-    FNewFormProc: Pointer;
+    FFormSubclassed: Boolean; // our SetWindowSubclass entry sits on FHookedHWnd
     FUnhooked:    Boolean;    // set TRUE inside FormWndProc on WM_NCDESTROY
     FAppHWnd:     HWND;
-    FOldAppProc:  Pointer;
-    FNewAppProc:  Pointer;
+    FAppSubclassed: Boolean;  // our SetWindowSubclass entry sits on FAppHWnd
     FHidingAppWnd: Boolean;   // reentrancy guard for HideAppWindow — SW_HIDE re-enters AppWndProc (WM_SHOWWINDOW arrives while the window still reads as visible)
     procedure HideAppWindow;  // re-assert "ApplicationHWND is never on screen"
     procedure TrayWndProc(var Msg: TMessage);
     procedure FormWndProc(var Msg: TMessage);
     procedure AppWndProc (var Msg: TMessage);
+    { comctl32 subclass callbacks (SUBCLASSPROC). ARefData is the TTrayIcon; they forward to FormWndProc / AppWndProc. }
+    class function FormSubclassProc(AWnd: HWND; AMsg: UINT; AWParam: WPARAM; ALParam: LPARAM; AIdSubclass: UINT_PTR; ARefData: DWORD_PTR): LRESULT; stdcall; static;
+    class function AppSubclassProc (AWnd: HWND; AMsg: UINT; AWParam: WPARAM; ALParam: LPARAM; AIdSubclass: UINT_PTR; ARefData: DWORD_PTR): LRESULT; stdcall; static;
     procedure HandleLeftClick;   // debounced FOnLeftClick (swallows a double-click's 2nd up)
     procedure ShowContextMenu;
     procedure ApplyToShell;   // NIM_MODIFY with current icon + tip
@@ -110,7 +117,7 @@ implementation
 
 {$IFDEF MSWINDOWS}
 USES
-  Winapi.ShellAPI,
+  Winapi.ShellAPI, Winapi.CommCtrl,
   FMX.Platform.Win;
 
 { TrackPopupMenu with TPM_RETURNCMD returns the command ID as an integer, not a boolean.
@@ -316,10 +323,8 @@ begin
       through ApplicationHWND (owner), bypassing our form subclass and
       producing the Windows 3.0 legacy stub at screen bottom-left. Catch
       SC_MINIMIZE / SIZE_MINIMIZED here too and hide the form HWND. }
-    FAppHWnd    := AppHWnd;
-    FOldAppProc := Pointer(GetWindowLongPtr(AppHWnd, GWL_WNDPROC));
-    FNewAppProc := system.Classes.MakeObjectInstance(AppWndProc);
-    SetWindowLongPtr(AppHWnd, GWL_WNDPROC, LONG_PTR(FNewAppProc));
+    FAppHWnd       := AppHWnd;
+    FAppSubclassed := SetWindowSubclass(AppHWnd, AppSubclassProc, UINT_PTR(Self), DWORD_PTR(Self));
     end;
 
   { NOTE: do NOT also set WS_EX_TOOLWINDOW on the form HWND.
@@ -329,9 +334,31 @@ begin
     to suppress the taskbar button. }
 
   // Subclass to intercept minimize (FMX default = tiny-rect stub) + auto-unhook at NCDESTROY
-  FOldFormProc := Pointer(GetWindowLongPtr(Wnd, GWL_WNDPROC));
-  FNewFormProc := system.Classes.MakeObjectInstance(FormWndProc);
-  SetWindowLongPtr(Wnd, GWL_WNDPROC, LONG_PTR(FNewFormProc));
+  FFormSubclassed := SetWindowSubclass(Wnd, FormSubclassProc, UINT_PTR(Self), DWORD_PTR(Self));
+end;
+
+
+class function TTrayIcon.FormSubclassProc(AWnd: HWND; AMsg: UINT; AWParam: WPARAM; ALParam: LPARAM; AIdSubclass: UINT_PTR; ARefData: DWORD_PTR): LRESULT;
+var Msg: TMessage;
+begin
+  Msg.Msg    := AMsg;
+  Msg.WParam := AWParam;
+  Msg.LParam := ALParam;
+  Msg.Result := 0;
+  TTrayIcon(Pointer(ARefData)).FormWndProc(Msg);
+  Result := Msg.Result;
+end;
+
+
+class function TTrayIcon.AppSubclassProc(AWnd: HWND; AMsg: UINT; AWParam: WPARAM; ALParam: LPARAM; AIdSubclass: UINT_PTR; ARefData: DWORD_PTR): LRESULT;
+var Msg: TMessage;
+begin
+  Msg.Msg    := AMsg;
+  Msg.WParam := AWParam;
+  Msg.LParam := ALParam;
+  Msg.Result := 0;
+  TTrayIcon(Pointer(ARefData)).AppWndProc(Msg);
+  Result := Msg.Result;
 end;
 
 
@@ -470,81 +497,42 @@ begin
   { Auto-unhook on ApplicationHWND death (mirrors FormWndProc pattern) }
   if Msg.Msg = WM_NCDESTROY then
     begin
-    if Assigned(FOldAppProc)
-    then SetWindowLongPtr(LocalHWnd, GWL_WNDPROC, LONG_PTR(FOldAppProc));
+    RemoveWindowSubclass(LocalHWnd, AppSubclassProc, UINT_PTR(Self));
+    FAppSubclassed := False;
     FAppHWnd := 0;   // mark dead so UnhookForm won't touch it
     end;
 
-  if Assigned(FOldAppProc)
-  then Msg.Result := CallWindowProc(FOldAppProc, LocalHWnd, Msg.Msg, Msg.WParam, Msg.LParam)
-  else Msg.Result := DefWindowProc(LocalHWnd, Msg.Msg, Msg.WParam, Msg.LParam);
+  Msg.Result := DefSubclassProc(LocalHWnd, Msg.Msg, Msg.WParam, Msg.LParam);   // next handler in the chain, FMX's in the end
 end;
 
 procedure TTrayIcon.UnhookForm;
-var
-  Current:     Pointer;
-  CanFreeStub: Boolean;
+{ RemoveWindowSubclass takes out only OUR entry (this procedure + Self as the id), wherever it sits in the chain.
+  Another subclass on top of ours is the normal case on the form window: FMX's TWindowsHint tooltip (TTF_SUBCLASS). }
 begin
   { Unhook ApplicationHWND subclass first (independent of form HWND lifetime) }
-  if Assigned(FNewAppProc) then
+  if FAppSubclassed then
     begin
-    CanFreeStub := True;
-    if (FAppHWnd <> 0) and IsWindow(FAppHWnd) then
-      begin
-        Current := Pointer(GetWindowLongPtr(FAppHWnd, GWL_WNDPROC));
-        if (Current = FNewAppProc) and Assigned(FOldAppProc)
-        then SetWindowLongPtr(FAppHWnd, GWL_WNDPROC, LONG_PTR(FOldAppProc))
-        else CanFreeStub := False;
-      end;
-    if CanFreeStub
-    then system.Classes.FreeObjectInstance(FNewAppProc);
-    FNewAppProc := nil;
+    if (FAppHWnd <> 0) and IsWindow(FAppHWnd)
+    then RemoveWindowSubclass(FAppHWnd, AppSubclassProc, UINT_PTR(Self));
+    FAppSubclassed := False;
     end;
-  FOldAppProc := nil;
-  FAppHWnd    := 0;
+  FAppHWnd := 0;
 
-  if FHookedHWnd = 0 then Exit;
-
-  CanFreeStub := True;   // default: safe to free (window dead / we're top)
-
-  if Assigned(FNewFormProc) then
+  if FFormSubclassed then
     begin
-    { If WM_NCDESTROY already auto-unhooked us (FUnhooked=TRUE), HWND is
-      dying/dead — safe to free stub, no more dispatches possible.
-      Otherwise if HWND alive: only free stub if we're still top of chain
-      (SetWindowLongPtr successfully restores). If another subclass sits
-      on top, we CANNOT free — Windows would call freed trampoline. Leak
-      it instead (one-shot at shutdown, better than AV).
-
-      DEFERRED (2026-07-07): migrating this manual GWL_WNDPROC subclass to
-      comctl32 SetWindowSubclass/RemoveWindowSubclass would remove the
-      dangling-trampoline hazard entirely (the OS owns the chain). Not done:
-      in this app only ONE subclass is installed and no foreign code layers
-      on top, so the leak branch is unreachable. Revisit if this base is
-      reused where third-party subclassing is possible. }
-    if (not FUnhooked) and IsWindow(FHookedHWnd) then
-      begin
-        Current := Pointer(GetWindowLongPtr(FHookedHWnd, GWL_WNDPROC));
-        if (Current = FNewFormProc) and Assigned(FOldFormProc)
-        then SetWindowLongPtr(FHookedHWnd, GWL_WNDPROC, LONG_PTR(FOldFormProc))
-        else CanFreeStub := False;    // layer above us — leak stub, can't safely free
-      end;
-
-    if CanFreeStub
-    then system.Classes.FreeObjectInstance(FNewFormProc);
-    FNewFormProc := nil;
+    { FUnhooked=TRUE: WM_NCDESTROY already removed the subclass, and the HWND value may now name another window }
+    if (not FUnhooked) and IsWindow(FHookedHWnd)
+    then RemoveWindowSubclass(FHookedHWnd, FormSubclassProc, UINT_PTR(Self));
+    FFormSubclassed := False;
     end;
-  FOldFormProc := nil;
-  FHookedHWnd  := 0;
-  FUnhooked    := False;
+  FHookedHWnd := 0;
+  FUnhooked   := False;
 end;
 
 
 procedure TTrayIcon.FormWndProc(var Msg: TMessage);
-{ Canonical MSDN subclass pattern: auto-unhook at WM_NCDESTROY, the last
-  message the HWND ever receives. Restore original proc BEFORE dispatching
-  NCDESTROY so further routing (unlikely but possible) bypasses our stub.
-  Stub memory freed later in destructor, by which time no callbacks possible. }
+{ Auto-unhook at WM_NCDESTROY, the last message the HWND ever receives: remove our subclass, then pass the
+  message on (Raymond Chen, "Safer subclassing": https://devblogs.microsoft.com/oldnewthing/20031111-00/?p=41883). }
 var
   IsMinimize: Boolean;
 begin
@@ -565,15 +553,12 @@ begin
 
   if Msg.Msg = WM_NCDESTROY then
     begin
-    // Restore original proc — guarantees no further dispatch into our stub.
-    if Assigned(FOldFormProc)
-    then SetWindowLongPtr(FHookedHWnd, GWL_WNDPROC, LONG_PTR(FOldFormProc));
+    RemoveWindowSubclass(FHookedHWnd, FormSubclassProc, UINT_PTR(Self));
+    FFormSubclassed := False;
     FUnhooked := True;
     end;
 
-  if Assigned(FOldFormProc)
-  then Msg.Result := CallWindowProc(FOldFormProc, FHookedHWnd, Msg.Msg, Msg.WParam, Msg.LParam)
-  else Msg.Result := DefWindowProc(FHookedHWnd, Msg.Msg, Msg.WParam, Msg.LParam);
+  Msg.Result := DefSubclassProc(FHookedHWnd, Msg.Msg, Msg.WParam, Msg.LParam);   // next handler in the chain, FMX's in the end
 end;
 
 
