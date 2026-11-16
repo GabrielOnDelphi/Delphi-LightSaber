@@ -1,7 +1,7 @@
 ﻿UNIT LightCore.IO;
 
 {=============================================================================================================
-   2026.11.14
+   2026.11.15
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -2261,13 +2261,20 @@ begin
 end;
 
 
+{ TRUE when ToFolder is FromFolder itself or lies inside it. The body is below CheckFolderDeletable, after the guard routines it calls }
+function moveTargetInsideSource(CONST FromFolder, ToFolder: string): Boolean; forward;
+
+
 { Example: MoveFolder('c:\Documents', 'C:\Backups').
   It will overwrite all files in 'ToFolder' without asking.
+  Raises, before anything is copied, when ToFolder is FromFolder itself or lies inside it: the delete of the source would take the copy with it.
   If you want feedback from user use LightVcl.Common.IO.MoveFolderMsg }
 procedure MoveFolder(CONST FromFolder, ToFolder: String; SilentOverwrite: Boolean);
 VAR FailedCount: Integer;
 begin
   CheckFolderDeletable(FromFolder);   { Refuse before the copy: DeleteFolder below would refuse anyway, after copying everything }
+  if moveTargetInsideSource(FromFolder, ToFolder)   { DeleteFolder below would delete the copy together with the source }
+  then RAISE Exception.Create('MoveFolder: the destination '+ ToFolder+ ' is the source folder itself or lies inside it: '+ FromFolder+ CRLFw+ 'Nothing was copied, nothing was deleted.');
   FailedCount:= CopyFolder(FromFolder, ToFolder, SilentOverwrite);
   if FailedCount > 0
   then RAISE Exception.Create('MoveFolder: '+ IntToStr(FailedCount)+ ' file(s) could not be copied to '+ ToFolder+ CRLFw+ 'The source folder was NOT deleted: '+ FromFolder);  { Deleting the source here would destroy the files that were never copied! }
@@ -2296,6 +2303,8 @@ end;
 function MoveFolderSlow(CONST FromFolder, ToFolder: String; Overwrite: boolean): integer;
 begin
  CheckFolderDeletable(FromFolder);   { Refuse before the copy: DeleteFolder below would refuse anyway, after copying everything }
+ if moveTargetInsideSource(FromFolder, ToFolder)   { DeleteFolder below would delete the copy together with the source }
+ then RAISE Exception.Create('MoveFolderSlow: the destination '+ ToFolder+ ' is the source folder itself or lies inside it: '+ FromFolder+ CRLFw+ 'Nothing was copied, nothing was deleted.');
  Result:= CopyFolder(FromFolder, ToFolder, Overwrite);
  if Result = 0
  then DeleteFolder(FromFolder);   { Keep the source if anything failed to copy — deleting it would destroy the files that were never copied }
@@ -2448,6 +2457,54 @@ begin
 end;
 
 
+{ Path as the disk names it: every junction, symbolic link, subst letter, mapped network drive and 8.3 short name
+  on the way to it resolved (C:\Documents and Settings\Name -> \\?\C:\Users\Name). Without it, such a second name
+  of a protected folder passes every test, which compare names only.
+  Read with GetFinalPathNameByHandle from the deepest folder ABOVE the last element of Path that exists;
+  the rest of Path is added back as written. The last element is never followed: DeleteFolder removes a folder
+  that is itself a link as a link only.
+  Returns '' when no such folder exists or Windows cannot open it.
+  https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfinalpathnamebyhandlew
+  A folder opens only with FILE_FLAG_BACKUP_SEMANTICS; access 0 reads metadata only:
+  https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew }
+{$WARN SYMBOL_PLATFORM OFF}   { W1002: GetFinalPathNameByHandle and its flags are marked 'platform'; this code is inside IFDEF MSWINDOWS }
+function guardFinalPath(CONST Path: string): string;
+CONST
+  Flags = FILE_NAME_NORMALIZED OR VOLUME_NAME_DOS;
+VAR
+  Folder, Parent, Tail: string;
+  Handle: THandle;
+  Len: DWORD;
+begin
+  Folder:= ExtractFileDir(Path);
+  Tail  := PathDelim + ExtractFileName(Path);
+  { FollowLink FALSE: with TRUE the RTL opens a link with GENERIC_READ (System.SysUtils.pas, DirectoryExists), which the
+    deny entry of C:\Documents and Settings refuses, so that junction would count as missing and never be resolved }
+  while NOT System.SysUtils.DirectoryExists(Folder, FALSE) do
+   begin
+    Parent:= ExtractFileDir(Folder);
+    if (Parent = '') OR (Parent = Folder) then EXIT('');
+    Tail  := PathDelim + ExtractFileName(Folder) + Tail;
+    Folder:= Parent;
+   end;
+
+  Handle:= CreateFile(PChar(Folder), 0, FILE_SHARE_READ OR FILE_SHARE_WRITE OR FILE_SHARE_DELETE, NIL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
+  if Handle = INVALID_HANDLE_VALUE then EXIT('');
+  TRY
+    Len:= GetFinalPathNameByHandle(Handle, NIL, 0, Flags);   { the size needed, terminating null included }
+    if Len = 0 then EXIT('');
+    SetLength(Result, Len);
+    Len:= GetFinalPathNameByHandle(Handle, PChar(Result), Len, Flags);   { the length copied, null not included }
+    if (Len = 0) OR (Len >= DWORD(Length(Result))) then EXIT('');
+    SetLength(Result, Len);
+  FINALLY
+    CloseHandle(Handle);
+  END;
+  Result:= ExcludeTrailingPathDelimiter(Result) + Tail;
+end;
+{$WARN SYMBOL_PLATFORM ON}
+
+
 { Path in the one shape the tests compare: no \\?\ or \\.\ prefix, an administrative share (\\host\c$\Windows)
   written as its drive (c:\Windows), no trailing backslash. With ExpandShortNames, also the long names (reads the disk). }
 function guardComparable(CONST Path: string; ExpandShortNames: Boolean): string;
@@ -2545,12 +2602,25 @@ begin
 
   { # Drive root, share root, and a folder directly under one }
   if Drive = '' then EXIT('the path names no drive and no share');
+
+  { # A stream name. NTFS opens a folder under the name of its index stream too: C:\Users\Name::$INDEX_ALLOCATION is the profile itself.
+      ExtractFileDir splits such a name at the colon, so the rules below would never see the real parent folder.
+      A colon is a reserved character in a file name, so after the drive part it can only start a stream name:
+      https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file }
+  if Pos(DriveDelim, Bare, 3) > 0 then EXIT('a stream name: a colon after the drive');
   if SameText(Bare, Drive) then
     if System.Copy(Drive, 1, 2) = '\\'
     then EXIT('a share root')
     else EXIT('a drive root');
   Parent:= ExcludeTrailingPathDelimiter(ExtractFileDir(Bare));
   if SameText(Parent, Drive) then EXIT('a folder directly under a drive root or a share root');
+
+  { # The share named Users. Windows can share C:\Users under that name, and no pass of FolderDeleteRefusal maps
+      \\host\Users\Name back to C:\Users, so the Users rules below never match it. The profile (\\host\Users\Name) is refused
+      by the rule above, as a folder directly under a share root. This rule refuses a folder directly inside the profile }
+  if (System.Copy(Drive, 1, 2) = '\\') AND SameText(ExtractFileName(Drive), 'Users')
+  AND SameText(ExcludeTrailingPathDelimiter(ExtractFileDir(Parent)), Drive)
+  then EXIT('a folder directly inside a user profile, reached over the share named Users');
 
   { # System folders and every folder that holds one. A folder INSIDE one (C:\Windows\Temp\x) is not refused }
   for Folder in guardSystemFolders do
@@ -2646,9 +2716,12 @@ end;
   Refused on Windows: an empty path, a drive root, a share root, a folder directly under one (C:\Projects),
   the Windows folder, Program Files, Program Files (x86), ProgramData, the Users folder, a user profile,
   a folder directly inside a profile (C:\Users\Name\Documents), and every folder that holds one of these.
-  Path is tested as written and again with its 8.3 short names expanded. A path that does not exist is tested too. }
+  Also refused: a path with a colon after the drive part, which is a stream name (C:\Users\Name::$INDEX_ALLOCATION is the profile itself).
+  Also refused: a folder directly inside a profile that is reached over a share named Users (\\host\Users\Name\Documents).
+  Path is tested as written, again with its 8.3 short names expanded, and again as the disk names it
+  (guardFinalPath: a junction, a subst letter or a mapped drive on the way resolved). A path that does not exist is tested too. }
 function FolderDeleteRefusal(CONST Path: string): string;
-VAR Full: string;
+VAR Full {$IFDEF MSWINDOWS}, DiskPath {$ENDIF}: string;
 begin
   if Trim(Path) = '' then EXIT('the path is empty');
   Full:= ExpandFileName(Path);
@@ -2656,6 +2729,12 @@ begin
   Result:= guardRefusalOf(guardComparable(Full, FALSE));
   if Result = ''
   then Result:= guardRefusalOf(guardComparable(Full, TRUE));
+  if Result = '' then
+   begin
+    DiskPath:= guardFinalPath(ExcludeTrailingPathDelimiter(Full));
+    if DiskPath <> ''
+    then Result:= guardRefusalOf(guardComparable(DiskPath, FALSE));
+   end;
   {$ELSE}
   Result:= guardRefusalOfPosix(Full);
   {$ENDIF}
@@ -2668,6 +2747,31 @@ begin
   Reason:= FolderDeleteRefusal(Path);
   if Reason <> ''
   then RAISE EProtectedFolder.Create('Refused to delete "'+ Path+ '": '+ Reason+ '. Nothing was deleted.');
+end;
+
+
+{ TRUE when ToFolder is FromFolder itself or lies inside it. MoveFolder deletes FromFolder after the copy, and the copy with it.
+  Compared by name and, on Windows, as the disk names both folders: D:\Link\Backup lies inside C:\Data when D:\Link is a junction to C:\Data.
+  ToFolder is followed to its end, so a destination that is itself a junction into the source is found.
+  FromFolder is followed only above its last element: DeleteFolder removes a source that is itself a link as a link only.
+  When Windows cannot name one of the two folders, only the names decide. }
+function moveTargetInsideSource(CONST FromFolder, ToFolder: string): Boolean;
+VAR Source, Target {$IFDEF MSWINDOWS}, DiskSource, DiskTarget {$ENDIF}: string;
+begin
+  Source:= ExcludeTrailingPathDelimiter(ExpandFileName(FromFolder));
+  Target:= ExcludeTrailingPathDelimiter(ExpandFileName(ToFolder));
+  {$IFDEF MSWINDOWS}
+  { # By name }
+  if guardSameOrInside(guardComparable(Target, TRUE), guardComparable(Source, TRUE)) then EXIT(TRUE);
+
+  { # As the disk names them. guardFinalPath never follows the last element, so Target gets one more element: '*', which no folder has as its name }
+  DiskSource:= guardFinalPath(Source);
+  DiskTarget:= guardFinalPath(Target + PathDelim + '*');
+  Result:= (DiskSource <> '') AND (DiskTarget <> '')
+       AND guardSameOrInside(guardComparable(DiskTarget, FALSE), guardComparable(DiskSource, TRUE));
+  {$ELSE}
+  Result:= (Target = Source) OR StartsStr(Source + PathDelim, Target);
+  {$ENDIF}
 end;
 
 
@@ -2944,10 +3048,11 @@ end;
     - a list with no path in it;
     - a path with the \\?\ or \\.\ prefix: the SHFILEOPSTRUCT page says SHFileOperation fails on any path with the \\?\ prefix
       (RecycleBin.exe measured error code 124);
+    - a path with a colon after the drive part, which is a stream name (C:\Users\Name::$INDEX_ALLOCATION is the profile itself);
     - a folder that FolderDeleteRefusal refuses, and a folder that is itself a junction or a symbolic link
       (EmptyDirectory refuses such a folder too; what the Shell recycles then is not tested);
     - a wildcard (* or ?) outside the file name ("unpredictable results", Microsoft), and a wildcard whose folder
-      FolderDeleteRefusal refuses (C:\Users\Name\*).
+      FolderDeleteRefusal refuses (C:\Users\Name\*) or is itself a junction or a symbolic link (D:\Work\Link\*).
   The drive is not checked: on a drive with no Recycle Bin (NoRecycleBinReason) the caller decides; RecycleItem then deletes for good.
   A FILE is not given to FolderDeleteRefusal, which would refuse a file directly under a drive root.
   A path that does not exist is not refused: SHFileOperation then fails, and RecycleItem returns FALSE.
@@ -2979,6 +3084,15 @@ begin
         EXIT('"'+ Full+ '": SHFileOperation does not accept the \\?\ or \\.\ prefix');
        end;
 
+      { # A stream name (C:\Users\Name::$INDEX_ALLOCATION is the profile itself): a colon after the drive part.
+          FolderDeleteRefusal refuses a folder of that shape. This test also refuses a name that Windows does not report as a folder,
+          which would take the file route below and never reach the folder guard }
+      if Pos(DriveDelim, Full, 3) > 0 then
+       begin
+        PathList:= '';
+        EXIT('"'+ Full+ '": a stream name: a colon after the drive');
+       end;
+
       { # Wildcards: the folder whose content they name gets the folder guard }
       Reason:= '';
       if (Pos('*', Full) > 0) OR (Pos('?', Full) > 0) then
@@ -2989,13 +3103,17 @@ begin
         else
          begin
           Reason:= FolderDeleteRefusal(Folder);
+          if (Reason = '') AND isLinkFolder(Folder)   { the same rule as for a folder that is itself a link, below: its content belongs to another folder }
+          then Reason:= 'a junction or a symbolic link';
           if Reason <> ''
           then Reason:= 'the wildcard names the content of '+ Folder+ ', which is '+ Reason;
          end;
        end
       else
-        { # Folders. The RTL routine, not DirectoryExists of this unit, which answers FALSE for a path ending in a space and would skip the guard }
-        if System.SysUtils.DirectoryExists(Full) then
+        { # Folders. The RTL routine, not DirectoryExists of this unit, which answers FALSE for a path ending in a space and would skip the guard.
+            FollowLink FALSE: with TRUE the RTL opens a link with GENERIC_READ, so a junction that denies reading (C:\Documents and Settings)
+            would count as a file and skip the folder guard }
+        if System.SysUtils.DirectoryExists(Full, FALSE) then
          begin
           Reason:= FolderDeleteRefusal(Full);
           if (Reason = '') AND isLinkFolder(Full)
