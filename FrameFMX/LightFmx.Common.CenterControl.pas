@@ -78,12 +78,17 @@ end;
 procedure EnsureFormVisibleOnScreen(Form: TForm);
 var
   WorkArea: TRectF;
+  MaxLeft, MaxTop: Single;
 begin
   Assert(Assigned(Form), 'EnsureFormVisibleOnScreen: Form parameter cannot be nil');
 
-  WorkArea  := Screen.WorkAreaRect;
-  Form.Left:= Round(EnsureRange(Form.Left, WorkArea.Left, WorkArea.Right  - Form.Width));
-  Form.Top := Round(EnsureRange(Form.Top,  WorkArea.Top,  WorkArea.Bottom - Form.Height));
+  WorkArea:= Screen.WorkAreaRect;
+
+  { The form is not shrunk. A form wider or taller than the work area goes to its left or top edge. }
+  MaxLeft:= Max(WorkArea.Left, WorkArea.Right  - Form.Width);
+  MaxTop := Max(WorkArea.Top,  WorkArea.Bottom - Form.Height);
+  Form.Left:= Round(EnsureRange(Form.Left, WorkArea.Left, MaxLeft));
+  Form.Top := Round(EnsureRange(Form.Top,  WorkArea.Top,  MaxTop));
 end;
 
 
