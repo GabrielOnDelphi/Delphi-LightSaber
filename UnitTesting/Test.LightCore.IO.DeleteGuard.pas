@@ -1,22 +1,25 @@
 unit Test.LightCore.IO.DeleteGuard;
 
 {=============================================================================================================
-   2026.11.13
+   2026.11.15
    Unit tests for the delete guard of LightCore.IO.pas: FolderDeleteRefusal, CheckFolderDeletable,
-   DeleteFolder and EmptyDirectory (refused paths, junctions removed as links).
+   DeleteFolder and EmptyDirectory (refused paths, junctions removed as links),
+   and MoveFolder / MoveFolderRel, which delete the source after the copy (a destination inside the source).
 
-   THESE TESTS DELETE FILES. Claude never runs them: rule in C:\Projects\.claude\rules\delphi-code.md, section "Unit Testing".
-   So the fixture is registered only when the runner gets the switch --delete-tests:
+   THESE TESTS DELETE FILES. Who may start them, and what must be checked first: C:\Projects\.claude\rules\delphi-code.md, section "Unit Testing".
+   The fixture is registered only when the runner gets the switch --delete-tests:
      C:\Projects\LightSaber\UnitTesting\Tests_LightCore.exe --delete-tests --run:Test.LightCore.IO.DeleteGuard
    Without the switch, a plain run, Run-Tests.ps1 and --run:Test.LightCore.IO never see this fixture.
 
    How the tests stay safe even when the guard is broken:
    - A protected folder that exists (the drive root, the Windows folder, the real profile) goes ONLY to
      FolderDeleteRefusal and CheckFolderDeletable, which delete nothing.
-   - DeleteFolder and EmptyDirectory get only '' and protected-shaped paths that do NOT exist,
-     so a broken guard deletes nothing and the test turns red.
-   - Every path a test deletes lies inside FRoot, a folder the test made in this run under the Temp folder,
+   - DeleteFolder, EmptyDirectory and MoveFolder get only '' and protected-shaped paths that do NOT exist,
+     or paths inside FRoot, so a broken guard deletes nothing outside FRoot and the test turns red.
+   - Every path a test deletes lies inside FRoot, a folder the test made in this run under C:\test delete\ (TestDeleteRoot),
      and is checked against FRoot before the delete. TearDown removes only the names it made, never recursively.
+     C:\test delete\ holds nothing else, and the guard refuses the folder itself: it sits directly under a drive root.
+   - The target of every junction a test makes lies inside FRoot. No test makes a subst drive.
 =============================================================================================================}
 
 interface
@@ -41,6 +44,7 @@ type
     FLink: string;       { FRoot\Victim\link - a junction to FTarget }
     FRootLink: string;   { FRoot\RootLink - a junction to FTarget, given to the routines as the folder itself }
     procedure buildTarget;
+    procedure buildPlainVictim;
     procedure buildVictim;
     procedure assertInsideRoot(CONST Path: string);
     procedure waitGone(CONST Path: string);
@@ -80,6 +84,10 @@ type
     procedure DeleteFolder_FolderIsJunction_RemovesOnlyTheLink;
     [Test]
     procedure EmptyDirectory_FolderIsJunction_Raises;
+
+    { MoveFolder deletes the source after the copy, inside FRoot only }
+    [Test]
+    procedure MoveFolder_IntoOwnSubfolder_RaisesKeepsSource;
   end;
 
 
@@ -88,6 +96,7 @@ implementation
 
 CONST
   DeleteTestsSwitch = 'delete-tests';
+  TestDeleteRoot    = 'C:\test delete\';   { Every run makes its own folder in here, never in the Temp folder or in a user profile }
 
 
 { The system drive as 'C:'. }
@@ -151,14 +160,15 @@ end;
 
 procedure TTestDeleteGuard.Setup;
 begin
-  FRoot    := TPath.Combine(TPath.GetTempPath, 'LightCoreDeleteGuard_'+ TGUID.NewGuid.ToString);
+  FRoot    := TestDeleteRoot + 'DeleteGuard_'+ TGUID.NewGuid.ToString;
   FTarget  := TPath.Combine(FRoot, 'Target');
   FKeep    := TPath.Combine(FTarget, 'keep.txt');
   FVictim  := TPath.Combine(FRoot, 'Victim');
   FLink    := TPath.Combine(FVictim, 'link');
   FRootLink:= TPath.Combine(FRoot, 'RootLink');
 
-  Assert.IsTrue(StartsText(TPath.GetTempPath, FRoot), 'Setup: the test folder must lie in the Temp folder: '+ FRoot);
+  Assert.IsTrue(StartsText(TestDeleteRoot, FRoot), 'Setup: the test folder must lie in '+ TestDeleteRoot+ ': '+ FRoot);
+  Assert.AreNotEqual('', FolderDeleteRefusal(TestDeleteRoot), 'Setup: the guard must refuse '+ TestDeleteRoot+ ' itself, a folder directly under a drive root');
   Assert.IsFalse(DirectoryExists(FRoot), 'Setup: the test folder must be new: '+ FRoot);
   Assert.IsTrue(System.SysUtils.ForceDirectories(FRoot), 'Setup: cannot create '+ FRoot);
   Assert.AreEqual('', FolderDeleteRefusal(FRoot), 'Setup: the test folder itself must be deletable: '+ FRoot);
@@ -188,6 +198,10 @@ procedure TTestDeleteGuard.TearDown;
 
 begin
   if FRoot = '' then EXIT;
+  removeFile(TPath.Combine(FVictim, 'Backup\Sub\inner.txt'));   { what a broken MoveFolder copies into FVictim\Backup }
+  removeFile(TPath.Combine(FVictim, 'Backup\plain.txt'));
+  removeDir (TPath.Combine(FVictim, 'Backup\Sub'));
+  removeDir (TPath.Combine(FVictim, 'Backup'));
   removeFile(TPath.Combine(FVictim, 'Sub\inner.txt'));
   removeFile(TPath.Combine(FVictim, 'plain.txt'));
   removeDir (FLink);
@@ -209,13 +223,21 @@ begin
 end;
 
 
+{ FRoot\Victim with a file and a subfolder with a file. No junction }
+procedure TTestDeleteGuard.buildPlainVictim;
+begin
+  Assert.IsTrue(System.SysUtils.ForceDirectories(TPath.Combine(FVictim, 'Sub')), 'Precondition: cannot create '+ FVictim);
+  TFile.WriteAllText(TPath.Combine(FVictim, 'plain.txt'), 'test file');
+  TFile.WriteAllText(TPath.Combine(FVictim, 'Sub\inner.txt'), 'test file');
+  Assert.IsTrue(FileExists(TPath.Combine(FVictim, 'Sub\inner.txt')), 'Precondition: the files of '+ FVictim+ ' must exist');
+end;
+
+
 { FRoot\Victim with a file, a subfolder with a file, and the junction FRoot\Victim\link -> FRoot\Target }
 procedure TTestDeleteGuard.buildVictim;
 begin
   buildTarget;
-  Assert.IsTrue(System.SysUtils.ForceDirectories(TPath.Combine(FVictim, 'Sub')), 'Precondition: cannot create '+ FVictim);
-  TFile.WriteAllText(TPath.Combine(FVictim, 'plain.txt'), 'to be deleted');
-  TFile.WriteAllText(TPath.Combine(FVictim, 'Sub\inner.txt'), 'to be deleted');
+  buildPlainVictim;
 
   Assert.IsTrue(makeJunction(FLink, FTarget), 'Precondition: mklink /J must create the junction '+ FLink);
   Assert.IsTrue(isReparsePoint(FLink), 'Precondition: '+ FLink+ ' must be a junction');
@@ -312,7 +334,8 @@ begin
   Profile:= GetEnvironmentVariable('USERPROFILE');
   Assert.IsNotEmpty(Profile, 'Precondition: USERPROFILE must be set');
 
-  Assert.AreEqual('', FolderDeleteRefusal(FRoot), 'The test folder in Temp must be accepted');
+  Assert.AreEqual('', FolderDeleteRefusal(FRoot), 'The test folder must be accepted');
+  Assert.AreEqual('', FolderDeleteRefusal(TPath.Combine(TPath.GetTempPath, 'ZZ-NoSuch')), 'A folder in the Temp folder must be accepted');
   Assert.AreEqual('', FolderDeleteRefusal(FVictim), 'A folder that does not exist yet, inside the test folder, must be accepted');
   Assert.AreEqual('', FolderDeleteRefusal(TPath.Combine(Profile, 'AppData\Roaming\ZZ-SomeApp\Thumbs')), 'A cache folder in AppData must be accepted');
   Assert.AreEqual('', FolderDeleteRefusal(TPath.Combine(GetEnvironmentVariable('SystemRoot'), 'Temp\ZZ-NoSuch')), 'A folder INSIDE the Windows folder is not refused');
@@ -350,6 +373,7 @@ end;
 procedure TTestDeleteGuard.DeleteFolder_ProtectedPaths_RaiseBeforeAnyFileCall;
 VAR P: string;
 begin
+  Assert.AreEqual('', ExpandFileName(''), 'Precondition: an empty path must expand to an empty path, not to the current folder');
   Assert.WillRaise(procedure begin DeleteFolder(''); end, EProtectedFolder, 'DeleteFolder must refuse an empty path');
 
   for P in missingProtectedPaths do
@@ -363,6 +387,7 @@ end;
 procedure TTestDeleteGuard.EmptyDirectory_ProtectedPaths_RaiseBeforeAnyFileCall;
 VAR P: string;
 begin
+  Assert.AreEqual('', ExpandFileName(''), 'Precondition: an empty path must expand to an empty path, not to the current folder');
   Assert.WillRaise(procedure begin EmptyDirectory(''); end, EProtectedFolder, 'EmptyDirectory must refuse an empty path');
 
   for P in missingProtectedPaths do
@@ -434,6 +459,33 @@ end;
 
 
 
+{ # MoveFolder: a destination inside the source }
+
+{ MoveFolder copies first, then deletes the source. A destination inside the source is deleted with it, so every file would be lost }
+procedure TTestDeleteGuard.MoveFolder_IntoOwnSubfolder_RaisesKeepsSource;
+VAR Plain, Inner, Backup: string;
+begin
+  buildPlainVictim;
+  Plain := TPath.Combine(FVictim, 'plain.txt');
+  Inner := TPath.Combine(FVictim, 'Sub\inner.txt');
+  Backup:= TPath.Combine(FVictim, 'Backup');
+  assertInsideRoot(FVictim);
+  assertInsideRoot(Backup);
+
+  Assert.WillRaise(procedure begin MoveFolder(FVictim, Backup, TRUE); end, Exception, 'MoveFolder must refuse a destination inside the source');
+  Assert.IsTrue(FileExists(Plain), 'MoveFolder: the source file must survive: '+ Plain);
+  Assert.IsTrue(FileExists(Inner), 'MoveFolder: the source file must survive: '+ Inner);
+  Assert.IsFalse(DirectoryExists(Backup), 'MoveFolder: nothing must be copied before the refusal: '+ Backup);
+
+  { MoveFolderRel builds the same destination: <parent of FVictim>\Victim\Backup }
+  Assert.WillRaise(procedure begin MoveFolderRel(FVictim, 'Victim\Backup', TRUE); end, Exception, 'MoveFolderRel must refuse a destination inside the source');
+  Assert.IsTrue(FileExists(Plain), 'MoveFolderRel: the source file must survive: '+ Plain);
+  Assert.IsFalse(DirectoryExists(Backup), 'MoveFolderRel: nothing must be copied before the refusal: '+ Backup);
+end;
+
+
+
+
 { # Registration: only with --delete-tests }
 
 { Read here, in the initialization section, before DUnitX parses its options, so the fixture can stay unregistered. }
@@ -452,7 +504,7 @@ end;
 procedure registerDeleteTestsSwitch;
 VAR Def: IOptionDefinition;
 begin
-  Def:= TOptionsRegistry.RegisterOption<Boolean>(DeleteTestsSwitch, 'dlt', 'Register the fixture Test.LightCore.IO.DeleteGuard, whose tests delete files. Only Gabriel starts it',
+  Def:= TOptionsRegistry.RegisterOption<Boolean>(DeleteTestsSwitch, 'dlt', 'Register the fixture Test.LightCore.IO.DeleteGuard, whose tests delete files inside C:\test delete\',
           procedure(Value: Boolean)
           begin
           end);

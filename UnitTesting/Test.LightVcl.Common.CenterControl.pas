@@ -13,12 +13,22 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.Types,
+  System.Math,
   Vcl.Forms,
   Vcl.Controls,
   Vcl.StdCtrls,
   Vcl.ExtCtrls;
 
 type
+  { A form that refuses to shrink below MinW x MinH, as a real window does through its Constraints.
+    VCL applies the Constraints of a windowed control only when it has a window handle
+    (TWinControl.WMWindowPosChanging), so a form with no handle needs this override to keep its size. }
+  TUnshrinkableForm = class(TForm)
+  public
+    MinW, MinH: Integer;
+    procedure SetBounds(ALeft, ATop, AWidth, AHeight: Integer); override;
+  end;
+
   [TestFixture]
   TTestCenterControl = class
   private
@@ -52,6 +62,12 @@ type
 
     [Test]
     procedure TestCorrectFormPositionDesktop_NilRaisesException;
+
+    [Test]
+    procedure TestCorrectFormPositionDesktop_WiderThanDesktop_LeftAtDesktopLeft;
+
+    [Test]
+    procedure TestCorrectFormPositionDesktop_TallerThanDesktop_TopAtDesktopTop;
 
     { CenterForm Tests }
     [Test]
@@ -90,6 +106,12 @@ type
 
     [Test]
     procedure TestCorrectCtrlPosition_WithParentControl;
+
+    [Test]
+    procedure TestCorrectCtrlPosition_ConstrainedWiderThanParent_LeftAtZero;
+
+    [Test]
+    procedure TestCorrectCtrlPosition_ConstrainedTallerThanParent_TopAtZero;
 
     [Test]
     procedure TestCorrectCtrlPosition_NilCtrlRaisesException;
@@ -166,6 +188,14 @@ implementation
 
 uses
   LightVcl.Common.CenterControl;
+
+
+{ TUnshrinkableForm }
+
+procedure TUnshrinkableForm.SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
+begin
+  inherited SetBounds(ALeft, ATop, Max(AWidth, MinW), Max(AHeight, MinH));
+end;
 
 
 procedure TTestCenterControl.Setup;
@@ -281,6 +311,47 @@ begin
       CorrectFormPositionDesktop(NIL);
     end,
     Exception);
+end;
+
+
+{ The shrink to the desktop width does not take, so the space left for Left is "desktop width minus a bigger form width" }
+procedure TTestCenterControl.TestCorrectFormPositionDesktop_WiderThanDesktop_LeftAtDesktopLeft;
+var
+  Form: TUnshrinkableForm;
+begin
+  Form:= TUnshrinkableForm.CreateNew(NIL);
+  FTestForm:= Form;   { TearDown frees it }
+  Form.MinW:= Screen.DesktopWidth + 300;
+  Form.Width:= Form.MinW;
+  Form.Height:= 300;
+  Form.Left:= Screen.DesktopLeft + 50;
+  Form.Top:= Screen.DesktopTop + 50;
+
+  CorrectFormPositionDesktop(Form);
+
+  Assert.AreEqual(Screen.DesktopWidth + 300, Form.Width, 'Precondition: the form refused to shrink to the desktop width');
+  Assert.AreEqual(Screen.DesktopLeft, Form.Left, 'A form wider than the desktop goes to the left edge of the desktop');
+  Assert.AreEqual(Screen.DesktopTop + 50, Form.Top, 'Top was inside the desktop and must not change');
+end;
+
+
+procedure TTestCenterControl.TestCorrectFormPositionDesktop_TallerThanDesktop_TopAtDesktopTop;
+var
+  Form: TUnshrinkableForm;
+begin
+  Form:= TUnshrinkableForm.CreateNew(NIL);
+  FTestForm:= Form;   { TearDown frees it }
+  Form.MinH:= Screen.DesktopHeight + 300;
+  Form.Width:= 400;
+  Form.Height:= Form.MinH;
+  Form.Left:= Screen.DesktopLeft + 50;
+  Form.Top:= Screen.DesktopTop + 50;
+
+  CorrectFormPositionDesktop(Form);
+
+  Assert.AreEqual(Screen.DesktopHeight + 300, Form.Height, 'Precondition: the form refused to shrink to the desktop height');
+  Assert.AreEqual(Screen.DesktopTop, Form.Top, 'A form taller than the desktop goes to the top edge of the desktop');
+  Assert.AreEqual(Screen.DesktopLeft + 50, Form.Left, 'Left was inside the desktop and must not change');
 end;
 
 
@@ -503,6 +574,48 @@ begin
 
   Assert.AreEqual(0, FButton.Left, 'Left should be corrected to 0');
   Assert.AreEqual(0, FButton.Top, 'Top should be corrected to 0');
+end;
+
+
+{ TShape is a TGraphicControl: TControl.SetBounds applies its Constraints with no window handle and no form.
+  So Constraints.MinWidth stops the shrink to the parent width, as it does for a real window. }
+procedure TTestCenterControl.TestCorrectCtrlPosition_ConstrainedWiderThanParent_LeftAtZero;
+var
+  Shape: TShape;
+begin
+  Shape:= TShape.Create(NIL);
+  try
+    Shape.Constraints.MinWidth:= 500;
+    Shape.SetBounds(50, 10, 500, 30);
+
+    CorrectCtrlPosition(Shape, 300, 300);
+
+    Assert.AreEqual(500, Shape.Width, 'Precondition: Constraints.MinWidth kept the control wider than the parent');
+    Assert.AreEqual(0, Shape.Left, 'A control wider than the parent goes to Left 0');
+    Assert.AreEqual(10, Shape.Top, 'Top was inside the parent and must not change');
+  finally
+    FreeAndNil(Shape);
+  end;
+end;
+
+
+procedure TTestCenterControl.TestCorrectCtrlPosition_ConstrainedTallerThanParent_TopAtZero;
+var
+  Shape: TShape;
+begin
+  Shape:= TShape.Create(NIL);
+  try
+    Shape.Constraints.MinHeight:= 500;
+    Shape.SetBounds(10, 50, 30, 500);
+
+    CorrectCtrlPosition(Shape, 300, 300);
+
+    Assert.AreEqual(500, Shape.Height, 'Precondition: Constraints.MinHeight kept the control taller than the parent');
+    Assert.AreEqual(0, Shape.Top, 'A control taller than the parent goes to Top 0');
+    Assert.AreEqual(10, Shape.Left, 'Left was inside the parent and must not change');
+  finally
+    FreeAndNil(Shape);
+  end;
 end;
 
 

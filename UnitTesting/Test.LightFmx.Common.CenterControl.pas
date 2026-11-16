@@ -55,6 +55,12 @@ type
     [Test]
     procedure TestEnsureFormVisibleOnScreen_NilRaisesAssertion;
 
+    [Test]
+    procedure TestEnsureFormVisibleOnScreen_WiderThanWorkArea_LeftAtWorkAreaLeft;
+
+    [Test]
+    procedure TestEnsureFormVisibleOnScreen_TallerThanWorkArea_TopAtWorkAreaTop;
+
     { CenterFormOnParent Tests }
     [Test]
     procedure TestCenterFormOnParent_CentersInParent;
@@ -233,6 +239,48 @@ begin
       EnsureFormVisibleOnScreen(NIL);
     end,
     EAssertionFailed);
+end;
+
+
+{ EnsureFormVisibleOnScreen does not shrink the form, so a form wider than the work area leaves
+  "work area right minus form width" below "work area left".
+  The test asserts first that the form is still wider than the work area: the position asserts rest on that. }
+procedure TTestFmxCenterControl.TestEnsureFormVisibleOnScreen_WiderThanWorkArea_LeftAtWorkAreaLeft;
+var
+  WorkArea: TRectF;
+begin
+  WorkArea:= Screen.WorkAreaRect;
+  FTestForm:= TForm.CreateNew(NIL);
+  FTestForm.Width := Round(WorkArea.Width) + 300;
+  FTestForm.Height:= 200;
+  FTestForm.Left  := Round(WorkArea.Left) + 50;
+  FTestForm.Top   := Round(WorkArea.Top)  + 50;
+  Assert.IsTrue(FTestForm.Width > WorkArea.Width, 'Precondition: the form is wider than the work area');
+
+  EnsureFormVisibleOnScreen(FTestForm);
+
+  { Integer cast: Round returns Int64, but FMX TCommonCustomForm.Left/Top are Integer }
+  Assert.AreEqual(Integer(Round(WorkArea.Left)), FTestForm.Left, 'A form wider than the work area goes to the left edge of the work area');
+  Assert.AreEqual(Integer(Round(WorkArea.Top)) + 50, FTestForm.Top, 'Top was inside the work area and must not change');
+end;
+
+
+procedure TTestFmxCenterControl.TestEnsureFormVisibleOnScreen_TallerThanWorkArea_TopAtWorkAreaTop;
+var
+  WorkArea: TRectF;
+begin
+  WorkArea:= Screen.WorkAreaRect;
+  FTestForm:= TForm.CreateNew(NIL);
+  FTestForm.Width := 300;
+  FTestForm.Height:= Round(WorkArea.Height) + 300;
+  FTestForm.Left  := Round(WorkArea.Left) + 50;
+  FTestForm.Top   := Round(WorkArea.Top)  + 50;
+  Assert.IsTrue(FTestForm.Height > WorkArea.Height, 'Precondition: the form is taller than the work area');
+
+  EnsureFormVisibleOnScreen(FTestForm);
+
+  Assert.AreEqual(Integer(Round(WorkArea.Top)), FTestForm.Top, 'A form taller than the work area goes to the top edge of the work area');
+  Assert.AreEqual(Integer(Round(WorkArea.Left)) + 50, FTestForm.Left, 'Left was inside the work area and must not change');
 end;
 
 

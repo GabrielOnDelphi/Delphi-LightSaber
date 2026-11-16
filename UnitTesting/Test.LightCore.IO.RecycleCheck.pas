@@ -1,13 +1,15 @@
 unit Test.LightCore.IO.RecycleCheck;
 
 {=============================================================================================================
-   2026.11.14
-   Unit tests for the Recycle Bin checks of LightCore.IO.pas: NoRecycleBinReason, DriveHasRecycleBin, RecycleItemRefusal.
+   2026.11.15
+   Unit tests for the Recycle Bin checks of LightCore.IO.pas: NoRecycleBinReason, DriveHasRecycleBin, RecycleItemRefusal,
+   and for FolderDeleteRefusal on other names of a protected folder (a junction, a subst letter, an 8.3 short name, a prefix,
+   a stream name, the share named Users).
    These routines delete nothing, so this fixture is registered for every run and may name real protected folders.
    The tests of RecycleItem itself, which deletes, are in Test.LightVcl.Common.IO.RecycleItem.pas,
    registered only with the switch --delete-tests.
 
-   One test makes a subst drive for a moment (subst.exe <free letter>: <Temp folder>) and removes it again.
+   Two tests make a subst drive for a moment (subst.exe <free letter>: <folder>) and remove it again.
    subst only maps a drive letter: it creates and deletes no file.
 
    Run only this fixture:
@@ -71,6 +73,24 @@ type
     procedure RecycleItemRefusal_RelativePath_ExpandedInPathList;
     [Test]
     procedure RecycleItemRefusal_List_DoubleNullNoTrailingBackslash;
+
+    { FolderDeleteRefusal on another name of a protected folder. It deletes nothing, so it may see real protected folders }
+    [Test]
+    procedure FolderDeleteRefusal_ProfileThroughJunction_Refused;
+    [Test]
+    procedure FolderDeleteRefusal_ProfileThroughSubstOfDriveRoot_Refused;
+    [Test]
+    procedure FolderDeleteRefusal_ShortNames_Refused;
+    [Test]
+    procedure FolderDeleteRefusal_DeviceAndSharePrefixes_Refused;
+    [Test]
+    procedure RecycleItemRefusal_JunctionThatDeniesReading_Refused;
+    [Test]
+    procedure FolderDeleteRefusal_StreamName_Refused;
+    [Test]
+    procedure RecycleItemRefusal_WildcardInsideJunction_Refused;
+    [Test]
+    procedure FolderDeleteRefusal_UsersShare_Refused;
   end;
 
 
@@ -218,8 +238,9 @@ begin
   Assert.IsNotEmpty(Letter, 'Precondition: a free drive letter');
   Target:= ExcludeTrailingPathDelimiter(TPath.GetTempPath);
 
-  Assert.IsTrue(runProgram('subst.exe '+ Letter+ ' "'+ Target+ '"'), 'Precondition: subst.exe must map '+ Letter+ ' to '+ Target);
   TRY
+    { Inside the TRY: when runProgram gives up after 10 s, subst may still map the letter, and the FINALLY must remove it }
+    Assert.IsTrue(runProgram('subst.exe '+ Letter+ ' "'+ Target+ '"'), 'Precondition: subst.exe must map '+ Letter+ ' to '+ Target);
     Assert.IsTrue(System.SysUtils.DirectoryExists(Letter + '\'), 'Precondition: the subst drive '+ Letter+ ' must exist');
     Assert.IsTrue(Winapi.Windows.GetDriveType(PChar(Letter + '\')) = DRIVE_FIXED, 'Precondition: a subst drive reports DRIVE_FIXED, so the drive type alone cannot refuse it');
 
@@ -363,6 +384,249 @@ begin
   FileName:= tempFolder + newName + '.txt';
   Assert.AreEqual('', RecycleItemRefusal(Folder + '\'#0 + FileName + #0, PathList), 'A list of two ordinary paths is accepted');
   Assert.AreEqual(Folder + #0 + FileName + #0#0, PathList, 'PathList: each path ended with #0, a second #0 at the end, no trailing backslash');
+end;
+
+
+
+
+{ # FolderDeleteRefusal: other names of a protected folder }
+
+{ The 8.3 short name of Path, read from Windows, or '' when Windows gives none }
+function shortName(CONST Path: string): string;
+VAR Len: DWORD;
+begin
+  Len:= GetShortPathName(PChar(Path), NIL, 0);   { the size needed, terminating null included }
+  if Len = 0 then EXIT('');
+  SetLength(Result, Len);
+  Len:= GetShortPathName(PChar(Path), PChar(Result), Len);
+  if (Len = 0) OR (Len >= DWORD(Length(Result))) then EXIT('');
+  SetLength(Result, Len);
+end;
+
+
+{ The junction "Documents and Settings" -> Users, which Windows makes on every install.
+  Through it, the real profile has a name the guard cannot tell from an ordinary folder without reading the disk. }
+function junctionToUsers: string;
+VAR Attr: DWORD;
+begin
+  Result:= systemDrive + '\Documents and Settings';
+  Attr:= GetFileAttributes(PChar(Result));
+  Assert.IsTrue((Attr <> INVALID_FILE_ATTRIBUTES) AND ((Attr AND FILE_ATTRIBUTE_REPARSE_POINT) <> 0), 'Precondition: '+ Result+ ' must be a junction');
+end;
+
+
+procedure TTestRecycleCheck.FolderDeleteRefusal_ProfileThroughJunction_Refused;
+VAR
+  Alias, P: string;
+  Paths: TArray<string>;
+begin
+  Assert.IsTrue(SameText(ExtractFileDir(profile), systemDrive + '\Users'), 'Precondition: the profile must be in '+ systemDrive + '\Users: '+ profile);
+  Alias:= TPath.Combine(junctionToUsers, ExtractFileName(profile));
+  Assert.IsTrue(System.SysUtils.DirectoryExists(Alias), 'Precondition: the profile must be reachable through the junction: '+ Alias);
+
+  { Folders that exist: both guards must refuse them }
+  Paths:= [Alias, Alias + '\', TPath.Combine(Alias, 'AppData')];
+  for P in Paths do
+   begin
+    Assert.IsTrue(System.SysUtils.DirectoryExists(P), 'Precondition: '+ P+ ' must exist');
+    Assert.AreNotEqual('', FolderDeleteRefusal(P), 'FolderDeleteRefusal must refuse the profile reached through a junction: "'+ P+ '"');
+    Assert.AreNotEqual('', RecycleItemRefusal(P),  'RecycleItemRefusal must refuse the profile reached through a junction: "'+ P+ '"');
+   end;
+
+  { A folder directly inside the profile that does not exist: still refused by its place }
+  P:= TPath.Combine(Alias, newName);
+  Assert.AreNotEqual('', FolderDeleteRefusal(P), 'FolderDeleteRefusal must refuse a folder directly inside the profile reached through a junction: "'+ P+ '"');
+end;
+
+
+{ subst <letter>: C:\ gives the whole system drive a second letter, so <letter>:\Users\<name> is the real profile }
+procedure TTestRecycleCheck.FolderDeleteRefusal_ProfileThroughSubstOfDriveRoot_Refused;
+VAR
+  Letter, Alias, P: string;
+  Paths: TArray<string>;
+begin
+  Letter:= freeDriveLetter;
+  Assert.IsNotEmpty(Letter, 'Precondition: a free drive letter');
+  Assert.IsTrue(SameText(ExtractFileDir(profile), systemDrive + '\Users'), 'Precondition: the profile must be in '+ systemDrive + '\Users: '+ profile);
+
+  TRY
+    { Inside the TRY: when runProgram gives up after 10 s, subst may still map the letter, and the FINALLY must remove it }
+    Assert.IsTrue(runProgram('subst.exe '+ Letter+ ' '+ systemDrive + '\'), 'Precondition: subst.exe must map '+ Letter+ ' to '+ systemDrive + '\');
+    Alias:= Letter + '\Users\'+ ExtractFileName(profile);
+    Assert.IsTrue(System.SysUtils.DirectoryExists(Alias), 'Precondition: the profile must be reachable through the subst drive: '+ Alias);
+
+    Paths:= [Alias, TPath.Combine(Alias, 'AppData')];
+    for P in Paths do
+     begin
+      Assert.AreNotEqual('', FolderDeleteRefusal(P), 'FolderDeleteRefusal must refuse the profile reached through a subst drive: "'+ P+ '"');
+      Assert.AreNotEqual('', RecycleItemRefusal(P),  'RecycleItemRefusal must refuse the profile reached through a subst drive: "'+ P+ '"');
+     end;
+  FINALLY
+    runProgram('subst.exe '+ Letter+ ' /D');
+  END;
+  Assert.IsFalse(System.SysUtils.DirectoryExists(Letter + '\'), 'The test must remove its subst drive '+ Letter);
+end;
+
+
+procedure TTestRecycleCheck.FolderDeleteRefusal_ShortNames_Refused;
+VAR
+  Long, Short: string;
+  Tested: Integer;
+  Paths: TArray<string>;
+begin
+  Paths:= [TPath.Combine(junctionToUsers, ExtractFileName(profile)),   { C:\DOCUME~1\<name> - the profile }
+           GetEnvironmentVariable('ProgramFiles'),
+           GetEnvironmentVariable('ProgramData')];
+  Tested:= 0;
+  for Long in Paths do
+   begin
+    Short:= shortName(Long);
+    if (Short = '') OR SameText(Short, Long) then Continue;   { 8.3 names may be switched off on the drive }
+    Inc(Tested);
+    Assert.AreNotEqual('', FolderDeleteRefusal(Short), 'FolderDeleteRefusal must refuse the short name "'+ Short+ '" of "'+ Long+ '"');
+   end;
+  if Tested = 0
+  then Assert.Pass('No 8.3 short name on this drive: nothing to test');
+end;
+
+
+procedure TTestRecycleCheck.FolderDeleteRefusal_DeviceAndSharePrefixes_Refused;
+VAR
+  Name, Letter, P: string;
+  Paths: TArray<string>;
+begin
+  Name  := ExtractFileName(profile);
+  Letter:= systemDrive[1];
+  Assert.IsTrue(SameText(ExtractFileDir(profile), systemDrive + '\Users'), 'Precondition: the profile must be in '+ systemDrive + '\Users: '+ profile);
+
+  Paths:= ['\\.\'+ systemDrive + '\Users\'+ Name,
+           '\\?\'+ systemDrive + '\Users\'+ Name + '\Documents',
+           '\\localhost\'+ Letter + '$\Users\'+ Name,
+           '\\localhost\'+ Letter + '$\Users\'+ Name + '\AppData',
+           '\\?\UNC\localhost\'+ Letter + '$\Users\'+ Name,
+           '\\localhost\'+ Letter + '$\Windows',
+           '\\localhost\'+ Letter + '$\Program Files'];
+  for P in Paths do
+    Assert.AreNotEqual('', FolderDeleteRefusal(P), 'FolderDeleteRefusal must refuse "'+ P+ '"');
+end;
+
+
+{ C:\Documents and Settings denies reading to everyone, so a folder test that opens it for reading answers "not a folder".
+  RecycleItemRefusal must still see a folder, a junction directly under the drive root, and refuse it }
+procedure TTestRecycleCheck.RecycleItemRefusal_JunctionThatDeniesReading_Refused;
+VAR Junction: string;
+begin
+  Junction:= junctionToUsers;
+  Assert.AreNotEqual('', RecycleItemRefusal(Junction), 'RecycleItemRefusal must refuse the junction "'+ Junction+ '"');
+  Assert.AreNotEqual('', RecycleItemRefusal(Junction + '\'), 'RecycleItemRefusal must refuse the junction "'+ Junction+ '\"');
+end;
+
+
+
+
+{ # FolderDeleteRefusal, RecycleItemRefusal: a stream name, a wildcard inside a junction, the share named Users }
+
+{ The attributes Windows reports for Path, read without the code under test. INVALID_FILE_ATTRIBUTES when the name names nothing }
+function attributesOf(CONST Path: string): DWORD;
+begin
+  Result:= GetFileAttributes(PChar(Path));
+end;
+
+
+function isFolderName(CONST Path: string): Boolean;
+VAR Attr: DWORD;
+begin
+  Attr:= attributesOf(Path);
+  Result:= (Attr <> INVALID_FILE_ATTRIBUTES) AND ((Attr AND FILE_ATTRIBUTE_DIRECTORY) <> 0);
+end;
+
+
+{ NTFS opens a folder under the name of its index stream too: C:\Users\Name::$INDEX_ALLOCATION is the profile itself,
+  and GetFileAttributes reports it as a folder. ExtractFileDir splits such a name at the colon (C:\Users\Name::),
+  so neither the place rules nor the disk pass see the real parent folder.
+  The stream name of the drive root has no folder precondition: inside this test program GetFileAttributes fails on it
+  with ERROR_INVALID_NAME (123), while PowerShell gets a folder for the same name. It must be refused by its shape either way }
+procedure TTestRecycleCheck.FolderDeleteRefusal_StreamName_Refused;
+VAR
+  P, Missing: string;
+  Paths: TArray<string>;
+begin
+  Paths:= [GetEnvironmentVariable('SystemRoot') + '::$INDEX_ALLOCATION',    { the Windows folder }
+           profile + '::$INDEX_ALLOCATION',                                 { the profile }
+           profile + ':$I30:$INDEX_ALLOCATION',                             { the profile, the index named in full }
+           TPath.Combine(profile, 'Documents') + '::$INDEX_ALLOCATION'];    { a folder directly inside the profile }
+  for P in Paths do
+   begin
+    Assert.IsTrue(isFolderName(P), 'Precondition: Windows must report "'+ P+ '" as a folder. Attributes: $'+ IntToHex(attributesOf(P), 8));
+    Assert.AreNotEqual('', FolderDeleteRefusal(P), 'FolderDeleteRefusal must refuse the stream name "'+ P+ '"');
+    Assert.AreNotEqual('', RecycleItemRefusal(P),  'RecycleItemRefusal must refuse the stream name "'+ P+ '"');
+    Assert.AreNotEqual('', RecycleItemRefusal(P + '\*'), 'RecycleItemRefusal must refuse a wildcard inside the stream name "'+ P+ '"');
+   end;
+
+  { A stream name is refused by its shape, also where Windows reports no folder under it }
+  Missing:= tempFolder + newName + '::$INDEX_ALLOCATION';
+  Assert.IsFalse(isFolderName(Missing), 'Precondition: '+ Missing+ ' must not exist');
+  Paths:= [systemDrive + '\::$INDEX_ALLOCATION',    { the drive root }
+           Missing];
+  for P in Paths do
+   begin
+    Assert.AreNotEqual('', FolderDeleteRefusal(P), 'FolderDeleteRefusal must refuse the stream name "'+ P+ '"');
+    Assert.AreNotEqual('', RecycleItemRefusal(P),  'RecycleItemRefusal must refuse the stream name "'+ P+ '"');
+   end;
+end;
+
+
+{ C:\ProgramData\Desktop and C:\ProgramData\Documents are junctions Windows makes for old programs,
+  to C:\Users\Public\Desktop and C:\Users\Public\Documents. Neither junction is a protected place by its name,
+  but a wildcard inside one names the content of its target. RecycleItemRefusal refuses a folder that is itself a junction;
+  the wildcard form must be refused the same way.
+  The precondition reads the attributes, not DirectoryExists, which with FollowLink TRUE opens the link for reading }
+procedure TTestRecycleCheck.RecycleItemRefusal_WildcardInsideJunction_Refused;
+VAR
+  J: string;
+  Attr: DWORD;
+  Junctions: TArray<string>;
+begin
+  Junctions:= [TPath.Combine(GetEnvironmentVariable('ProgramData'), 'Desktop'),
+               TPath.Combine(GetEnvironmentVariable('ProgramData'), 'Documents')];
+  for J in Junctions do
+   begin
+    Attr:= attributesOf(J);
+    Assert.IsTrue((Attr <> INVALID_FILE_ATTRIBUTES) AND ((Attr AND FILE_ATTRIBUTE_DIRECTORY) <> 0) AND ((Attr AND FILE_ATTRIBUTE_REPARSE_POINT) <> 0),
+                  'Precondition: '+ J+ ' must be a junction');
+    Assert.AreNotEqual('', RecycleItemRefusal(J), 'Precondition: RecycleItemRefusal refuses the junction itself: "'+ J+ '"');
+    Assert.AreNotEqual('', RecycleItemRefusal(J + '\*'), 'RecycleItemRefusal must refuse a wildcard inside the junction "'+ J+ '"');
+   end;
+end;
+
+
+{ Windows can share C:\Users under the name Users. Over that share every profile has a UNC name (\\localhost\Users\Name),
+  and no pass of FolderDeleteRefusal maps that name back to C:\Users.
+  The profile itself, directly under the share root, is already refused; a folder directly inside the profile must be refused too.
+  Skipped where the share is not reachable, so the test holds whichever way the guard learns the share }
+procedure TTestRecycleCheck.FolderDeleteRefusal_UsersShare_Refused;
+VAR
+  Name, Share, P: string;
+  Paths: TArray<string>;
+begin
+  Name := ExtractFileName(profile);
+  Share:= '\\localhost\Users\'+ Name;
+  Assert.IsTrue(SameText(ExtractFileDir(profile), systemDrive + '\Users'), 'Precondition: the profile must be in '+ systemDrive + '\Users: '+ profile);
+  if NOT isFolderName(Share) then
+   begin
+    Assert.Pass('The share \\localhost\Users is not reachable on this PC: nothing to test');
+    EXIT;
+   end;
+
+  Paths:= [Share + '\Documents',
+           Share + '\AppData',
+           '\\127.0.0.1\Users\'+ Name + '\Documents'];
+  for P in Paths do
+   begin
+    Assert.IsTrue(isFolderName(P), 'Precondition: '+ P+ ' must exist');
+    Assert.AreNotEqual('', FolderDeleteRefusal(P), 'FolderDeleteRefusal must refuse a folder directly inside a profile reached over the Users share: "'+ P+ '"');
+    Assert.AreNotEqual('', RecycleItemRefusal(P),  'RecycleItemRefusal must refuse a folder directly inside a profile reached over the Users share: "'+ P+ '"');
+   end;
 end;
 
 
