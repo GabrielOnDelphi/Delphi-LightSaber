@@ -92,8 +92,10 @@ begin
    would yank forms off such monitors onto the primary, so clamp to the real desktop rectangle instead. }
  Form.Width := Min(Form.Width,  Screen.DesktopWidth);
  Form.Height:= Min(Form.Height, Screen.DesktopHeight);
- Form.Left  := EnsureRange(Form.Left, Screen.DesktopLeft, Screen.DesktopLeft + Screen.DesktopWidth  - Form.Width);
- Form.Top   := EnsureRange(Form.Top,  Screen.DesktopTop,  Screen.DesktopTop  + Screen.DesktopHeight - Form.Height);
+
+ { Constraints can stop the shrink. A form still wider or taller than the desktop goes to its left or top edge. }
+ Form.Left  := EnsureRange(Form.Left, Screen.DesktopLeft, Max(Screen.DesktopLeft, Screen.DesktopLeft + Screen.DesktopWidth  - Form.Width));
+ Form.Top   := EnsureRange(Form.Top,  Screen.DesktopTop,  Max(Screen.DesktopTop,  Screen.DesktopTop  + Screen.DesktopHeight - Form.Height));
 end;
 
 
@@ -186,12 +188,13 @@ begin
   for i := 0 to ParentForm.MDIChildCount - 1 do
   begin
     Child := ParentForm.MDIChildren[i];
+    { Constraints can stop the shrink. A child still taller or wider than the client area goes to Top 0 or Left 0. }
     { Clamp Height and Top }
     Child.Height := Min(Child.Height, ParentForm.ClientHeight);
-    Child.Top    := EnsureRange(Child.Top, 0, ParentForm.ClientHeight - Child.Height);
+    Child.Top    := EnsureRange(Child.Top, 0, Max(0, ParentForm.ClientHeight - Child.Height));
     { Clamp Width and Left }
     Child.Width  := Min(Child.Width, ParentForm.ClientWidth);
-    Child.Left   := EnsureRange(Child.Left, 0, ParentForm.ClientWidth - Child.Width);
+    Child.Left   := EnsureRange(Child.Left, 0, Max(0, ParentForm.ClientWidth - Child.Width));
   end;
 end;
 
@@ -229,9 +232,10 @@ begin
   Ctrl.Width  := Min(Ctrl.Width, ParentWidth);
   Ctrl.Height := Min(Ctrl.Height, ParentHeight);
 
-  { Clamp within parent client area }
-  Ctrl.Left := EnsureRange(Ctrl.Left, 0, ParentWidth  - Ctrl.Width);
-  Ctrl.Top  := EnsureRange(Ctrl.Top,  0, ParentHeight - Ctrl.Height);
+  { Clamp within parent client area.
+    Constraints can stop the shrink above. A control still wider or taller than the parent goes to Left 0 or Top 0. }
+  Ctrl.Left := EnsureRange(Ctrl.Left, 0, Max(0, ParentWidth  - Ctrl.Width));
+  Ctrl.Top  := EnsureRange(Ctrl.Top,  0, Max(0, ParentHeight - Ctrl.Height));
 end;
 
 
