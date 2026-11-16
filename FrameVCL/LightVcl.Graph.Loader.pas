@@ -579,9 +579,13 @@ begin
      then
        begin
         Result:= ExtractThumbnailJpg(FileName, ThumbWidth, -1, ResolutionX, ResolutionY); // This will do "RotateEXIF"
-        if Result = NIL
-        then FrameCount:= 0;   { Keep the contract consistent with the other branches: 0 = extraction error }
-        EXIT;     // Jpegs are special because a thumbnail was already generated for them by ExtractThumbnailJpg. So, we do no further processing
+        if Result <> NIL
+        then EXIT;     // Jpegs are special because a thumbnail was already generated for them by ExtractThumbnailJpg. So, we do no further processing
+
+        { The extension says JPEG but the JPEG decoder refused the bytes. The file can be another format
+          with a wrong extension (a PNG named .jpg). LoadGraph picks the decoder by the file signature;
+          a file it cannot read either gives NIL, and the block below sets FrameCount 0. }
+        Result:= LoadGraph(FileName, TRUE);
        end
      else
        Result:= LoadGraph(FileName, TRUE);
