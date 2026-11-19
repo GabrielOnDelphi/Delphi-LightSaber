@@ -11,6 +11,7 @@ UNIT LightVcl.Common.CpuMonitor;
     Class that owns a TCpuMonitor + TTimer. 
     Automatically samples CPU every 2 seconds.
     CpuIsBusy returns TRUE when the system is too busy (or on battery).
+    LoadFromIni/SaveToIni persist the three user settings (keys 'PowerSettings.*'). The owner calls them; the class never does.
 
     Requirements: Windows 10+ (GetSystemTimes guaranteed).
 --------------------------------------------------------------------------------------------------------------}
@@ -18,7 +19,7 @@ UNIT LightVcl.Common.CpuMonitor;
 INTERFACE
 
 USES
-  System.Classes, Vcl.ExtCtrls;
+  System.Classes, Vcl.ExtCtrls, LightCore.INIFile;
 
 CONST
   CPU_HISTORY_SIZE = 10;     { Rolling window size for Average. At 2-second intervals this gives a 20-second window. }
@@ -51,6 +52,8 @@ TYPE
     constructor Create;
     destructor Destroy; override;
     procedure Reset;
+    procedure LoadFromIni(IniFile: TIniFileEx);  { A missing key gives the default of Reset. Does not touch LastCpuUsage. }
+    procedure SaveToIni  (IniFile: TIniFileEx);
     function CpuIsBusy: Boolean; { Returns TRUE when CPU >= HighCpuThreshold or on battery. Meaning: wallpaper change should be skipped. }
   end;
 
@@ -58,7 +61,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-  System.SysUtils, Winapi.Windows, LightVcl.Common.PowerUtils;
+  System.SysUtils, System.Math, Winapi.Windows, LightVcl.Common.PowerUtils;
 
 { Ensure GetSystemTimes is available. Declared in Winapi.Windows since at least XE2,
   but we provide a fallback declaration for older or incomplete headers.
@@ -170,6 +173,27 @@ begin
   NotifyPowerChange:= TRUE;
   HighCpuThreshold := 80;
   LastCpuUsage     := 0;
+end;
+
+
+{ The keys go into the section the caller gave to IniFile's constructor.
+  HighCpuThreshold is clamped to the range of the spin box in FormPower.dfm (2..101; 101 disables the check):
+  the INI is user-editable, and a threshold of 0 would make CpuIsBusy TRUE for ever. }
+procedure TPowerSettings.LoadFromIni(IniFile: TIniFileEx);
+begin
+  Assert(IniFile <> NIL, 'TPowerSettings.LoadFromIni: IniFile is nil');
+  CheckBatteries   := IniFile.Read('PowerSettings.CheckBatteries',    TRUE);
+  NotifyPowerChange:= IniFile.Read('PowerSettings.NotifyPowerChange', TRUE);
+  HighCpuThreshold := EnsureRange(IniFile.Read('PowerSettings.HighCpuThreshold', 80), 2, 101);
+end;
+
+
+procedure TPowerSettings.SaveToIni(IniFile: TIniFileEx);
+begin
+  Assert(IniFile <> NIL, 'TPowerSettings.SaveToIni: IniFile is nil');
+  IniFile.Write('PowerSettings.CheckBatteries',    CheckBatteries);
+  IniFile.Write('PowerSettings.NotifyPowerChange', NotifyPowerChange);
+  IniFile.Write('PowerSettings.HighCpuThreshold',  HighCpuThreshold);
 end;
 
 
