@@ -236,8 +236,9 @@ end;
 ------------------------------------------------------------------------------------------------------------}
 procedure TCubicSpinEdit.Change;
 begin
-  { Skip validation if min/max are not configured (both are zero = no range checking) }
-  if ((MaxValue <> 0) AND (MinValue <> 0))
+  { Skip validation if min/max are not configured. MinValue = MaxValue (both are zero by default) means no range, as in TSpinEdit.CheckValue.
+    A range with one limit at 0 (0..60) is checked too. }
+  if (MaxValue <> MinValue)
   AND ((Value > MaxValue) OR (Value < MinValue)) then    { Parentheses around OR are critical for correct precedence! }
    begin
      Color:= clOrange; // Orange indicates an out-of-range value
