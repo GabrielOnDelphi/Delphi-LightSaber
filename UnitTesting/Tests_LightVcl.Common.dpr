@@ -70,7 +70,9 @@ uses
   Test.LightVcl.Common.SystemTime in 'Test.LightVcl.Common.SystemTime.pas',
   LightVcl.Common.SystemTime in '..\FrameVCL\LightVcl.Common.SystemTime.pas',
   Test.LightVcl.Common.WindowMetrics in 'Test.LightVcl.Common.WindowMetrics.pas',
-  LightVcl.Common.WindowMetrics in '..\FrameVCL\LightVcl.Common.WindowMetrics.pas';
+  LightVcl.Common.WindowMetrics in '..\FrameVCL\LightVcl.Common.WindowMetrics.pas',
+  Test.LightVcl.Common.CpuMonitor in 'Test.LightVcl.Common.CpuMonitor.pas',
+  LightVcl.Common.CpuMonitor in '..\FrameVCL\LightVcl.Common.CpuMonitor.pas';
 
 {$IFNDEF TESTINSIGHT}
 var

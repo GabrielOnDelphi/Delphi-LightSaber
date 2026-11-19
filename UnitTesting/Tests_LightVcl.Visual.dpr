@@ -75,7 +75,9 @@ uses
   Test.LightVcl.Visual.ThumbViewerM in 'Test.LightVcl.Visual.ThumbViewerM.pas',
   LightCore.SvgShapes in '..\LightCore.SvgShapes.pas',
   LightVcl.Visual.SvgSpeedButton in '..\FrameVCL\LightVcl.Visual.SvgSpeedButton.pas',
-  Test.LightVcl.Visual.SvgSpeedButton in 'Test.LightVcl.Visual.SvgSpeedButton.pas';
+  Test.LightVcl.Visual.SvgSpeedButton in 'Test.LightVcl.Visual.SvgSpeedButton.pas',
+  LightVcl.Visual.SpinEdit in '..\FrameVCL\LightVcl.Visual.SpinEdit.pas',
+  Test.LightVcl.Visual.SpinEdit in 'Test.LightVcl.Visual.SpinEdit.pas';
 
 {$R *.res}   { The version resource that MSBuild builds from VerInfo_* in the .dproj; Test.LightVcl.Visual.AppData reads it }
 
