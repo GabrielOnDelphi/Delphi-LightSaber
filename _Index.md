@@ -2329,13 +2329,15 @@ function StringFromClipboard (CONST MaxWaitTime: Cardinal= 5000): string; { Retu
 function StringFromClipboardTSL(CONST MaxWaitTime: Cardinal= 5000): TStringList; { Returns NIL if clipboard has no text; caller must free result }
 ```
 
-## LightVcl.Common.CpuMonitor (5)
+## LightVcl.Common.CpuMonitor (7)
 
 ```pascal
 function Usage: Integer; { Collect a sample and return current CPU usage (0..100). Returns -1 on API error. }
 function Average: Integer; { Rolling average of last CPU_HISTORY_SIZE samples (0..100). Returns 0 if no data. }
 procedure OnTimer(Sender: TObject);
 procedure Reset;
+procedure LoadFromIni(IniFile: TIniFileEx); { A missing key gives the default of Reset. Does not touch LastCpuUsage. }
+procedure SaveToIni (IniFile: TIniFileEx);
 function CpuIsBusy: Boolean; { Returns TRUE when CPU >= HighCpuThreshold or on battery. Meaning: wallpaper change should be skipped. }
 ```
 
@@ -3171,6 +3173,63 @@ procedure SendEmail (CONST sTo, sSubject, sBody: string);
 ```pascal
 procedure SetFieldValue (aForm: IHTMLFormElement; const fieldName: string; const newValue: string; const Instance: integer= 0);
 function GetFormByNumber (Document: IHTMLDocument2; formNumber: integer): IHTMLFormElement;
+```
+
+## LightVcl.Internet.PageDriver (52)
+
+```pascal
+function addStep(Kind: TStepKind; CONST Name, Target: string; TimeOut: Integer): TDriverStep;
+function current: TDriverStep;
+function stepLabel: string;
+function elapsedMs: string;
+procedure doLog(CONST Line: string);
+procedure browserCreated(Sender: TCustomEdgeBrowser; AResult: HResult);
+function hookNavigation: Boolean;
+procedure navigationCompleted(IsSuccess: Boolean; WebErrorStatus: COREWEBVIEW2_WEB_ERROR_STATUS; HttpStatus: Integer);
+procedure answerArrived(Ticket: Integer; ErrorCode: HResult; CONST Json: string);
+procedure startQueue;
+procedure sendUserAgent;
+procedure userAgentAnswered(ErrorCode: HResult; CONST Json: string);
+procedure failUserAgent(CONST Info: string);
+procedure delay(Ms: Integer; Action: TDelayAction);
+procedure delayFire(Sender: TObject);
+procedure stepTimeOut(Sender: TObject);
+procedure nextStep;
+procedure startStep;
+procedure startNavigate;
+procedure sendPoll;
+procedure sendScript(CONST JavaScript: string);
+procedure addCall(CONST Method, Params: string);
+procedure queueKey(CONST Key: string);
+procedure sendNextCall;
+procedure insertFocused(CONST Json: string);
+procedure insertAnswered(CONST Json: string);
+procedure clickLocated(CONST Json: string);
+procedure startAttach;
+procedure attachLocated(CONST Json: string);
+procedure finishStep;
+procedure failStep(CONST Info: string);
+procedure failRun(CONST StepName, Info: string);
+procedure succeedRun;
+procedure stopAll;
+procedure Clear; { removes the steps and the stored results }
+procedure Navigate (CONST Url: string; TimeOut: Integer= 30000);
+procedure WaitFor (CONST Selector: string; TimeOut: Integer= 15000); { an element exists AND has a non-zero size }
+procedure WaitGone (CONST Selector: string; TimeOut: Integer= 15000); { no visible element matches any more }
+procedure WaitUntil (CONST Name, JsCondition: string; TimeOut: Integer= 15000); { a JavaScript expression that becomes true }
+procedure RunScript (CONST Name, JavaScript: string; TimeOut: Integer= 10000); { stores the unwrapped result under Name }
+procedure ReadText (CONST Name, Selector: string; TimeOut: Integer= 10000); { innerText of the first match, stored under Name; fails if none }
+procedure InsertText(CONST Selector, Text: string; Mode: TInsertMode= imKeyboard; TimeOut: Integer= 15000);
+procedure Click (CONST Selector: string; Mode: TClickMode= cmMouse; TimeOut: Integer= 10000);
+procedure Focus (CONST Selector: string; TimeOut: Integer= 10000); { focuses the first match and puts the caret at its end; fails if none }
+procedure PressKey (CONST Key: string); { 'Enter', 'Escape', 'Tab', 'Backspace', 'SelectAll' (Ctrl+A) - sent to the focused element through Input.dispatchKeyEvent. Another key raises EArgumentException. }
+procedure AttachFile(CONST Selector, FilePath: string; TimeOut: Integer= 10000); { gives the file to the ONE file input that matches Selector, hidden or not; fails if none or more than one match, or if the file does not exist. See ATTACH FILE in the header. }
+procedure InterceptFileChooser(Enabled: Boolean); { Page.setInterceptFileChooserDialog. While on, a page that opens its file chooser gets no Windows file dialog. See ATTACH FILE in the header. }
+procedure Pause (Ms: Integer);
+procedure Run; { starts the queue. Ends in exactly one OnDone or one OnFailed. }
+procedure Cancel; { stops the queue; no event fires after it }
+function ResultOf(CONST Name: string): string; { '' when no step stored that name }
+function Busy: Boolean;
 ```
 
 ## LightVcl.TranslatorAPI (18)
@@ -4265,4 +4324,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_3066 public routines across 238 units._
+_3120 public routines across 239 units._
