@@ -97,6 +97,12 @@ TYPE
 
 implementation
 
+USES
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcDownload';
+
 
 {-------------------------------------------------------------------------------------------------------------
    TLocalHttpServer
@@ -244,8 +250,7 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 procedure TTestDownload.Setup;
 begin
-  FTestDir:= TPath.Combine(TPath.GetTempPath, 'DownloadTest_' + TGUID.NewGuid.ToString);
-  TDirectory.CreateDirectory(FTestDir);
+  FTestDir:= NewRunFolder(RunPrefix);
 end;
 
 
@@ -257,8 +262,8 @@ end;
 
 procedure TTestDownload.CleanupTestDir;
 begin
-  if TDirectory.Exists(FTestDir)
-  then TDirectory.Delete(FTestDir, True);
+  DeleteRunFolder(FTestDir, RunPrefix);
+  FTestDir:= '';
 end;
 
 

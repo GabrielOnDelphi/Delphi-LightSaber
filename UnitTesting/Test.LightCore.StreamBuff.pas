@@ -245,21 +245,24 @@ type
 implementation
 
 uses
-  LightCore.StreamBuff;
+  LightCore.StreamBuff, Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcStreamBuff';
 
 
 { Helper Methods }
 
 procedure TTestLightStream.CleanupTestFile;
 begin
-  if TFile.Exists(FTestFile)
-  then TFile.Delete(FTestFile);
+  DeleteRunFolder(FTestDir, RunPrefix);
+  FTestDir:= '';
 end;
 
 
 procedure TTestLightStream.Setup;
 begin
-  FTestDir:= TPath.GetTempPath;
+  FTestDir:= NewRunFolder(RunPrefix);
   FTestFile:= TPath.Combine(FTestDir, 'LightStreamTest_' + IntToStr(Random(MaxInt)) + '.dat');
 end;
 

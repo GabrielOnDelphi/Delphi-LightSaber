@@ -107,11 +107,16 @@ type
 
 implementation
 
+USES
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcMRU';
+
 
 procedure TTestMRU.Setup;
 begin
-  FTestDir:= TPath.Combine(TPath.GetTempPath, 'MRUTest_' + TGUID.NewGuid.ToString);
-  TDirectory.CreateDirectory(FTestDir);
+  FTestDir:= NewRunFolder(RunPrefix);
 
   FMRU:= TMRUList.Create;
   FChangedCount:= 0;
@@ -127,8 +132,8 @@ end;
 
 procedure TTestMRU.CleanupTestDir;
 begin
-  if TDirectory.Exists(FTestDir)
-  then TDirectory.Delete(FTestDir, True);
+  DeleteRunFolder(FTestDir, RunPrefix);
+  FTestDir:= '';
 end;
 
 

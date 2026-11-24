@@ -4,7 +4,7 @@ unit Test.GifProperties;
    Unit tests for External\GifProperties.pas
    IsAnimatedGif counts the frames of a GIF by walking its block structure, without decoding any pixel.
 
-   Setup writes two GIF files into a temporary folder that TearDown deletes:
+   Setup writes two GIF files into a run folder of its own (Test.RunFolder) that TearDown deletes:
      - static.gif   (1 red frame)
      - animated.gif (3 frames: red, blue, lime)
    A "cut" test copies static.gif without its last bytes, the way an interrupted download or copy
@@ -74,9 +74,11 @@ uses
   System.Types,
   Vcl.Imaging.GIFImg,
   GifProperties,
-  LightCore.IO;
+  LightCore.IO,
+  Test.RunFolder;
 
 CONST
+  RunPrefix = 'TestVclGifProperties';
   GifWidth  = 20;
   GifHeight = 10;
   GifDelay  = 20;           { Hundredths of a second, as stored in the GIF graphic control extension }
@@ -87,8 +89,7 @@ CONST
 
 procedure TTestGifProperties.Setup;
 begin
-  FTestFolder:= IncludeTrailingPathDelimiter(TPath.Combine(TPath.GetTempPath, 'TestGifProperties_' + TGUID.NewGuid.ToString));
-  TDirectory.CreateDirectory(FTestFolder);
+  FTestFolder:= NewRunFolder(RunPrefix);
   FStaticGifPath:= FTestFolder + 'static.gif';
   FAnimatedGifPath:= FTestFolder + 'animated.gif';
   WriteGif(FStaticGifPath,   [clRed]);
@@ -98,8 +99,8 @@ end;
 
 procedure TTestGifProperties.TearDown;
 begin
-  if TDirectory.Exists(FTestFolder)
-  then TDirectory.Delete(FTestFolder, TRUE);
+  DeleteRunFolder(FTestFolder, RunPrefix);
+  FTestFolder:= '';
 end;
 
 

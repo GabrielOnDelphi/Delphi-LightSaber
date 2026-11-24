@@ -26,6 +26,7 @@ type
   TTestFormProxyList = class
   private
     FTestForm: TObject;
+    FRunFolder: string;
     FTestFile: string;
     procedure CleanupForm;
     procedure CreateTestProxyFile;
@@ -174,21 +175,28 @@ implementation
 uses
   LightCore.AppData,
   LightVcl.Visual.AppData,
-  FormProxyList;
+  FormProxyList,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestFormProxyList';
 
 
+{ The proxy file lives in <temp>\TestFormProxyList_<GUID>\ (Test.RunFolder), deleted in TearDown }
 procedure TTestFormProxyList.Setup;
 begin
   Assert.IsNotNull(AppData, 'AppData must be initialized before running tests');
   FTestForm:= NIL;
-  FTestFile:= TPath.Combine(TPath.GetTempPath, 'TestProxyList_' + TGUID.NewGuid.ToString + '.txt');
+  FRunFolder:= NewRunFolder(RunPrefix);
+  FTestFile:= FRunFolder + 'TestProxyList.txt';
 end;
 
 
 procedure TTestFormProxyList.TearDown;
 begin
   CleanupForm;
-  DeleteTestFile;
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
 end;
 
 
@@ -226,8 +234,7 @@ end;
 
 procedure TTestFormProxyList.DeleteTestFile;
 begin
-  if FileExists(FTestFile)
-  then DeleteFile(FTestFile);
+  DeleteFileInFolder(FTestFile, FRunFolder);
 end;
 
 

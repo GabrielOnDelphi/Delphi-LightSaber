@@ -6,7 +6,7 @@
 
    Includes TestInsight support: define TESTINSIGHT in project options.
 
-   Setup writes the two GIF files the tests need into a temporary folder that TearDown deletes:
+   Setup writes the two GIF files the tests need into a run folder of its own (Test.RunFolder) that TearDown deletes:
      - test_static.gif   (1 red frame)
      - test_animated.gif (3 frames: red, blue, lime; each with a delay of GifDelay hundredths of a second)
 =============================================================================================================}
@@ -107,9 +107,11 @@ uses
   Vcl.Imaging.GIFImg,
   LightVcl.Graph.Gif,
   LightCore.AppData,
-  LightCore.IO;
+  LightCore.IO,
+  Test.RunFolder;
 
 CONST
+  RunPrefix = 'TestVclGraphGif';
   GifWidth  = 20;
   GifHeight = 10;
   GifDelay  = 20;   { Hundredths of a second, as stored in the GIF graphic control extension }
@@ -122,8 +124,7 @@ begin
     AppDataCore:= TAppDataCore.Create('TestApp');
 
   { The fixture writes its own GIF files, so no test depends on a file that can go missing }
-  FTestFolder:= IncludeTrailingPathDelimiter(TPath.Combine(TPath.GetTempPath, 'TestGraphGif_' + TGUID.NewGuid.ToString));
-  TDirectory.CreateDirectory(FTestFolder);
+  FTestFolder:= NewRunFolder(RunPrefix);
   FAnimatedGifPath:= FTestFolder + 'test_animated.gif';
   FStaticGifPath:= FTestFolder + 'test_static.gif';
   WriteGif(FStaticGifPath,   [clRed]);
@@ -133,8 +134,8 @@ end;
 
 procedure TTestGraphGif.TearDown;
 begin
-  if TDirectory.Exists(FTestFolder)
-  then TDirectory.Delete(FTestFolder, TRUE);
+  DeleteRunFolder(FTestFolder, RunPrefix);
+  FTestFolder:= '';
 end;
 
 

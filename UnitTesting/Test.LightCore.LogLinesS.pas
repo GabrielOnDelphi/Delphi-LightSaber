@@ -21,6 +21,7 @@ type
   [TestFixture]
   TTestLogLinesS = class
   private
+    FRunFolder: string;
     FLines: TLogLinesSingleThreaded;
   public
     [Setup]
@@ -132,9 +133,16 @@ type
 
 implementation
 
+USES
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcLogLinesS';
+
 
 procedure TTestLogLinesS.Setup;
 begin
+  FRunFolder:= NewRunFolder(RunPrefix);
   FLines:= TLogLinesSingleThreaded.Create;
 end;
 
@@ -142,6 +150,8 @@ end;
 procedure TTestLogLinesS.TearDown;
 begin
   FreeAndNil(FLines);
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
 end;
 
 
@@ -527,7 +537,7 @@ begin
   FLines.AddNewLine('Message 3', lvErrors);
 
   { Write to stream }
-  FilePath:= TPath.Combine(TPath.GetTempPath, 'TestLogLines_' + TGUID.NewGuid.ToString + '.dat');
+  FilePath:= FRunFolder + 'TestLogLines.dat';
   Stream:= TLightStream.CreateWrite(FilePath);
   try
     FLines.WriteToStream(Stream);
@@ -555,7 +565,6 @@ begin
     Assert.AreEqual(lvErrors, NewLines[2].Level);
   finally
     FreeAndNil(NewLines);
-    DeleteFile(FilePath);
   end;
 end;
 
@@ -565,7 +574,7 @@ var
   Stream: TLightStream;
 begin
   { Write an invalid header }
-  FilePath:= TPath.Combine(TPath.GetTempPath, 'TestInvalidVersion_' + TGUID.NewGuid.ToString + '.dat');
+  FilePath:= FRunFolder + 'TestInvalidVersion.dat';
   Stream:= TLightStream.CreateWrite(FilePath);
   try
     Stream.WriteHeader('TLogLines', 99);  { Invalid version }
@@ -586,7 +595,6 @@ begin
     );
   finally
     FreeAndNil(Stream);
-    DeleteFile(FilePath);
   end;
 end;
 

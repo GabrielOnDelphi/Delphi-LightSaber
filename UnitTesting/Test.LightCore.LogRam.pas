@@ -227,13 +227,15 @@ type
 implementation
 
 uses
-  LightCore.AppData, LightCore.LogLinesAbstract;
+  LightCore.AppData, LightCore.LogLinesAbstract, Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcLogRam';
 
 
 procedure TTestLogRam.Setup;
 begin
-  FTestDir:= TPath.Combine(TPath.GetTempPath, 'LogRamTest_' + TGUID.NewGuid.ToString);
-  TDirectory.CreateDirectory(FTestDir);
+  FTestDir:= NewRunFolder(RunPrefix);
 
   { Initialize AppDataCore if not already done }
   if AppDataCore = nil
@@ -252,8 +254,8 @@ end;
 
 procedure TTestLogRam.CleanupTestDir;
 begin
-  if TDirectory.Exists(FTestDir)
-  then TDirectory.Delete(FTestDir, True);
+  DeleteRunFolder(FTestDir, RunPrefix);
+  FTestDir:= '';
 end;
 
 

@@ -22,6 +22,7 @@ type
   TTestBkgColorParams = class
   private
     FParams: RBkgColorParams;
+    FRunFolder: string;
     FTempFile: string;
     procedure CreateTempFile;
     procedure DeleteTempFile;
@@ -99,10 +100,17 @@ type
 
 implementation
 
+USES
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcBkgColorParams';
+
 
 procedure TTestBkgColorParams.Setup;
 begin
   FParams.Reset;
+  FRunFolder:= NewRunFolder(RunPrefix);
   FTempFile:= '';
 end;
 
@@ -115,14 +123,14 @@ end;
 
 procedure TTestBkgColorParams.CreateTempFile;
 begin
-  FTempFile:= TPath.GetTempFileName;
+  FTempFile:= FRunFolder + 'BkgColorParams.dat';
 end;
 
 
 procedure TTestBkgColorParams.DeleteTempFile;
 begin
-  if (FTempFile <> '') AND TFile.Exists(FTempFile)
-  then TFile.Delete(FTempFile);
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
   FTempFile:= '';
 end;
 

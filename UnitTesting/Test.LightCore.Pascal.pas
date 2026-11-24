@@ -20,6 +20,7 @@ type
   [TestFixture]
   TTestLightCorePascal = class
   private
+    FRunFolder: string;
     FTestLines: TStringList;
   public
     [Setup]
@@ -228,9 +229,16 @@ type
 
 implementation
 
+USES
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcPascal';
+
 
 procedure TTestLightCorePascal.Setup;
 begin
+  FRunFolder:= NewRunFolder(RunPrefix);
   FTestLines:= TStringList.Create;
 end;
 
@@ -238,6 +246,8 @@ end;
 procedure TTestLightCorePascal.TearDown;
 begin
   FreeAndNil(FTestLines);
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
 end;
 
 
@@ -807,15 +817,13 @@ var
   TempFile: string;
   TSL: TStringList;
 begin
-  TempFile:= System.IOUtils.TPath.GetTempFileName;
+  TempFile:= FRunFolder + 'EmptyFile.tmp';
   TSL:= TStringList.Create;
   try
     TSL.SaveToFile(TempFile);  { Empty file }
     Assert.AreEqual(0, CountComments(TempFile));
   finally
     FreeAndNil(TSL);
-    if FileExists(TempFile)
-    then DeleteFile(TempFile);
   end;
 end;
 

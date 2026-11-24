@@ -65,22 +65,25 @@ implementation
 uses
   Winapi.Windows,
   Winapi.ShellAPI,
-  System.Win.Registry;
+  System.Win.Registry,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcShell';
 
 
 procedure TTestShell.Setup;
 begin
   CoInitialize(nil);
-  FTestDir:= TPath.Combine(TPath.GetTempPath, 'ShellTest_' + TGUID.NewGuid.ToString);
-  TDirectory.CreateDirectory(FTestDir);
+  FTestDir:= NewRunFolder(RunPrefix);
   FTestLnkFile:= TPath.Combine(FTestDir, 'test.lnk');
 end;
 
 
 procedure TTestShell.TearDown;
 begin
-  if TDirectory.Exists(FTestDir)
-  then TDirectory.Delete(FTestDir, True);
+  DeleteRunFolder(FTestDir, RunPrefix);
+  FTestDir:= '';
   CoUninitialize;
 end;
 

@@ -121,7 +121,7 @@
         <DCCReference Include="..\FrameVCL\FormSkinsDisk.pas"/>
         <DCCReference Include="..\FrameVCL\FormSkinsRes.pas"/>
         <DCCReference Include="..\FrameVCL\FormSplashScreen.pas"/>
-        <DCCReference Include="..\FrameVCL\FormTranslSelector.pas"/>
+        <DCCReference Include="..\FrameVCL\AutoTranslator\FormTranslSelector.pas"/>
         <DCCReference Include="..\FrameVCL\FormUniversalEula.pas"/>
         <DCCReference Include="..\FrameVCL\FrameExplorer.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Common.Translate.pas"/>

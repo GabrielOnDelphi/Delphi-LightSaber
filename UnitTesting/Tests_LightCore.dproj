@@ -169,6 +169,7 @@
         <DCCReference Include="Test.LightCore.Core.pas"/>
         <DCCReference Include="Test.LightCore.AppData.pas"/>
         <DCCReference Include="Test.LightCore.INIFile.pas"/>
+        <DCCReference Include="Test.LightCore.INIFileMem.pas"/>
         <DCCReference Include="Test.LightCore.INIFileQuick.pas"/>
         <DCCReference Include="Test.LightCore.MRU.pas"/>
         <DCCReference Include="Test.LightCore.IO.pas"/>
@@ -226,6 +227,7 @@
         <DCCReference Include="..\LightCore.StreamBuff.pas"/>
         <DCCReference Include="..\LightCore.AppData.pas"/>
         <DCCReference Include="..\LightCore.INIFile.pas"/>
+        <DCCReference Include="..\LightCore.INIFileMem.pas"/>
         <DCCReference Include="..\LightCore.INIFileQuick.pas"/>
         <DCCReference Include="..\LightCore.MRU.pas"/>
         <DCCReference Include="..\LightCore.EncodeMime.pas"/>

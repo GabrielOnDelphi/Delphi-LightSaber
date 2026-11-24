@@ -50,6 +50,9 @@ type
     [Test]
     procedure Test_GetWinVerNetServer_NotUnknownOS;
 
+    [Test]
+    procedure Test_ServerInfo101_LayoutMatchesLmServerH;
+
     { Cross-Method Consistency Tests }
     [Test]
     procedure Test_Consistency_GetWinVersion_MatchesNetServer;
@@ -238,6 +241,38 @@ begin
   { On most systems, NetServerGetInfo should succeed }
   Assert.AreNotEqual('Unknown OS', VersionStr,
     'GetWinVerNetServer should return valid version on most systems');
+end;
+
+
+{ NetServerGetInfo writes SERVER_INFO_101 with the C layout of lmserver.h (DWORD, LPWSTR, DWORD, DWORD, DWORD, LPWSTR),
+  every field on its natural boundary: https://learn.microsoft.com/en-us/windows/win32/api/lmserver/ns-lmserver-server_info_101
+  Win32 (4-byte pointers): size 24, offsets 0, 4, 8, 12, 16, 20.
+  Win64 (8-byte pointers): size 40, offsets 0, 8, 16, 20, 24, 32 (4 padding bytes after sv101_platform_id and after sv101_type).
+  With alignment 2 (DCC_Alignment 2) Win64 would give size 32, offsets 0, 4, 12, 16, 20, 24. Win32 is the same at every alignment, so this test cannot fail there. }
+procedure TTestWinVersionApi.Test_ServerInfo101_LayoutMatchesLmServerH;
+VAR
+  Info: SERVER_INFO_101;
+  Base: NativeUInt;
+begin
+  Info:= Default(SERVER_INFO_101);
+  Base:= NativeUInt(@Info);
+  {$IFDEF CPUX64}
+  Assert.AreEqual(40, Integer(SizeOf(SERVER_INFO_101)), 'SizeOf');
+  Assert.AreEqual(0,  Integer(NativeUInt(@Info.sv101_platform_id)   - Base), 'sv101_platform_id');
+  Assert.AreEqual(8,  Integer(NativeUInt(@Info.sv101_name)          - Base), 'sv101_name');
+  Assert.AreEqual(16, Integer(NativeUInt(@Info.sv101_version_major) - Base), 'sv101_version_major');
+  Assert.AreEqual(20, Integer(NativeUInt(@Info.sv101_version_minor) - Base), 'sv101_version_minor');
+  Assert.AreEqual(24, Integer(NativeUInt(@Info.sv101_type)          - Base), 'sv101_type');
+  Assert.AreEqual(32, Integer(NativeUInt(@Info.sv101_comment)       - Base), 'sv101_comment');
+  {$ELSE}
+  Assert.AreEqual(24, Integer(SizeOf(SERVER_INFO_101)), 'SizeOf');
+  Assert.AreEqual(0,  Integer(NativeUInt(@Info.sv101_platform_id)   - Base), 'sv101_platform_id');
+  Assert.AreEqual(4,  Integer(NativeUInt(@Info.sv101_name)          - Base), 'sv101_name');
+  Assert.AreEqual(8,  Integer(NativeUInt(@Info.sv101_version_major) - Base), 'sv101_version_major');
+  Assert.AreEqual(12, Integer(NativeUInt(@Info.sv101_version_minor) - Base), 'sv101_version_minor');
+  Assert.AreEqual(16, Integer(NativeUInt(@Info.sv101_type)          - Base), 'sv101_type');
+  Assert.AreEqual(20, Integer(NativeUInt(@Info.sv101_comment)       - Base), 'sv101_comment');
+  {$ENDIF}
 end;
 
 

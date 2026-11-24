@@ -110,13 +110,15 @@ type
 implementation
 
 uses
-  LightCore.AppData;
+  LightCore.AppData, Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcDebugger';
 
 
 procedure TTestDebugger.Setup;
 begin
-  FTestDir:= TPath.Combine(TPath.GetTempPath, 'DebuggerTest_' + TGUID.NewGuid.ToString);
-  TDirectory.CreateDirectory(FTestDir);
+  FTestDir:= NewRunFolder(RunPrefix);
 
   { Initialize AppDataCore if not already done }
   if AppDataCore = nil
@@ -132,8 +134,8 @@ end;
 
 procedure TTestDebugger.CleanupTestDir;
 begin
-  if TDirectory.Exists(FTestDir)
-  then TDirectory.Delete(FTestDir, True);
+  DeleteRunFolder(FTestDir, RunPrefix);
+  FTestDir:= '';
 end;
 
 

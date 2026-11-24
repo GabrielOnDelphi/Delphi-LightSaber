@@ -30,6 +30,7 @@ type
   [TestFixture]
   TTestFtpDetails = class
   private
+    FRunFolder: string;
     FTestFile: string;
     function  MakeSample: TFTPDetails;                    { A fully-populated record with distinct field values }
   public
@@ -46,6 +47,12 @@ type
 
 implementation
 
+USES
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcFtpDetails';
+
 
 function TTestFtpDetails.MakeSample: TFTPDetails;
 begin
@@ -60,16 +67,18 @@ begin
 end;
 
 
+{ The test file lives in <temp>\TestLcFtpDetails_<GUID>\ (Test.RunFolder), deleted in TearDown }
 procedure TTestFtpDetails.Setup;
 begin
-  FTestFile:= TPath.Combine(TPath.GetTempPath, 'FtpDetailsTest_' + IntToStr(Random(MaxInt)) + '.dat');
+  FRunFolder:= NewRunFolder(RunPrefix);
+  FTestFile:= FRunFolder + 'FtpDetailsTest.dat';
 end;
 
 
 procedure TTestFtpDetails.TearDown;
 begin
-  if TFile.Exists(FTestFile)
-  then TFile.Delete(FTestFile);
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
 end;
 
 

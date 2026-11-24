@@ -90,7 +90,11 @@ uses
   Winapi.ActiveX,
   Winapi.KnownFolders,
   LightCore.Win.IO,
-  LightCore.IO;
+  LightCore.IO,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcWinIO';
 
 
 { A variable of the process environment block. Qualified, because Winapi.Windows also declares a GetEnvironmentVariable (the API, with three parameters) }
@@ -139,8 +143,7 @@ end;
 
 procedure TTestVclCommonIO.Setup;
 begin
-  FTestFolder := TPath.Combine(TPath.GetTempPath, 'LightVclIOTest_' + IntToStr(Random(100000)));
-  ForceDirectoriesE(FTestFolder);
+  FTestFolder := NewRunFolder(RunPrefix);
   FTestFile := TPath.Combine(FTestFolder, 'TestFile.txt');
   TFile.WriteAllText(FTestFile, 'Test content');
 end;
@@ -152,9 +155,8 @@ end;
 
 procedure TTestVclCommonIO.CleanupTestFiles;
 begin
-  LightCore.IO.TryDeleteFile(FTestFile);
-  if DirectoryExists(FTestFolder) then
-    TDirectory.Delete(FTestFolder, True);
+  DeleteRunFolder(FTestFolder, RunPrefix);
+  FTestFolder:= '';
 end;
 
 { Special Folders Tests }

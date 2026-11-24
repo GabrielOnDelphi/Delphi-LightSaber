@@ -19,9 +19,16 @@ type
   [TestFixture]
   TTestResizeParams = class
   private
+    FRunFolder: string;
     procedure Poison(VAR Params: RResizeParams);
     procedure CheckPersistedOp(Op: TResizeOp; ExpectedByte: Byte);
   public
+    [Setup]
+    procedure Setup;
+
+    [TearDown]
+    procedure TearDown;
+
     { Reset Tests }
     [Test]
     procedure TestReset_DefaultValues;
@@ -119,7 +126,24 @@ implementation
 
 uses
   System.IOUtils,
-  LightCore.StreamBuff;
+  LightCore.StreamBuff,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcResizeParams';
+
+
+procedure TTestResizeParams.Setup;
+begin
+  FRunFolder:= NewRunFolder(RunPrefix);
+end;
+
+
+procedure TTestResizeParams.TearDown;
+begin
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
+end;
 
 
 { Fills every field with a value that differs from the one Reset writes, so a field that Reset forgets keeps the wrong value }
@@ -152,35 +176,31 @@ VAR
   Written, ReadBack: RResizeParams;
   Bytes: TBytes;
 begin
-  FileName:= TPath.GetTempFileName;
+  FileName:= FRunFolder + 'ResizeParams_' + IntToStr(Ord(Op)) + '.dat';
+
+  Written.Reset;
+  Written.ResizeOpp:= Op;
+  Stream:= TLightStream.CreateWrite(FileName);
   TRY
-    Written.Reset;
-    Written.ResizeOpp:= Op;
-    Stream:= TLightStream.CreateWrite(FileName);
-    TRY
-      Written.WriteToStream(Stream);
-    FINALLY
-      FreeAndNil(Stream);
-    END;
-
-    Bytes:= TFile.ReadAllBytes(FileName);
-    Assert.AreEqual(RecordSize, Length(Bytes), 'Size of the saved record');
-    Assert.AreEqual(ExpectedByte, Bytes[0], 'Persisted byte of the resize mode ' + IntToStr(Ord(Op)));
-
-    Poison(ReadBack);
-    if Op = roStretch
-    then ReadBack.ResizeOpp:= roNone;   { Poison sets roStretch; the read must overwrite it }
-    Stream:= TLightStream.CreateRead(FileName);
-    TRY
-      ReadBack.ReadFromStream(Stream);
-    FINALLY
-      FreeAndNil(Stream);
-    END;
-    Assert.AreEqual(Op, ReadBack.ResizeOpp, 'ReadFromStream must restore the resize mode ' + IntToStr(ExpectedByte));
+    Written.WriteToStream(Stream);
   FINALLY
-    if TFile.Exists(FileName)
-    then TFile.Delete(FileName);
+    FreeAndNil(Stream);
   END;
+
+  Bytes:= TFile.ReadAllBytes(FileName);
+  Assert.AreEqual(RecordSize, Length(Bytes), 'Size of the saved record');
+  Assert.AreEqual(ExpectedByte, Bytes[0], 'Persisted byte of the resize mode ' + IntToStr(Ord(Op)));
+
+  Poison(ReadBack);
+  if Op = roStretch
+  then ReadBack.ResizeOpp:= roNone;   { Poison sets roStretch; the read must overwrite it }
+  Stream:= TLightStream.CreateRead(FileName);
+  TRY
+    ReadBack.ReadFromStream(Stream);
+  FINALLY
+    FreeAndNil(Stream);
+  END;
+  Assert.AreEqual(Op, ReadBack.ResizeOpp, 'ReadFromStream must restore the resize mode ' + IntToStr(ExpectedByte));
 end;
 
 

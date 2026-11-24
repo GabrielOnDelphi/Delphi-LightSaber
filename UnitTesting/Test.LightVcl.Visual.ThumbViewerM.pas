@@ -46,13 +46,16 @@ type
 implementation
 
 uses
-  LightCore.IO;
+  LightCore.IO,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestVclCubicThumbs';
 
 
 procedure TTestCubicThumbs.Setup;
 begin
-  FTempDir:= TPath.Combine(TPath.GetTempPath, 'TestCubicThumbs_' + TGUID.NewGuid.ToString);
-  ForceDirectoriesE(FTempDir);
+  FTempDir:= NewRunFolder(RunPrefix);
 
   { CreateNew: a form class declared in code has no DFM resource. The form is never shown. }
   FForm:= TForm.CreateNew(NIL);
@@ -72,8 +75,8 @@ procedure TTestCubicThumbs.TearDown;
 begin
   FreeAndNil(FThumbs);
   FreeAndNil(FForm);
-  if DirectoryExists(FTempDir)
-  then TDirectory.Delete(FTempDir, TRUE);
+  DeleteRunFolder(FTempDir, RunPrefix);
+  FTempDir:= '';
 end;
 
 

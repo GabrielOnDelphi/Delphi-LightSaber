@@ -77,20 +77,24 @@ type
 implementation
 
 uses
-  LightCore.AppData, LightCore.LogTypes;
+  LightCore.AppData, LightCore.LogTypes,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestVclExecuteFile';
 
 
+{ FTestDir is <temp>\TestVclExecuteFile_<GUID>\ (Test.RunFolder), deleted in TearDown }
 procedure TTestExecuteFile.Setup;
 begin
-  FTestDir:= TPath.Combine(TPath.GetTempPath, 'ExecuteFileTest_' + TGUID.NewGuid.ToString);
-  TDirectory.CreateDirectory(FTestDir);
+  FTestDir:= NewRunFolder(RunPrefix);
 end;
 
 
 procedure TTestExecuteFile.TearDown;
 begin
-  if TDirectory.Exists(FTestDir)
-  then TDirectory.Delete(FTestDir, True);
+  DeleteRunFolder(FTestDir, RunPrefix);
+  FTestDir:= '';
 end;
 
 

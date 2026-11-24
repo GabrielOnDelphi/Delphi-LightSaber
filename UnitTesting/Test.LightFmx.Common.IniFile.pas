@@ -20,8 +20,8 @@ type
   [TestFixture]
   TTestFmxIniFileApp = class
   private
+    FRunFolder: string;
     FTestIniPath: string;
-    procedure CleanupTestIni;
   public
     [Setup]
     procedure Setup;
@@ -150,25 +150,24 @@ type
 implementation
 
 uses
-  LightCore.AppData;
+  LightCore.AppData,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestFmxIniFileApp';
 
 
 procedure TTestFmxIniFileApp.Setup;
 begin
-  FTestIniPath:= TPath.Combine(TPath.GetTempPath, 'TestFmxIniFile_' + TGUID.NewGuid.ToString + '.ini');
+  FRunFolder:= NewRunFolder(RunPrefix);
+  FTestIniPath:= FRunFolder + 'TestFmxIniFile_' + TGUID.NewGuid.ToString + '.ini';
 end;
 
 
 procedure TTestFmxIniFileApp.TearDown;
 begin
-  CleanupTestIni;
-end;
-
-
-procedure TTestFmxIniFileApp.CleanupTestIni;
-begin
-  if FileExists(FTestIniPath)
-  then DeleteFile(FTestIniPath);
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
 end;
 
 

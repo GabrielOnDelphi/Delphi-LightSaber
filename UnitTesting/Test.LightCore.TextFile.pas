@@ -110,12 +110,14 @@ type
 implementation
 
 uses
-  LightCore.TextFile;
+  LightCore.TextFile, Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcTextFile';
 
 procedure TTestLightCoreTextFile.Setup;
 begin
-  FTestFolder:= TPath.Combine(TPath.GetTempPath, 'LightTextFileTest_' + IntToStr(Random(100000)));
-  ForceDirectoriesE(FTestFolder);
+  FTestFolder:= NewRunFolder(RunPrefix);
   FTestFile:= TPath.Combine(FTestFolder, 'TestFile.txt');
 end;
 
@@ -126,8 +128,8 @@ end;
 
 procedure TTestLightCoreTextFile.CleanupTestFiles;
 begin
-  if DirectoryExists(FTestFolder)
-  then TDirectory.Delete(FTestFolder, True);
+  DeleteRunFolder(FTestFolder, RunPrefix);
+  FTestFolder:= '';
 end;
 
 { String Write/Read Tests }

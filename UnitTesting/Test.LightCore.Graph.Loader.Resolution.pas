@@ -112,7 +112,11 @@ type
 implementation
 
 uses
-  LightCore.Graph.Loader.Resolution;
+  LightCore.Graph.Loader.Resolution,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcGraphResolution';
 
 
 procedure WriteBytes(Stream: TStream; CONST Bytes: array of Byte);
@@ -140,15 +144,14 @@ end;
 
 procedure TTestCoreGraphLoaderResolution.Setup;
 begin
-  FTempDir:= TPath.Combine(TPath.GetTempPath, 'TestCoreGraphResolution_' + TGUID.NewGuid.ToString);
-  ForceDirectoriesE(FTempDir);
+  FTempDir:= NewRunFolder(RunPrefix);
 end;
 
 
 procedure TTestCoreGraphLoaderResolution.TearDown;
 begin
-  if DirectoryExists(FTempDir)
-  then RemoveDir(FTempDir);
+  DeleteRunFolder(FTempDir, RunPrefix);
+  FTempDir:= '';
 end;
 
 
@@ -447,14 +450,10 @@ begin
     FreeAndNil(Stream);
   END;
 
-  TRY
-    GetImageRes(UnsupportedFile, Width, Height);
+  GetImageRes(UnsupportedFile, Width, Height);
 
-    Assert.AreEqual(-1, Width, 'Unsupported format should return Width = -1');
-    Assert.AreEqual(-1, Height, 'Unsupported format should return Height = -1');
-  FINALLY
-    DeleteFile(UnsupportedFile);
-  END;
+  Assert.AreEqual(-1, Width, 'Unsupported format should return Width = -1');
+  Assert.AreEqual(-1, Height, 'Unsupported format should return Height = -1');
 end;
 
 

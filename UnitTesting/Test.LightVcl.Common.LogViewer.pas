@@ -21,6 +21,7 @@ type
   TTestLogViewer = class
   private
     FTestForm: TForm;
+    FRunFolder: string;
     procedure checkSavedRtf(CONST MultiLineMsg: string);
   public
     [Setup]
@@ -105,11 +106,13 @@ uses
   System.IOUtils,
   Winapi.Windows,
   Vcl.ComCtrls, Vcl.Controls, Vcl.StdCtrls,
-  LightVcl.Common.LogViewer;
+  LightVcl.Common.LogViewer,
+  Test.RunFolder;
 
 CONST
   RowHeight = 22;    { TLogViewer.CreateWnd sets DefaultRowHeight to 22 }
   PageRows  = 5;     { The test viewer shows 5 data rows under the header }
+  RunPrefix = 'TestVclLogViewer';
 
 
 { A viewer with a window, 5 data rows high, on Form }
@@ -152,8 +155,10 @@ begin
   else Result:= Text;
 end;
 
+{ FRunFolder is <temp>\TestVclLogViewer_<GUID>\ (Test.RunFolder): the SaveAsRtf tests write there; TearDown deletes it }
 procedure TTestLogViewer.Setup;
 begin
+  FRunFolder:= NewRunFolder(RunPrefix);
   FTestForm:= TForm.Create(NIL);
   FTestForm.Width:= 400;
   FTestForm.Height:= 300;
@@ -162,6 +167,8 @@ end;
 procedure TTestLogViewer.TearDown;
 begin
   FreeAndNil(FTestForm);
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
 end;
 
 { Constructor Tests }
@@ -296,7 +303,7 @@ var
   Reader: TRichEdit;
   TempFile: string;
 begin
-  TempFile:= TPath.Combine(TPath.GetTempPath, 'Test_LogViewer_SaveAsRtf.rtf');
+  TempFile:= FRunFolder + 'Test_LogViewer_SaveAsRtf.rtf';
   LogViewer:= TLogViewer.Create(FTestForm);
   Reader:= TRichEdit.Create(NIL);
   try
@@ -323,8 +330,6 @@ begin
   finally
     FreeAndNil(Reader);
     FreeAndNil(LogViewer);
-    if FileExists(TempFile)
-    then System.SysUtils.DeleteFile(TempFile);
   end;
 end;
 

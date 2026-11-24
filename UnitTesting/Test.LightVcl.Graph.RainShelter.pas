@@ -27,7 +27,6 @@ type
     FTestDir: string;
     FTestFile: string;
     FTestBitmap: TBitmap;
-    procedure CleanupTestFile;
     function CreateTestBitmap(Width, Height: Integer): TBitmap;
     function CreateTestMaskBitmap(Width, Height: Integer): TBitmap;
   public
@@ -84,17 +83,14 @@ implementation
 uses
   LightVcl.Graph.RainShelter,
   LightCore.Graph.RainDropParams,
-  LightCore.IO;              { RainDrop - the '.RainDrop' file extension constant, LightCore.IO.pas:138 }
+  LightCore.IO,              { RainDrop - the '.RainDrop' file extension constant, LightCore.IO.pas:138 }
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestVclRainShelter';
 
 
 { Helper Methods }
-
-procedure TTestRainDrop.CleanupTestFile;
-begin
-  if TFile.Exists(FTestFile)
-  then TFile.Delete(FTestFile);
-end;
-
 
 function TTestRainDrop.CreateTestBitmap(Width, Height: Integer): TBitmap;
 begin
@@ -126,7 +122,7 @@ end;
 
 procedure TTestRainDrop.Setup;
 begin
-  FTestDir:= TPath.GetTempPath;
+  FTestDir:= NewRunFolder(RunPrefix);
   FTestFile:= TPath.Combine(FTestDir, 'RainDropTest_' + IntToStr(Random(MaxInt)) + RainDrop);
   FTestBitmap:= NIL;
 end;
@@ -134,8 +130,9 @@ end;
 
 procedure TTestRainDrop.TearDown;
 begin
-  CleanupTestFile;
   FreeAndNil(FTestBitmap);
+  DeleteRunFolder(FTestDir, RunPrefix);
+  FTestDir:= '';
 end;
 
 
@@ -305,8 +302,7 @@ begin
     Assert.IsTrue(Shelter.OrigImage = NIL, 'OrigImage should remain nil for invalid file');
   FINALLY
     FreeAndNil(Shelter);
-    if TFile.Exists(TempFile)
-    then TFile.Delete(TempFile);
+    DeleteFileInFolder(TempFile, FTestDir);
   END;
 end;
 
@@ -337,10 +333,8 @@ begin
   FINALLY
     FreeAndNil(Mask);
     FreeAndNil(Shelter);
-    if TFile.Exists(ExpectedRainDropFile)
-    then TFile.Delete(ExpectedRainDropFile);
-    if TFile.Exists(JpgFileName)
-    then TFile.Delete(JpgFileName);
+    DeleteFileInFolder(ExpectedRainDropFile, FTestDir);
+    DeleteFileInFolder(JpgFileName, FTestDir);
   END;
 end;
 
@@ -382,8 +376,7 @@ begin
   FINALLY
     FreeAndNil(Mask);
     FreeAndNil(Shelter);
-    if TFile.Exists(InvalidFile)
-    then TFile.Delete(InvalidFile);
+    DeleteFileInFolder(InvalidFile, FTestDir);
   END;
 end;
 
@@ -443,8 +436,7 @@ begin
     Assert.IsTrue(LoadedBitmap = NIL, 'TRainShelter.LoadBitmap should return NIL for invalid file');
   FINALLY
     FreeAndNil(LoadedBitmap);
-    if TFile.Exists(TempFile)
-    then TFile.Delete(TempFile);
+    DeleteFileInFolder(TempFile, FTestDir);
   END;
 end;
 

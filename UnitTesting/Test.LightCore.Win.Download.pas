@@ -88,13 +88,15 @@ implementation
 {$IFDEF MSWINDOWS}
 
 uses
-  Test.LightCore.Download;
+  Test.LightCore.Download, Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcWinDownload';
 
 
 procedure TTestDownloadWinInet.Setup;
 begin
-  FTestDir:= TPath.Combine(TPath.GetTempPath, 'WinInetTest_' + TGUID.NewGuid.ToString);
-  TDirectory.CreateDirectory(FTestDir);
+  FTestDir:= NewRunFolder(RunPrefix);
 end;
 
 
@@ -106,8 +108,8 @@ end;
 
 procedure TTestDownloadWinInet.CleanupTestDir;
 begin
-  if TDirectory.Exists(FTestDir)
-  then TDirectory.Delete(FTestDir, True);
+  DeleteRunFolder(FTestDir, RunPrefix);
+  FTestDir:= '';
 end;
 
 

@@ -20,7 +20,6 @@ type
   private
     FTestFolder: string;
     FTestFile: string;
-    procedure CleanupTestFiles;
   public
     [Setup]
     procedure Setup;
@@ -57,26 +56,24 @@ implementation
 
 uses
   LightVcl.Common.IO,
-  LightCore.IO;
+  LightCore.IO,
+  Test.RunFolder;
 
+CONST
+  RunPrefix = 'TestVclCommonIO';
+
+{ FTestFolder is <temp>\TestVclCommonIO_<GUID>\ (Test.RunFolder), deleted with its file in TearDown }
 procedure TTestVclCommonIO.Setup;
 begin
-  FTestFolder := TPath.Combine(TPath.GetTempPath, 'LightVclIOTest_' + IntToStr(Random(100000)));
-  ForceDirectoriesE(FTestFolder);
+  FTestFolder := NewRunFolder(RunPrefix);
   FTestFile := TPath.Combine(FTestFolder, 'TestFile.txt');
   TFile.WriteAllText(FTestFile, 'Test content');
 end;
 
 procedure TTestVclCommonIO.TearDown;
 begin
-  CleanupTestFiles;
-end;
-
-procedure TTestVclCommonIO.CleanupTestFiles;
-begin
-  LightCore.IO.TryDeleteFile(FTestFile);
-  if DirectoryExists(FTestFolder) then
-    TDirectory.Delete(FTestFolder, True);
+  DeleteRunFolder(FTestFolder, RunPrefix);
+  FTestFolder:= '';
 end;
 
 { File Age Tests }
@@ -94,7 +91,7 @@ procedure TTestVclCommonIO.TestFileAge_NonExistentFile;
 var
   Age: TDateTime;
 begin
-  Age := FileAge(FTestFolder + '\NonExistent.txt');
+  Age := FileAge(FTestFolder + 'NonExistent.txt');
   Assert.AreEqual(Double(-1), Double(Age), 0.0001, 'Non-existent file should return -1');
 end;
 

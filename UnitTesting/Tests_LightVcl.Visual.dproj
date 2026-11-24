@@ -230,6 +230,8 @@
         <DCCReference Include="..\LightCore.SvgShapes.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Visual.SvgSpeedButton.pas"/>
         <DCCReference Include="Test.LightVcl.Visual.SvgSpeedButton.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Visual.TrackBar.pas"/>
+        <DCCReference Include="Test.LightVcl.Visual.TrackBar.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -39,7 +39,6 @@ type
     procedure CreateTempPngFile(Width, Height: Integer);
     procedure CreateTempJpgFile(Width, Height: Integer);
     procedure CreateTempGifFile(Width, Height: Integer);
-    procedure CleanupTempFiles;
   public
     [Setup]
     procedure Setup;
@@ -113,13 +112,16 @@ uses
   Vcl.Imaging.PngImage,
   Vcl.Imaging.GIFImg,
   LightCore.Graph.Loader.Resolution,     { GetImageRes, GetBmpSize, GetPngSize, GetJpgSize, GetGifSize, GetBmpHeader, TBitmapHeader }
-  LightVcl.Graph.Loader.Resolution;      { GetBitsPerPixel }
+  LightVcl.Graph.Loader.Resolution,      { GetBitsPerPixel }
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestVclGraphResolution';
 
 
 procedure TTestGraphLoaderResolution.Setup;
 begin
-  FTempDir:= TPath.Combine(TPath.GetTempPath, 'TestGraphResolution_' + TGUID.NewGuid.ToString);
-  ForceDirectoriesE(FTempDir);
+  FTempDir:= NewRunFolder(RunPrefix);
   FTempBmpFile:= '';
   FTempPngFile:= '';
   FTempJpgFile:= '';
@@ -129,22 +131,8 @@ end;
 
 procedure TTestGraphLoaderResolution.TearDown;
 begin
-  CleanupTempFiles;
-  if DirectoryExists(FTempDir)
-  then RemoveDir(FTempDir);
-end;
-
-
-procedure TTestGraphLoaderResolution.CleanupTempFiles;
-begin
-  if (FTempBmpFile <> '') AND FileExists(FTempBmpFile)
-  then DeleteFile(FTempBmpFile);
-  if (FTempPngFile <> '') AND FileExists(FTempPngFile)
-  then DeleteFile(FTempPngFile);
-  if (FTempJpgFile <> '') AND FileExists(FTempJpgFile)
-  then DeleteFile(FTempJpgFile);
-  if (FTempGifFile <> '') AND FileExists(FTempGifFile)
-  then DeleteFile(FTempGifFile);
+  DeleteRunFolder(FTempDir, RunPrefix);
+  FTempDir:= '';
 end;
 
 

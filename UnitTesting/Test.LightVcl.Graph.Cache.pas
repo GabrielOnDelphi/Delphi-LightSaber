@@ -135,7 +135,12 @@ implementation
 
 uses
   LightVcl.Graph.Cache,
-  LightCore.IO;
+  LightCore.IO,
+  Test.RunFolder;
+
+CONST
+  { TCacheObj deletes files (DeleteImage, ClearCache, MaintainCache), so the run folder lives under C:\test delete\ }
+  RunPrefix = 'TestVclGraphCache';
 
 type
   { Reaches the protected AddToCache / DeleteThumb / DeleteImage of TCacheObj }
@@ -145,12 +150,11 @@ type
 
 procedure TTestGraphCache.Setup;
 begin
-  FTestFolder:= TPath.Combine(TPath.GetTempPath, 'LightSaberTestCache');
+  FTestFolder:= NewDeleteTestFolder(RunPrefix);   { Ends with '\' }
   FCacheFolder:= TPath.Combine(FTestFolder, 'Cache');
   FTestImagePath:= TPath.Combine(FTestFolder, 'TestImage1.bmp');
   FTestImagePath2:= TPath.Combine(FTestFolder, 'TestImage2.bmp');
 
-  ForceDirectoriesE(FTestFolder);
   ForceDirectoriesE(FCacheFolder);
 
   { Create test images }
@@ -182,8 +186,8 @@ end;
 
 procedure TTestGraphCache.CleanupTestFiles;
 begin
-  if DirectoryExists(FTestFolder)
-  then TDirectory.Delete(FTestFolder, True);
+  DeleteDeleteTestFolder(FTestFolder, RunPrefix);
+  FTestFolder:= '';
 end;
 
 { Constructor Tests }
@@ -657,7 +661,7 @@ begin
     Assert.IsTrue(Cache.ImagePosDB(LowerCase(TempImage)) >= 0, 'Should be in cache');
 
     { Delete the original image }
-    DeleteFile(TempImage);
+    DeleteFileInFolder(TempImage, FTestFolder);
     Assert.IsFalse(FileExists(TempImage), 'Original should be deleted');
 
     { Run maintenance }

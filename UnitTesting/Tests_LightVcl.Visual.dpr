@@ -77,7 +77,9 @@ uses
   LightVcl.Visual.SvgSpeedButton in '..\FrameVCL\LightVcl.Visual.SvgSpeedButton.pas',
   Test.LightVcl.Visual.SvgSpeedButton in 'Test.LightVcl.Visual.SvgSpeedButton.pas',
   LightVcl.Visual.SpinEdit in '..\FrameVCL\LightVcl.Visual.SpinEdit.pas',
-  Test.LightVcl.Visual.SpinEdit in 'Test.LightVcl.Visual.SpinEdit.pas';
+  Test.LightVcl.Visual.SpinEdit in 'Test.LightVcl.Visual.SpinEdit.pas',
+  LightVcl.Visual.TrackBar in '..\FrameVCL\LightVcl.Visual.TrackBar.pas',
+  Test.LightVcl.Visual.TrackBar in 'Test.LightVcl.Visual.TrackBar.pas';
 
 {$R *.res}   { The version resource that MSBuild builds from VerInfo_* in the .dproj; Test.LightVcl.Visual.AppData reads it }
 

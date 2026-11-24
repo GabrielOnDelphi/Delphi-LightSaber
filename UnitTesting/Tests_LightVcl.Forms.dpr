@@ -59,7 +59,7 @@ uses
   FormSkinsDisk in '..\FrameVCL\FormSkinsDisk.pas',
   FormSkinsRes in '..\FrameVCL\FormSkinsRes.pas',
   FormSplashScreen in '..\FrameVCL\FormSplashScreen.pas',
-  FormTranslSelector in '..\FrameVCL\FormTranslSelector.pas',
+  FormTranslSelector in '..\FrameVCL\AutoTranslator\FormTranslSelector.pas',
   FormUpdaterSettings in '..\FrameVCL\FormUpdaterSettings.pas' {frmUpdaterSettings},
   ciUpdater in '..\ciUpdater.pas',
   ciUpdaterRec in '..\ciUpdaterRec.pas',

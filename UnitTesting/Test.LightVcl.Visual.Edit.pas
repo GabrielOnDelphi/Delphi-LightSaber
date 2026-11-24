@@ -27,6 +27,7 @@ type
     FOnChangeCount: Integer;
     FOnPressEnterCount: Integer;
     FKeyPressed: Char;
+    FRunFolder: string;
     procedure OnChangeHandler(Sender: TObject);
     procedure OnPressEnterHandler(Sender: TObject);
     procedure OnKeyPressHandler(Sender: TObject; var Key: Char);
@@ -106,7 +107,11 @@ implementation
 
 uses
   Winapi.Windows,      { VK_RETURN }
-  Winapi.Messages;     { WM_CHAR }
+  Winapi.Messages,     { WM_CHAR }
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestVclLightEdit';
 
 type
   TLightEditAccess = class(TLightEdit);   { Opens the protected KeyPress }
@@ -126,6 +131,8 @@ begin
   FEdit.Left:= 10;
   FEdit.Top:= 10;
   FEdit.Width:= 200;
+
+  FRunFolder:= NewRunFolder(RunPrefix);   { TestCheckFileExistence_ExistingFile_WindowColor writes its file here }
 end;
 
 
@@ -133,6 +140,8 @@ procedure TTesTLightEdit.TearDown;
 begin
   FreeAndNil(FEdit);
   FreeAndNil(FForm);
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
 end;
 
 
@@ -207,7 +216,7 @@ VAR
   Stream: TFileStream;
 begin
   { A file that does not exist yet: the control must turn red first, so a do-nothing UpdateBkgColor cannot pass }
-  NewFile:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('TEMP')) + 'LightEdit_' + IntToStr(GetCurrentProcessId) + '_' + IntToStr(GetTickCount) + '.tmp';
+  NewFile:= FRunFolder + 'LightEdit_' + IntToStr(GetCurrentProcessId) + '_' + IntToStr(GetTickCount) + '.tmp';
   Assert.IsFalse(FileExists(NewFile), 'Test prerequisite: the file must not exist yet: ' + NewFile);
 
   FEdit.CheckFileExistence:= TRUE;
@@ -222,7 +231,7 @@ begin
     FEdit.UpdateBkgColor;
     Assert.AreEqual(Integer(clWindow), Integer(FEdit.Color), 'Color must go back to clWindow once the file exists');
   finally
-    System.SysUtils.DeleteFile(NewFile);
+    DeleteFileInFolder(NewFile, FRunFolder);
   end;
 end;
 

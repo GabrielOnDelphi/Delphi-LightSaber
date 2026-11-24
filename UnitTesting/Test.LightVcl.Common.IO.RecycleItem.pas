@@ -7,15 +7,15 @@ unit Test.LightVcl.Common.IO.RecycleItem;
    The checks it runs first (RecycleItemRefusal, DriveHasRecycleBin) are tested without any delete in
    Test.LightCore.IO.RecycleCheck.pas.
 
-   THESE TESTS DELETE FILES: they send throwaway files to the Recycle Bin. Claude never runs them:
-   rule in C:\Projects\.claude\rules\delphi-code.md, section "Unit Testing".
+   THESE TESTS DELETE FILES: they send throwaway files to the Recycle Bin.
+   Rule: C:\Projects\.claude\rules\delphi-code.md, section "Unit Testing".
    So the fixture is registered only when the runner gets the switch --delete-tests:
      C:\Projects\LightSaber\UnitTesting\Tests_LightVcl.Common.exe --delete-tests --run:Test.LightVcl.Common.IO.RecycleItem
    Without the switch, a plain run and --run:Test.LightVcl.Common.IO never see this fixture.
 
    How the tests stay safe even when RecycleItem is broken:
    - RecycleItem gets ONLY paths this fixture made in this run: files and folders inside FRoot (a new folder under
-     the Temp folder), and FTopFolder (a new, empty folder directly under the system drive root).
+     C:\test delete\), and FTopFolder (a new, empty folder directly under the system drive root).
      No real protected folder ever reaches RecycleItem; those are tested in Test.LightCore.IO.RecycleCheck.pas.
    - A path is checked against FRoot or FTopFolder before RecycleItem gets it.
    - TearDown removes only the names it made, never recursively.
@@ -36,7 +36,7 @@ type
   [TestFixture]
   TTestRecycleItem = class
   private
-    FRoot: string;        { The throwaway folder of this run, under the Temp folder }
+    FRoot: string;        { The throwaway folder of this run, under C:\test delete\ }
     FTarget: string;      { FRoot\Target - the folder the junction points to }
     FKeep: string;        { FRoot\Target\keep.txt - must survive }
     FLink: string;        { FRoot\Link - a junction to FTarget }
@@ -85,6 +85,7 @@ uses
 
 CONST
   DeleteTestsSwitch = 'delete-tests';
+  TestDeleteRoot    = 'C:\test delete\';   { Every run makes its own folder in here, never in the Temp folder or in a user profile }
 
 
 { The system drive as 'C:'. }
@@ -134,7 +135,7 @@ end;
 
 procedure TTestRecycleItem.Setup;
 begin
-  FRoot     := TPath.Combine(TPath.GetTempPath, 'LightVclRecycleItem_'+ TGUID.NewGuid.ToString);
+  FRoot     := TestDeleteRoot + 'RecycleItem_'+ TGUID.NewGuid.ToString;
   FTarget   := TPath.Combine(FRoot, 'Target');
   FKeep     := TPath.Combine(FTarget, 'keep.txt');
   FLink     := TPath.Combine(FRoot, 'Link');
@@ -142,10 +143,10 @@ begin
   FOldDir   := GetCurrentDir;
   FStarted  := Now;
 
-  Assert.IsTrue(StartsText(TPath.GetTempPath, FRoot), 'Setup: the test folder must lie in the Temp folder: '+ FRoot);
+  Assert.IsTrue(StartsText(TestDeleteRoot, FRoot), 'Setup: the test folder must lie in '+ TestDeleteRoot+ ': '+ FRoot);
   Assert.IsFalse(System.SysUtils.DirectoryExists(FRoot), 'Setup: the test folder must be new: '+ FRoot);
   Assert.IsTrue(System.SysUtils.ForceDirectories(FRoot), 'Setup: cannot create '+ FRoot);
-  Assert.IsTrue(DriveHasRecycleBin(FRoot), 'Setup: the Temp folder must be on a drive with a Recycle Bin, or the tests that recycle cannot pass: '+ FRoot);
+  Assert.IsTrue(DriveHasRecycleBin(FRoot), 'Setup: '+ TestDeleteRoot+ ' must be on a drive with a Recycle Bin, or the tests that recycle cannot pass: '+ FRoot);
 end;
 
 

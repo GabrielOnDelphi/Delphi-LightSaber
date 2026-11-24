@@ -57,6 +57,14 @@ type
     [Test]
     [Category('Network')]
     procedure TestGetLocalIPv4List_EveryEntryIsDottedQuad;
+
+    { ResolveAddress must start WinSock itself. 'localhost' needs no network. }
+    [Test]
+    procedure TestResolveAddress_Localhost_WithoutWSAStartup;
+
+    { A dotted address whose last octet is 128 or more is a negative LongInt: it must not raise ERangeError }
+    [Test]
+    procedure TestResolveAddress_DottedAddressHighOctet;
   end;
   {$ENDIF}
 
@@ -693,6 +701,35 @@ begin
   { GetLocalIP reports only the first address of the same list }
   if GetLocalIP(HostName, FirstIP, FirstError)
   then Assert.AreEqual(FirstIP, Addresses[0]);
+end;
+
+
+{ A host name must resolve, also for a caller that never called WSAStartup. The test calls no WinSock routine itself.
+  Microsoft: gethostbyname fails with WSANOTINITIALISED without a successful WSAStartup
+  (https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-gethostbyname).
+  In this test EXE the lookup worked without it even when run alone, so the test pins the result (127.0.0.1)
+  and the ERangeError that a host name raised under range checking; it does not prove the WSAStartup call. }
+procedure TTestInternetWin.TestResolveAddress_Localhost_WithoutWSAStartup;
+CONST
+  Loopback = $0100007F;   { 127.0.0.1 in network byte order (bytes 7F 00 00 01), read as a little-endian DWORD }
+VAR
+  Address: Cardinal;
+begin
+  Assert.IsTrue(ResolveAddress('localhost', Address), 'ResolveAddress(localhost) must succeed without a WSAStartup by the caller');
+  Assert.AreEqual(Cardinal(Loopback), Address, 'localhost must resolve to 127.0.0.1');
+end;
+
+
+{ 10.0.0.200 in network byte order is the bytes 0A 00 00 C8, read as a little-endian DWORD $C800000A - above MaxInt.
+  inet_addr returns it as the signed u_long; assigned to a DWORD without a cast it raises ERangeError under range checking. }
+procedure TTestInternetWin.TestResolveAddress_DottedAddressHighOctet;
+CONST
+  Expected = $C800000A;
+VAR
+  Address: Cardinal;
+begin
+  Assert.IsTrue(ResolveAddress('10.0.0.200', Address), 'A dotted address must convert');
+  Assert.AreEqual(Cardinal(Expected), Address, '10.0.0.200 in network byte order');
 end;
 {$ENDIF}
 

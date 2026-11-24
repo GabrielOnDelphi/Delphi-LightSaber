@@ -127,7 +127,11 @@ type
 implementation
 
 uses
-  LightFmx.Common.Graph;
+  LightFmx.Common.Graph,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestFmxGraph';
 
 
 procedure TTestLightFmxGraph.Setup;
@@ -136,10 +140,7 @@ begin
   FImage:= NIL;
   FBitmap:= NIL;
 
-  { Create scratch directory for test files }
-  FScratchDir:= System.IOUtils.TPath.Combine(System.IOUtils.TPath.GetTempPath, 'LightFmxGraphTests');
-  if NOT TDirectory.Exists(FScratchDir)
-  then TDirectory.CreateDirectory(FScratchDir);
+  FScratchDir:= NewRunFolder(RunPrefix);
 
   FTestImagePath:= System.IOUtils.TPath.Combine(FScratchDir, 'test_image.png');
 end;
@@ -150,10 +151,8 @@ begin
   FreeAndNil(FBitmap);
   FreeAndNil(FImage);
   FreeAndNil(FTestForm);
-
-  { Clean up test files }
-  if TFile.Exists(FTestImagePath)
-  then TFile.Delete(FTestImagePath);
+  DeleteRunFolder(FScratchDir, RunPrefix);
+  FScratchDir:= '';
 end;
 
 
@@ -356,8 +355,7 @@ begin
     Assert.IsTrue(TFile.Exists(SavePath), 'File should exist after SaveBitmap');
   finally
     FreeAndNil(FBitmap);
-    if TFile.Exists(SavePath)
-    then TFile.Delete(SavePath);
+    DeleteFileInFolder(SavePath, FScratchDir);
   end;
 end;
 

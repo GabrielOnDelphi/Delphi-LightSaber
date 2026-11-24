@@ -32,7 +32,9 @@ type
     FErrorEventFired: Boolean;
     FWarnCount: Integer;
     FErrorCount: Integer;
+    FRunFolder: string;
     procedure CleanupRichLog;
+    function  tempFilePath(CONST FileName: string): string;
     procedure OnWarnHandler(Sender: TObject);
     procedure OnErrorHandler(Sender: TObject);
     function  makeLog(aHeight: Integer = 0): TObject;
@@ -307,7 +309,8 @@ uses
   LightCore.LogRam,
   LightVcl.Visual.AppData,
   LightVcl.Visual.RichLog,
-  LightVcl.Visual.RichLogUtils;
+  LightVcl.Visual.RichLogUtils,
+  Test.RunFolder;
 
 
 TYPE
@@ -335,6 +338,7 @@ end;
 
 CONST
   ManyEntries = 200;   { Far more entries than a 120 px high control can show }
+  RunPrefix   = 'TestVclRichLog';
 
 
 procedure TTestRichLog.Setup;
@@ -344,6 +348,7 @@ begin
   FWarnCount:= 0;
   FErrorCount:= 0;
   FTestForm:= TForm.Create(NIL);
+  FRunFolder:= NewRunFolder(RunPrefix);
 end;
 
 
@@ -351,6 +356,8 @@ procedure TTestRichLog.TearDown;
 begin
   CleanupRichLog;
   FreeAndNil(FTestForm);
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
 end;
 
 
@@ -470,11 +477,10 @@ begin
 end;
 
 
-function TempFilePath(CONST FileName: string): string;
+{ A file in the run folder of this test (Test.RunFolder), which TearDown deletes }
+function TTestRichLog.tempFilePath(CONST FileName: string): string;
 begin
-  { There is no AppData.ScratchDir in LightSaber - the whole repository has no such property.
-    The system temporary folder is what these tests actually need. }
-  Result:= TPath.Combine(TPath.GetTempPath, FileName);
+  Result:= FRunFolder + FileName;
 end;
 
 
@@ -996,7 +1002,7 @@ begin
   try
     RichLog.AddFromFile(FilePath, lvrWarnings);
   finally
-    System.SysUtils.DeleteFile(FilePath);
+    DeleteFileInFolder(FilePath, FRunFolder);
   end;
 
   Assert.AreEqual(3, RichLog.RamLog.Count(FALSE, lvDebug), 'Each line of the file is one entry');
@@ -1207,7 +1213,7 @@ begin
   try
     Assert.IsTrue(RichLog.RamLog.LoadFromFile(FilePath), 'Precondition: the file loads');
   finally
-    System.SysUtils.DeleteFile(FilePath);
+    DeleteFileInFolder(FilePath, FRunFolder);
   end;
 
   Assert.AreEqual(3, RichLog.Lines.Count, 'Only the loaded lines are drawn');
@@ -2207,8 +2213,7 @@ begin
     Assert.IsTrue(Content.StartsWith('{\rtf'), 'The file must be RTF, not plain text');
     Assert.IsTrue(Pos('Test content', Content) > 0, 'The file must hold the log text');
   finally
-    if FileExists(TempFile)
-    then System.SysUtils.DeleteFile(TempFile);
+    DeleteFileInFolder(TempFile, FRunFolder);
   end;
 end;
 
@@ -2241,8 +2246,7 @@ begin
     Assert.AreEqual('D', Reader.Lines[4]);
   finally
     FreeAndNil(Reader);
-    if FileExists(TempFile)
-    then System.SysUtils.DeleteFile(TempFile);
+    DeleteFileInFolder(TempFile, FRunFolder);
   end;
 end;
 
@@ -2266,8 +2270,7 @@ begin
     Assert.IsTrue(Pos('Big log entry number 0 of', Content) > 0, 'The first entry is in the file');
     Assert.IsTrue(Pos('Big log entry number ' + IntToStr(Total - 1) + ' of', Content) > 0, 'The last entry is in the file: the text was not cut');
   finally
-    if FileExists(TempFile)
-    then System.SysUtils.DeleteFile(TempFile);
+    DeleteFileInFolder(TempFile, FRunFolder);
   end;
 end;
 
@@ -2292,7 +2295,7 @@ begin
     { The old content stays; the whole log follows, also the line the slider hides; the file ends with a line break, so the next append starts on a new line }
     Assert.AreEqual('Already there'#13#10'Appended 1'#13#10'Appended hidden'#13#10, Content, 'The log is appended whole, one entry per line');
   finally
-    System.SysUtils.DeleteFile(TempFile);
+    DeleteFileInFolder(TempFile, FRunFolder);
   end;
 end;
 
@@ -2325,7 +2328,7 @@ begin
   try
     Assert.IsTrue(RichLog.LoadFromFile(TempFile), 'The file exists');
   finally
-    System.SysUtils.DeleteFile(TempFile);
+    DeleteFileInFolder(TempFile, FRunFolder);
   end;
 
   Assert.AreEqual(3, RichLog.RamLog.Count(FALSE, lvDebug), 'One entry per line, the old entry replaced');

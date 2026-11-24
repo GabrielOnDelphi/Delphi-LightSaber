@@ -235,6 +235,10 @@ type
     [Test]
     procedure TestGetPosAfterExtendedPrefix_UNCPrefix;
 
+    { Reparse tags: which ones the delete walk treats as links }
+    [Test]
+    procedure TestIsReparseTagNameSurrogate;
+
     { File Locking Tests }
     [Test]
     procedure TestFileIsLockedRW_UnlockedFile;
@@ -244,6 +248,15 @@ type
 
     [Test]
     procedure TestFileIsLockedR_NonExistentFile;
+
+    [Test]
+    procedure TestFileIsLockedR_UnlockedFile;
+
+    [Test]
+    procedure TestFileIsLockedRW_LockedFile;
+
+    [Test]
+    procedure TestFileIsLockedR_LockedFile;
 
     [Test]
     procedure TestCanCreateFile;
@@ -954,6 +967,19 @@ begin
   Assert.AreEqual(9, GetPosAfterExtendedPrefix('\\?\UNC\Server\Share'), 'UNC prefix should return 9');
 end;
 
+
+{ Tag values from https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-win32_find_dataw (MOUNT_POINT, SYMLINK)
+  and MS-FSCC 2.1.2.1 https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fscc/c8e77b37-3909-4fe6-a4ea-2b9d423b1ee4 (CLOUD, CLOUD_1).
+  A junction and a symbolic link stand for another named entity; a OneDrive placeholder holds its own files. }
+procedure TTestLightCoreIO.TestIsReparseTagNameSurrogate;
+begin
+  Assert.IsTrue (IsReparseTagNameSurrogate($A0000003), 'IO_REPARSE_TAG_MOUNT_POINT (a junction) is a name surrogate');
+  Assert.IsTrue (IsReparseTagNameSurrogate($A000000C), 'IO_REPARSE_TAG_SYMLINK is a name surrogate');
+  Assert.IsFalse(IsReparseTagNameSurrogate($9000001A), 'IO_REPARSE_TAG_CLOUD (OneDrive) is not a name surrogate');
+  Assert.IsFalse(IsReparseTagNameSurrogate($9000101A), 'IO_REPARSE_TAG_CLOUD_1 (OneDrive) is not a name surrogate');
+  Assert.IsFalse(IsReparseTagNameSurrogate(0), 'Tag 0 is not a name surrogate');
+end;
+
 { File Locking Tests }
 
 procedure TTestLightCoreIO.TestFileIsLockedRW_UnlockedFile;
@@ -975,6 +1001,37 @@ begin
       FileIsLockedR(FTestDir + '\NonExistent.txt');
     end,
     Exception);
+end;
+
+procedure TTestLightCoreIO.TestFileIsLockedR_UnlockedFile;
+begin
+  Assert.IsFalse(FileIsLockedR(FTestFile), 'Unlocked file should not report as locked');
+end;
+
+{ The file is held open with share mode 0, so a second CreateFile fails and returns INVALID_HANDLE_VALUE.
+  This is the case that depends on the width of the handle variable (64-bit on Win64). }
+procedure TTestLightCoreIO.TestFileIsLockedRW_LockedFile;
+VAR Holder: TFileStream;
+begin
+  Holder:= TFileStream.Create(FTestFile, fmOpenRead OR fmShareExclusive);
+  try
+    Assert.IsTrue(FileIsLockedRW(FTestFile), 'A file held open exclusively must report as locked');
+  finally
+    FreeAndNil(Holder);
+  end;
+  Assert.IsFalse(FileIsLockedRW(FTestFile), 'After the holder closed it, the file must not report as locked');
+end;
+
+procedure TTestLightCoreIO.TestFileIsLockedR_LockedFile;
+VAR Holder: TFileStream;
+begin
+  Holder:= TFileStream.Create(FTestFile, fmOpenRead OR fmShareExclusive);
+  try
+    Assert.IsTrue(FileIsLockedR(FTestFile), 'A file held open exclusively must report as locked');
+  finally
+    FreeAndNil(Holder);
+  end;
+  Assert.IsFalse(FileIsLockedR(FTestFile), 'After the holder closed it, the file must not report as locked');
 end;
 
 procedure TTestLightCoreIO.TestCanCreateFile;

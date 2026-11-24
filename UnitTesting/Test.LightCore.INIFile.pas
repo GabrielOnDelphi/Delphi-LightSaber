@@ -11,6 +11,7 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.IOUtils,
+  System.IniFiles,
   System.UITypes,
   Vcl.Graphics,
   LightCore.INIFile;
@@ -19,6 +20,7 @@ type
   [TestFixture]
   TTestIniFileEx = class
   private
+    FRunFolder: string;
     FTestFile: string;
     FIniFile: TIniFileEx;
   public
@@ -90,6 +92,7 @@ type
   [TestFixture]
   TTestIniFileDt = class
   private
+    FRunFolder: string;
     FTestFile: string;
     FIniFile: TIniFileDt;
   public
@@ -109,12 +112,66 @@ type
     procedure TestReadDate_Default;
   end;
 
+  { TIniFileEx.WriteString skips a value that the file already holds.
+    Proof that a write was skipped: the modified time of the file, set to 2020 before the write, stays in 2020. }
+  [TestFixture]
+  TTestIniFileExSkipUnchanged = class
+  private
+    FRunFolder: string;
+    FTestFile: string;
+    FIniFile: TIniFileEx;
+    procedure makeFileOld;
+    function  fileIsOld: Boolean;
+  public
+    [Setup]
+    procedure Setup;
+
+    [TearDown]
+    procedure TearDown;
+
+    [Test]
+    procedure UnchangedValue_FileNotRewritten;
+
+    [Test]
+    procedure ChangedValue_IsWritten;
+
+    [Test]
+    procedure UnchangedLongValue_FileNotRewritten;
+
+    [Test]
+    procedure WriteStringOverload_UnchangedValue_FileNotRewritten;
+
+    [Test]
+    procedure WriteIntegerOverload_UnchangedValue_FileNotRewritten;
+
+    [Test]
+    procedure MissingKey_EmptyValue_IsWritten;
+
+    [Test]
+    procedure ReadOnlyFile_UnchangedValue_RaisesNothing;
+
+    [Test]
+    procedure ReadOnlyFile_ChangedValue_Raises;
+
+    [Test]
+    procedure ReadStringOverload_LongValue_NotCut;
+  end;
+
 implementation
+
+USES
+  Test.RunFolder;
+
+CONST
+  RunPrefixEx   = 'TestLcIniFileEx';
+  RunPrefixDt   = 'TestLcIniFileDt';
+  RunPrefixSkip = 'TestLcIniFileSkip';
 
 
 procedure TTestIniFileEx.Setup;
 begin
-  FTestFile:= TPath.Combine(TPath.GetTempPath, 'TestIniFile_' + TGUID.NewGuid.ToString + '.ini');
+  FRunFolder:= NewRunFolder(RunPrefixEx);
+  FTestFile:= FRunFolder + 'TestIniFile.ini';
   FIniFile:= TIniFileEx.Create('TestSection', FTestFile);
 end;
 
@@ -122,8 +179,8 @@ end;
 procedure TTestIniFileEx.TearDown;
 begin
   FreeAndNil(FIniFile);
-  if FileExists(FTestFile)
-  then DeleteFile(FTestFile);
+  DeleteRunFolder(FRunFolder, RunPrefixEx);
+  FRunFolder:= '';
 end;
 
 
@@ -290,15 +347,16 @@ end;
 
 procedure TTestIniFileDt.Setup;
 begin
-  FTestFile:= TPath.Combine(TPath.GetTempPath, 'TestIniFileDt_' + TGUID.NewGuid.ToString + '.ini');
+  FRunFolder:= NewRunFolder(RunPrefixDt);
+  FTestFile:= FRunFolder + 'TestIniFileDt.ini';
   FIniFile:= TIniFileDt.Create(FTestFile);
 end;
 
 procedure TTestIniFileDt.TearDown;
 begin
   FreeAndNil(FIniFile);
-  if FileExists(FTestFile)
-  then DeleteFile(FTestFile);
+  DeleteRunFolder(FRunFolder, RunPrefixDt);
+  FRunFolder:= '';
 end;
 
 procedure TTestIniFileDt.TestWriteReadDate;
@@ -334,8 +392,132 @@ begin
 end;
 
 
+
+
+{ TTestIniFileExSkipUnchanged }
+
+procedure TTestIniFileExSkipUnchanged.Setup;
+begin
+  FRunFolder:= NewRunFolder(RunPrefixSkip);
+  FTestFile:= FRunFolder + 'TestIniFileSkip.ini';
+  FIniFile:= TIniFileEx.Create('TestSection', FTestFile);
+end;
+
+procedure TTestIniFileExSkipUnchanged.TearDown;
+begin
+  FreeAndNil(FIniFile);
+  if FileExists(FTestFile)
+  then FileSetReadOnly(FTestFile, FALSE);   { A failed read-only test may leave the attribute set }
+  DeleteRunFolder(FRunFolder, RunPrefixSkip);
+  FRunFolder:= '';
+end;
+
+procedure TTestIniFileExSkipUnchanged.makeFileOld;
+begin
+  TFile.SetLastWriteTime(FTestFile, EncodeDate(2020, 1, 1));
+end;
+
+function TTestIniFileExSkipUnchanged.fileIsOld: Boolean;
+begin
+  Result:= TFile.GetLastWriteTime(FTestFile) < EncodeDate(2021, 1, 1);
+end;
+
+
+procedure TTestIniFileExSkipUnchanged.UnchangedValue_FileNotRewritten;
+begin
+  FIniFile.WriteString('TestSection', 'Key', 'abc');
+  makeFileOld;
+  FIniFile.WriteString('TestSection', 'Key', 'abc');
+  FIniFile.UpdateFile;   { The flush that TIniFile.Destroy does must not rewrite the file either }
+  Assert.IsTrue(fileIsOld, 'Writing the value that the file already holds must not rewrite the file');
+  Assert.AreEqual('abc', FIniFile.ReadString('TestSection', 'Key', ''));
+end;
+
+procedure TTestIniFileExSkipUnchanged.ChangedValue_IsWritten;
+begin
+  FIniFile.WriteString('TestSection', 'Key', 'abc');
+  makeFileOld;
+  FIniFile.WriteString('TestSection', 'Key', 'xyz');
+  Assert.IsFalse(fileIsOld, 'A changed value must rewrite the file');
+  Assert.IsTrue(Pos('Key=xyz', TFile.ReadAllText(FTestFile)) > 0, 'The file must hold the new value');
+end;
+
+procedure TTestIniFileExSkipUnchanged.UnchangedLongValue_FileNotRewritten;
+begin
+  VAR LongValue:= StringOfChar('x', 5000);   { Longer than the 2047 characters that the RTL's TIniFile.ReadString returns }
+  FIniFile.WriteString('TestSection', 'Long', LongValue);
+  makeFileOld;
+  FIniFile.WriteString('TestSection', 'Long', LongValue);
+  Assert.IsTrue(fileIsOld, 'An unchanged value longer than 2047 characters must not rewrite the file');
+end;
+
+procedure TTestIniFileExSkipUnchanged.WriteStringOverload_UnchangedValue_FileNotRewritten;
+begin
+  FIniFile.Write('Key', 'abc');
+  makeFileOld;
+  FIniFile.Write('Key', 'abc');
+  Assert.IsTrue(fileIsOld, 'Write(Ident, string) must skip an unchanged value too');
+end;
+
+procedure TTestIniFileExSkipUnchanged.WriteIntegerOverload_UnchangedValue_FileNotRewritten;
+begin
+  FIniFile.Write('Num', 42);
+  makeFileOld;
+  FIniFile.Write('Num', 42);
+  Assert.IsTrue(fileIsOld, 'Write(Ident, Integer) must skip an unchanged value too');
+end;
+
+procedure TTestIniFileExSkipUnchanged.MissingKey_EmptyValue_IsWritten;
+begin
+  FIniFile.WriteString('TestSection', 'Other', '1');
+  makeFileOld;
+  FIniFile.WriteString('TestSection', 'Empty', '');
+  Assert.IsFalse(fileIsOld, 'An empty value for a missing key must create the key');
+  Assert.IsTrue(FIniFile.ValueExists('Empty'), 'The key must exist after the write');
+end;
+
+procedure TTestIniFileExSkipUnchanged.ReadOnlyFile_UnchangedValue_RaisesNothing;
+begin
+  FIniFile.WriteString('TestSection', 'Key', 'abc');
+  FileSetReadOnly(FTestFile, TRUE);
+  try
+    Assert.WillNotRaise(
+      procedure
+      begin
+        FIniFile.WriteString('TestSection', 'Key', 'abc');
+      end,
+      NIL, 'An unchanged value needs no write, so a read-only file must not raise');
+  finally
+    FileSetReadOnly(FTestFile, FALSE);
+  end;
+end;
+
+procedure TTestIniFileExSkipUnchanged.ReadOnlyFile_ChangedValue_Raises;
+begin
+  FIniFile.WriteString('TestSection', 'Key', 'abc');
+  FileSetReadOnly(FTestFile, TRUE);
+  try
+    Assert.WillRaise(
+      procedure
+      begin
+        FIniFile.WriteString('TestSection', 'Key', 'xyz');
+      end,
+      EIniFileException, 'A changed value written to a read-only file must raise');
+  finally
+    FileSetReadOnly(FTestFile, FALSE);
+  end;
+end;
+
+procedure TTestIniFileExSkipUnchanged.ReadStringOverload_LongValue_NotCut;
+begin
+  FIniFile.WriteString('TestSection', 'Long', StringOfChar('x', 5000));
+  Assert.AreEqual(5000, Length(FIniFile.Read('Long', '')), 'Read(Ident, string) must return values longer than 2047 characters whole');
+end;
+
+
 initialization
   TDUnitX.RegisterTestFixture(TTestIniFileEx);
   TDUnitX.RegisterTestFixture(TTestIniFileDt);
+  TDUnitX.RegisterTestFixture(TTestIniFileExSkipUnchanged);
 
 end.

@@ -3,20 +3,21 @@ unit Test.LightVcl.Common.CpuMonitor;
 {=============================================================================================================
    Unit tests for LightVcl.Common.CpuMonitor.pas
    Tests the INI persistence of TPowerSettings (LoadFromIni / SaveToIni).
-   Each test uses its own INI file in the temp folder, deleted in TearDown.
+   Each test uses its own INI file in a run folder of its own (Test.RunFolder), deleted in TearDown.
 =============================================================================================================}
 
 interface
 
 uses
   DUnitX.TestFramework,
-  System.SysUtils, System.IOUtils, System.IniFiles,
+  System.SysUtils, System.IniFiles,
   LightCore.INIFile, LightVcl.Common.CpuMonitor;
 
 type
   [TestFixture]
   TTestPowerSettingsIni = class
   private
+    FRunFolder: string;
     FIniPath: string;
     procedure setNonDefaults(Settings: TPowerSettings);
   public
@@ -38,20 +39,25 @@ type
 
 implementation
 
+USES
+  Test.RunFolder;
+
 CONST
   TestSection = 'TestSection';
+  RunPrefix   = 'TestPowerSettings';
 
 
 procedure TTestPowerSettingsIni.Setup;
 begin
-  FIniPath:= TPath.Combine(TPath.GetTempPath, 'TestPowerSettings_' + TGUID.NewGuid.ToString + '.ini');
+  FRunFolder:= NewRunFolder(RunPrefix);
+  FIniPath:= FRunFolder + 'PowerSettings.ini';
 end;
 
 
 procedure TTestPowerSettingsIni.TearDown;
 begin
-  if FileExists(FIniPath)
-  then DeleteFile(FIniPath);
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
 end;
 
 

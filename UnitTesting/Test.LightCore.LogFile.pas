@@ -3,7 +3,8 @@ unit Test.LightCore.LogFile;
 {=============================================================================================================
    2026.11.12
    Unit tests for LightCore.LogFile.pas (TLogDailyFile: the daily text file of a TRamLog)
-   Every test works in a folder of its own under the TEMP folder, made in Setup and removed in TearDown.
+   Every test works in a folder of its own under C:\test delete\ (Test.RunFolder), made in Setup and removed
+   in TearDown: TLogDailyFile deletes old log files (DaysToKeep).
    The writer's Clock is replaced, so "today" is a fixed date and the tests never depend on the real date.
 =============================================================================================================}
 
@@ -72,9 +73,13 @@ type
 
 implementation
 
+USES
+  Test.RunFolder;
+
 CONST
   CRLF       = #13#10;
   TestPrefix = 'Srv ';
+  RunPrefix  = 'TestLcLogFile';
 
 
 { Number of times Sub occurs in S }
@@ -99,8 +104,7 @@ end;
 
 procedure TTestLogDailyFile.Setup;
 begin
-  FTestDir:= TPath.Combine(TPath.GetTempPath, 'LogFileTest_' + TGUID.NewGuid.ToString);
-  TDirectory.CreateDirectory(FTestDir);
+  FTestDir:= ExcludeTrailingPathDelimiter(NewDeleteTestFolder(RunPrefix));   { The tests pass the folder without the trailing backslash }
   FToday:= EncodeDate(2026, 3, 15);
   FErrors:= 0;
   FLastError:= '';
@@ -110,10 +114,9 @@ end;
 { Removes only the folder that Setup made in this run }
 procedure TTestLogDailyFile.TearDown;
 begin
-  if (FTestDir <> '')
-  AND FTestDir.StartsWith(TPath.Combine(TPath.GetTempPath, 'LogFileTest_'), TRUE)
-  AND TDirectory.Exists(FTestDir)
-  then TDirectory.Delete(FTestDir, TRUE);
+  if FTestDir <> ''
+  then DeleteDeleteTestFolder(IncludeTrailingPathDelimiter(FTestDir), RunPrefix);
+  FTestDir:= '';
 end;
 
 

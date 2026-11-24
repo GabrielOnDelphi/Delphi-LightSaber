@@ -19,8 +19,8 @@ type
   [TestFixture]
   TTestIniFileApp = class
   private
+    FRunFolder: string;
     FTestIniPath: string;
-    procedure CleanupTestIni;
   public
     [Setup]
     procedure Setup;
@@ -160,25 +160,25 @@ implementation
 
 uses
   Vcl.Samples.Spin,
-  LightCore.AppData;
+  LightCore.AppData,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestVclIniFileApp';
 
 
+{ The test INI lives in <temp>\TestVclIniFileApp_<GUID>\ (Test.RunFolder), deleted in TearDown }
 procedure TTestIniFileApp.Setup;
 begin
-  FTestIniPath:= TPath.Combine(TPath.GetTempPath, 'TestIniFile_' + TGUID.NewGuid.ToString + '.ini');
+  FRunFolder:= NewRunFolder(RunPrefix);
+  FTestIniPath:= FRunFolder + 'TestIniFile.ini';
 end;
 
 
 procedure TTestIniFileApp.TearDown;
 begin
-  CleanupTestIni;
-end;
-
-
-procedure TTestIniFileApp.CleanupTestIni;
-begin
-  if FileExists(FTestIniPath)
-  then DeleteFile(FTestIniPath);
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
 end;
 
 

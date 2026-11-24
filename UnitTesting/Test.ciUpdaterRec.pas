@@ -29,6 +29,7 @@ TYPE
   [TestFixture]
   TTestRNews = class
   private
+    FRunFolder: string;
     FFile: string;
   public
     [Setup]    procedure Setup;
@@ -49,17 +50,24 @@ TYPE
 
 IMPLEMENTATION
 
+USES
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcRNews';
+
 
 procedure TTestRNews.Setup;
 begin
-  FFile:= TPath.Combine(TPath.GetTempPath, 'TestRNews_'+ TGUID.NewGuid.ToString+ '.ini');
+  FRunFolder:= NewRunFolder(RunPrefix);
+  FFile:= FRunFolder + 'TestRNews.ini';
 end;
 
 
 procedure TTestRNews.TearDown;
 begin
-  if FileExists(FFile)
-  then DeleteFile(FFile);
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
 end;
 
 

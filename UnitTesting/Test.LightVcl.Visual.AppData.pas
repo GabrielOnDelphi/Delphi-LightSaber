@@ -1,7 +1,7 @@
 unit Test.LightVcl.Visual.AppData;
 
 {=============================================================================================================
-   2026.10.07
+   2026.11.22
    Unit tests for LightVcl.Visual.AppData.pas
    Tests TAppData - VCL-specific application data management, form creation, version info, etc.
 
@@ -63,10 +63,8 @@ type
     { FormLog Tests }
     [Test]
     procedure TestFormLogExists;
-
-    [Test]
-    [Ignore('Shows a window on screen - not run')]
-    procedure TestFormLogNotMainForm;
+    { No "FormLog is not the main form" test: TAppData.getGlobalLog asserts it itself on every read,
+      and a second read of FormLog shows the log window, which this suite never does. }
 
     { Font Tests }
     [Test]
@@ -116,6 +114,20 @@ type
 
     [Test]
     procedure TestReadInstallationFolder_Empty;
+
+    { RegisterUninstaller's decision (UninstallEntryAction) }
+    [Test]
+    procedure TestUninstallEntry_InstalledWithUninstaller_Writes;
+    [Test]
+    procedure TestUninstallEntry_InstalledWithoutUninstaller_Leaves;
+    [Test]
+    procedure TestUninstallEntry_RunningFromSource_Removes;
+    [Test]
+    procedure TestUninstallEntry_OptedOut_RemovesEvenBesideAnUninstaller;
+    [Test]
+    procedure TestUninstallEntry_OptedOut_RemovesWithoutUninstaller;
+    [Test]
+    procedure TestUninstallEntry_DefaultIsOptedIn;
 
     { RaiseIfStillInitializing Tests }
     [Test]
@@ -289,14 +301,6 @@ procedure TTestAppDataVcl.TestFormLogExists;
 begin
   // Accessing FormLog creates it if needed
   Assert.IsNotNull(AppData.FormLog, 'FormLog should be created on access');
-end;
-
-procedure TTestAppDataVcl.TestFormLogNotMainForm;
-begin
-  // FormLog should never be the main form
-  if Application.MainForm <> NIL
-  then Assert.AreNotEqual(TObject(Application.MainForm), TObject(AppData.FormLog),
-         'FormLog should not be MainForm');
 end;
 
 
@@ -522,6 +526,49 @@ begin
   finally
     DeleteUninstallerValues(TestApp);
   end;
+end;
+
+
+{ RegisterUninstaller's decision, every case. RegisterUninstaller itself cannot be tested from here: this test EXE
+  sits beside its .dpr, so RunningHome is TRUE and the routine always takes the "remove" branch.
+  The expected answers come from the rules, not from the code:
+  - an installed program with System\Uninstall.exe beside it gets its entry;
+  - a program that ships no uninstaller (a small tool, the uninstaller's own Temp copy) touches nothing;
+  - a run from the source folder removes the entry, so Windows never offers to uninstall the source folder;
+  - a program that set RegistersUninstaller = FALSE (a screensaver inside another product's folder) never gets an entry,
+    and loses the one an older build wrote. }
+procedure TTestAppDataVcl.TestUninstallEntry_InstalledWithUninstaller_Writes;
+begin
+  Assert.AreEqual(Ord(ueWrite), Ord(TAppData.UninstallEntryAction(FALSE, TRUE, TRUE)));
+end;
+
+procedure TTestAppDataVcl.TestUninstallEntry_InstalledWithoutUninstaller_Leaves;
+begin
+  Assert.AreEqual(Ord(ueLeave), Ord(TAppData.UninstallEntryAction(FALSE, TRUE, FALSE)));
+end;
+
+procedure TTestAppDataVcl.TestUninstallEntry_RunningFromSource_Removes;
+begin
+  Assert.AreEqual(Ord(ueRemove), Ord(TAppData.UninstallEntryAction(TRUE, TRUE,  TRUE)),  'Source folder with an Uninstall.exe');
+  Assert.AreEqual(Ord(ueRemove), Ord(TAppData.UninstallEntryAction(TRUE, TRUE,  FALSE)), 'Source folder without an Uninstall.exe');
+  Assert.AreEqual(Ord(ueRemove), Ord(TAppData.UninstallEntryAction(TRUE, FALSE, TRUE)),  'Source folder, opted out');
+end;
+
+{ The screensaver case: bionixss.scr sits in the BioniX folder, beside System\Uninstall.exe of BioniX }
+procedure TTestAppDataVcl.TestUninstallEntry_OptedOut_RemovesEvenBesideAnUninstaller;
+begin
+  Assert.AreEqual(Ord(ueRemove), Ord(TAppData.UninstallEntryAction(FALSE, FALSE, TRUE)), 'An opted-out program must never write an entry, even beside an Uninstall.exe');
+end;
+
+procedure TTestAppDataVcl.TestUninstallEntry_OptedOut_RemovesWithoutUninstaller;
+begin
+  Assert.AreEqual(Ord(ueRemove), Ord(TAppData.UninstallEntryAction(FALSE, FALSE, FALSE)), 'An opted-out program must remove the entry an older build wrote');
+end;
+
+{ Every other LightSaber program must keep its behaviour: the switch starts TRUE }
+procedure TTestAppDataVcl.TestUninstallEntry_DefaultIsOptedIn;
+begin
+  Assert.IsTrue(AppData.RegistersUninstaller, 'RegistersUninstaller must be TRUE unless the DPR sets it to FALSE');
 end;
 
 

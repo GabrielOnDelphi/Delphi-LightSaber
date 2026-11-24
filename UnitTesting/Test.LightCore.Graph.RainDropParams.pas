@@ -24,6 +24,9 @@ type
     [Setup]
     procedure Setup;
 
+    [TearDown]
+    procedure TearDown;
+
     { RRaindropParams Tests }
     [Test]
     procedure TestParams_Reset;
@@ -46,12 +49,23 @@ implementation
 
 uses
   LightCore.Graph.RainDropParams,
-  LightCore.StreamBuff;
+  LightCore.StreamBuff,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcRainDropParams';
 
 
 procedure TTestRainDropParams.Setup;
 begin
-  FTestDir:= TPath.GetTempPath;
+  FTestDir:= NewRunFolder(RunPrefix);
+end;
+
+
+procedure TTestRainDropParams.TearDown;
+begin
+  DeleteRunFolder(FTestDir, RunPrefix);
+  FTestDir:= '';
 end;
 
 
@@ -114,8 +128,6 @@ begin
   Assert.AreEqual(WriteParams.WaveAplitude, ReadParams.WaveAplitude, 'WaveAplitude mismatch');
   Assert.AreEqual(WriteParams.WaveTravelDist, ReadParams.WaveTravelDist, 'WaveTravelDist mismatch');
   Assert.AreEqual(WriteParams.DropInterval, ReadParams.DropInterval, 'DropInterval mismatch');
-
-  TFile.Delete(TempFile);
 end;
 
 
@@ -154,22 +166,17 @@ VAR
   TempFile: string;
 begin
   TempFile:= TPath.Combine(FTestDir, 'DampingLow_' + IntToStr(Random(MaxInt)) + '.dat');
+  WriteRawParams(TempFile, 0);          { below the 1..99 range }
+
+  Params.Reset;
+  Stream:= TLightStream.CreateRead(TempFile);
   TRY
-    WriteRawParams(TempFile, 0);          { below the 1..99 range }
-
-    Params.Reset;
-    Stream:= TLightStream.CreateRead(TempFile);
-    TRY
-      Params.Load(Stream);
-    FINALLY
-      FreeAndNil(Stream);
-    END;
-
-    Assert.AreEqual(1, Integer(Params.Damping), 'Damping should clamp to minimum (1)');
+    Params.Load(Stream);
   FINALLY
-    if TFile.Exists(TempFile)
-    then TFile.Delete(TempFile);
+    FreeAndNil(Stream);
   END;
+
+  Assert.AreEqual(1, Integer(Params.Damping), 'Damping should clamp to minimum (1)');
 end;
 
 
@@ -180,22 +187,17 @@ VAR
   TempFile: string;
 begin
   TempFile:= TPath.Combine(FTestDir, 'DampingHigh_' + IntToStr(Random(MaxInt)) + '.dat');
+  WriteRawParams(TempFile, 100);        { above the 1..99 range }
+
+  Params.Reset;
+  Stream:= TLightStream.CreateRead(TempFile);
   TRY
-    WriteRawParams(TempFile, 100);        { above the 1..99 range }
-
-    Params.Reset;
-    Stream:= TLightStream.CreateRead(TempFile);
-    TRY
-      Params.Load(Stream);
-    FINALLY
-      FreeAndNil(Stream);
-    END;
-
-    Assert.AreEqual(99, Integer(Params.Damping), 'Damping should clamp to maximum (99)');
+    Params.Load(Stream);
   FINALLY
-    if TFile.Exists(TempFile)
-    then TFile.Delete(TempFile);
+    FreeAndNil(Stream);
   END;
+
+  Assert.AreEqual(99, Integer(Params.Damping), 'Damping should clamp to maximum (99)');
 end;
 
 

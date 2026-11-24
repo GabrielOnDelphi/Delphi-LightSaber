@@ -23,9 +23,9 @@ type
   [TestFixture]
   TTestGraphResizeWinThumb = class
   private
+    FRunFolder: string;
     FTempFile: string;
     procedure CreateTempImageFile;
-    procedure DeleteTempImageFile;
     procedure Blacken(Thumb: TObject);
     procedure CheckBlank(Thumb: TObject; Size: Integer);
   public
@@ -99,18 +99,25 @@ type
 implementation
 
 uses
-  LightVcl.Graph.ResizeWinThumb;
+  LightVcl.Graph.ResizeWinThumb,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestVclResizeWinThumb';
 
 
 procedure TTestGraphResizeWinThumb.Setup;
 begin
+  FRunFolder:= NewRunFolder(RunPrefix);
   FTempFile:= '';
 end;
 
 
 procedure TTestGraphResizeWinThumb.TearDown;
 begin
-  DeleteTempImageFile;
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
+  FTempFile:= '';
 end;
 
 
@@ -118,7 +125,7 @@ procedure TTestGraphResizeWinThumb.CreateTempImageFile;
 var
   Bmp: TBitmap;
 begin
-  FTempFile:= TPath.Combine(TPath.GetTempPath, 'TestThumb_' + TGUID.NewGuid.ToString + '.bmp');
+  FTempFile:= FRunFolder + 'TestThumb_' + TGUID.NewGuid.ToString + '.bmp';
   Bmp:= TBitmap.Create;
   TRY
     Bmp.Width:= 100;
@@ -129,14 +136,6 @@ begin
   FINALLY
     FreeAndNil(Bmp);
   END;
-end;
-
-
-procedure TTestGraphResizeWinThumb.DeleteTempImageFile;
-begin
-  if (FTempFile <> '') AND FileExists(FTempFile)
-  then DeleteFile(FTempFile);
-  FTempFile:= '';
 end;
 
 

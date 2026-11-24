@@ -34,7 +34,6 @@ type
     procedure CreateTempPngFile;
     procedure CreateTempJpgFile;
     procedure CreateTempGifFile;
-    procedure CleanupTempFiles;
     procedure AssertPixel(BMP: TBitmap; X, Y: Integer; Expected: TColor; Tolerance: Integer; const Msg: string);
   public
     [Setup]
@@ -186,13 +185,16 @@ uses
   Vcl.Imaging.GIFImg,
   CCR.Exif,
   LightCore.Graphics,
-  LightVcl.Graph.Loader;
+  LightVcl.Graph.Loader,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestVclGraphLoader';
 
 
 procedure TTestGraphLoader.Setup;
 begin
-  FTempDir:= TPath.Combine(TPath.GetTempPath, 'TestGraphLoader_' + TGUID.NewGuid.ToString);
-  ForceDirectoriesE(FTempDir);
+  FTempDir:= NewRunFolder(RunPrefix);
   FTempBmpFile:= '';
   FTempPngFile:= '';
   FTempJpgFile:= '';
@@ -202,22 +204,8 @@ end;
 
 procedure TTestGraphLoader.TearDown;
 begin
-  CleanupTempFiles;
-  if DirectoryExists(FTempDir)
-  then RemoveDir(FTempDir);
-end;
-
-
-procedure TTestGraphLoader.CleanupTempFiles;
-begin
-  if (FTempBmpFile <> '') AND FileExists(FTempBmpFile)
-  then DeleteFile(FTempBmpFile);
-  if (FTempPngFile <> '') AND FileExists(FTempPngFile)
-  then DeleteFile(FTempPngFile);
-  if (FTempJpgFile <> '') AND FileExists(FTempJpgFile)
-  then DeleteFile(FTempJpgFile);
-  if (FTempGifFile <> '') AND FileExists(FTempGifFile)
-  then DeleteFile(FTempGifFile);
+  DeleteRunFolder(FTempDir, RunPrefix);
+  FTempDir:= '';
 end;
 
 
@@ -442,7 +430,7 @@ begin
       FreeAndNil(Bmp);
     END;
   FINALLY
-    DeleteFile(InvalidFile);
+    DeleteFileInFolder(InvalidFile, FTempDir);
   END;
 end;
 
@@ -840,7 +828,7 @@ begin
     Assert.IsNull(Bmp, 'Result should be NIL when input is unreadable');
   FINALLY
     FreeAndNil(Bmp);
-    DeleteFile(CorruptFile);
+    DeleteFileInFolder(CorruptFile, FTempDir);
   END;
 end;
 
@@ -873,7 +861,7 @@ begin
       FreeAndNil(Bmp);
     END;
   FINALLY
-    DeleteFile(MislabeledFile);
+    DeleteFileInFolder(MislabeledFile, FTempDir);
   END;
 end;
 
@@ -914,7 +902,7 @@ begin
     AssertPixel(BMP, 25, 25, clFuchsia, 0, 'BMP content should survive a failed load');
   FINALLY
     FreeAndNil(BMP);
-    DeleteFile(CorruptFile);
+    DeleteFileInFolder(CorruptFile, FTempDir);
   END;
 end;
 
@@ -1001,7 +989,7 @@ begin
     IsValid:= CheckValidImage(InvalidFile);
     Assert.IsFalse(IsValid, 'Invalid file should return False');
   FINALLY
-    DeleteFile(InvalidFile);
+    DeleteFileInFolder(InvalidFile, FTempDir);
   END;
 end;
 

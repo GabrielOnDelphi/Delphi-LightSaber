@@ -34,7 +34,6 @@ type
     FTestForm: TForm;
     FEvent: TEvent;
     procedure CreateTestBmpFiles(Count: Integer);
-    procedure CleanupTempFiles;
     { TTestFormHelper.OnThumbnail is a TNotifyEvent, and the implementation below already takes a
       Sender. The declaration said (var Message: TMessage), which matched neither. }
     procedure HandleThumbnailMessage(Sender: TObject);
@@ -89,7 +88,11 @@ implementation
 
 uses
   Vcl.Imaging.Jpeg,
-  LightVcl.Graph.Loader.Thread;
+  LightVcl.Graph.Loader.Thread,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestVclBkgImgLoader';
 
 
 { Helper window procedure to receive WM_THUMBNAIL_NOTIFY }
@@ -115,8 +118,7 @@ end;
 
 procedure TTestBkgImgLoader.Setup;
 begin
-  FTempDir:= TPath.Combine(TPath.GetTempPath, 'TestBkgImgLoader_' + TGUID.NewGuid.ToString);
-  ForceDirectoriesE(FTempDir);
+  FTempDir:= NewRunFolder(RunPrefix);
   FTestBmpFiles:= TStringList.Create;
   FReceivedThumbs:= 0;
   FEvent:= TEvent.Create(NIL, True, False, '');
@@ -133,23 +135,11 @@ end;
 
 procedure TTestBkgImgLoader.TearDown;
 begin
-  CleanupTempFiles;
   FreeAndNil(FTestBmpFiles);
   FreeAndNil(FEvent);
   FreeAndNil(FTestForm);
-  if DirectoryExists(FTempDir)
-  then TDirectory.Delete(FTempDir, True);
-end;
-
-
-procedure TTestBkgImgLoader.CleanupTempFiles;
-var
-  FileName: string;
-begin
-  for FileName in FTestBmpFiles DO
-    if FileExists(FileName)
-    then DeleteFile(FileName);
-  FTestBmpFiles.Clear;
+  DeleteRunFolder(FTempDir, RunPrefix);
+  FTempDir:= '';
 end;
 
 

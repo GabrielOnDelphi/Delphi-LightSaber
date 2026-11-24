@@ -154,10 +154,12 @@ type
 implementation
 
 uses
-  LightVcl.Graph.Convert;
+  LightVcl.Graph.Convert,
+  Test.RunFolder;
 
 
 CONST
+  RunPrefix = 'TestVclGraphConvert';
   { JPEG is lossy, so a decoded channel may differ from the source. The quadrant centers that AssertQuadrants reads
     lie inside 16x16 blocks of one color (JPEG codes 8x8 blocks, 16x16 with chroma subsampling), so the error stays small. }
   JpegTolerance    = 40;
@@ -326,17 +328,15 @@ begin
   FBitmap.PixelFormat:= pf24bit;
   FillBitmapWithColor(FBitmap, clRed);
 
-  FTempDir:= TPath.Combine(TPath.GetTempPath, 'LightSaberTests_' + IntToStr(Random(100000)));
+  FTempDir:= NewRunFolder(RunPrefix);
 end;
 
 
 procedure TTestGraphConvert.TearDown;
 begin
   FreeAndNil(FBitmap);
-
-  { Clean up temp directory }
-  if TDirectory.Exists(FTempDir)
-  then TDirectory.Delete(FTempDir, TRUE);
+  DeleteRunFolder(FTempDir, RunPrefix);
+  FTempDir:= '';
 end;
 
 

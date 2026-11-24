@@ -76,20 +76,24 @@ type
 implementation
 
 uses
-  LightVcl.Internet.Download.Indy;
+  LightVcl.Internet.Download.Indy,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestVclDownloadIndy';
 
 
+{ FTempDir is <temp>\TestVclDownloadIndy_<GUID>\ (Test.RunFolder), deleted in TearDown }
 procedure TTestDownloadIndy.Setup;
 begin
-  FTempDir:= TPath.Combine(TPath.GetTempPath, 'TestDownloadIndy_' + TGUID.NewGuid.ToString);
-  ForceDirectoriesE(FTempDir);
+  FTempDir:= NewRunFolder(RunPrefix);
 end;
 
 
 procedure TTestDownloadIndy.TearDown;
 begin
-  if DirectoryExists(FTempDir)
-  then TDirectory.Delete(FTempDir, True);
+  DeleteRunFolder(FTempDir, RunPrefix);
+  FTempDir:= '';
 end;
 
 

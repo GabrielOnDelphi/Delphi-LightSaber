@@ -24,7 +24,8 @@ type
   TTesTlightPathEdit = class
   private
     FForm: TForm;
-    FTestFolder: string;
+    FRunFolder: string;     { With the trailing backslash }
+    FTestFolder: string;    { The same folder without it: the tests compare paths against this shape }
     FTestFile: string;
     function ChildControl(Owner: TComponent; CONST aName: string): TControl;
     function EditBox(PathEdit: TlightPathEdit): TButtonedEdit;
@@ -140,7 +141,11 @@ implementation
 
 uses
   LightCore.Colors,
-  LightCore.IO;
+  LightCore.IO,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestVclPathEdit';
 
 
 procedure TTesTlightPathEdit.Setup;
@@ -150,8 +155,8 @@ begin
   FForm.Height:= 600;
 
   { Create a temp folder for testing }
-  FTestFolder:= TPath.Combine(TPath.GetTempPath, 'TestPathEdit_' + TGUID.NewGuid.ToString);
-  ForceDirectoriesE(FTestFolder);
+  FRunFolder:= NewRunFolder(RunPrefix);
+  FTestFolder:= ExcludeTrailingPathDelimiter(FRunFolder);
 
   { Create a temp file for testing }
   FTestFile:= TPath.Combine(FTestFolder, 'TestFile.txt');
@@ -161,14 +166,9 @@ end;
 
 procedure TTesTlightPathEdit.TearDown;
 begin
-  { Clean up test files/folders }
-  if TFile.Exists(FTestFile)
-  then TFile.Delete(FTestFile);
-
-  if TDirectory.Exists(FTestFolder)
-  then TDirectory.Delete(FTestFolder, True);
-
   FreeAndNil(FForm);
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
 end;
 
 

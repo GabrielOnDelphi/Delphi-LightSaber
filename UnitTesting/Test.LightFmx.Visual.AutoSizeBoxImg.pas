@@ -32,6 +32,7 @@ type
   TTestAutoSizeBoxImg = class
   private
     FParent: TLayout;
+    FRunFolder: string;
     FTestImagePath: string;
     procedure CreateTestImage(const FileName: string; Width, Height: Integer);
   public
@@ -105,7 +106,11 @@ type
 implementation
 
 uses
-  LightFmx.Common.Graph;
+  LightFmx.Common.Graph,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestFmxAutoSizeBoxImg';
 
 
 procedure TTestAutoSizeBoxImg.CreateTestImage(const FileName: string; Width, Height: Integer);
@@ -127,17 +132,16 @@ begin
   FParent.Width:= 400;
   FParent.Height:= 600;
 
-  // Fully qualify TPath: FMX.Types defines a TPath class (vector graphics) that shadows System.IOUtils.TPath here.
-  FTestImagePath:= System.IOUtils.TPath.Combine(System.IOUtils.TPath.GetTempPath, 'TestAutoSizeBoxImg_TestImage.png');
+  FRunFolder:= NewRunFolder(RunPrefix);
+  FTestImagePath:= FRunFolder + 'TestAutoSizeBoxImg_TestImage.png';
 end;
 
 
 procedure TTestAutoSizeBoxImg.TearDown;
 begin
   FreeAndNil(FParent);
-
-  if FileExists(FTestImagePath) then
-    DeleteFile(FTestImagePath);
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
 end;
 
 

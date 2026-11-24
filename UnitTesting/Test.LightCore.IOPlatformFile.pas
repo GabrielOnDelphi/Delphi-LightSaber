@@ -173,6 +173,12 @@ type
 
 implementation
 
+USES
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcIOPlatformFile';
+
 
 TYPE
   { Raised by TStuckStream when the code under test keeps calling Read after Read returned 0.
@@ -217,8 +223,7 @@ end;
 
 procedure TTestIOPlatformFile.Setup;
 begin
-  FTestDir:= TPath.Combine(TPath.GetTempPath, 'IOPlatformTest_' + TGUID.NewGuid.ToString);
-  TDirectory.CreateDirectory(FTestDir);
+  FTestDir:= NewRunFolder(RunPrefix);
 end;
 
 
@@ -230,8 +235,8 @@ end;
 
 procedure TTestIOPlatformFile.CleanupTestDir;
 begin
-  if TDirectory.Exists(FTestDir)
-  then TDirectory.Delete(FTestDir, True);
+  DeleteRunFolder(FTestDir, RunPrefix);
+  FTestDir:= '';
 end;
 
 

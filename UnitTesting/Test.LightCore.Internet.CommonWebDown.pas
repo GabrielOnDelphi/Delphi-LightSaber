@@ -53,7 +53,11 @@ implementation
 uses
   LightCore.Download,
   LightCore.Internet.CommonWebDown,
-  Test.LightCore.Download;
+  Test.LightCore.Download,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcCommonWebDown';
 
 
 { How many request heads TLocalHttpServer.Requests holds: each one starts with its request line 'GET /' }
@@ -72,15 +76,14 @@ end;
 
 procedure TTestCommonWebDown.Setup;
 begin
-  FTempDir:= TPath.Combine(TPath.GetTempPath, 'TestCommonWebDown_' + TGUID.NewGuid.ToString);
-  ForceDirectoriesE(FTempDir);
+  FTempDir:= NewRunFolder(RunPrefix);
 end;
 
 
 procedure TTestCommonWebDown.TearDown;
 begin
-  if DirectoryExists(FTempDir)
-  then TDirectory.Delete(FTempDir, True);
+  DeleteRunFolder(FTempDir, RunPrefix);
+  FTempDir:= '';
 end;
 
 

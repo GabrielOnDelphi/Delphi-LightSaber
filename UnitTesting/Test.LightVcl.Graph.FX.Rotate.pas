@@ -31,6 +31,7 @@ type
   TTestGraphRotate = class
   private
     FBitmap: TBitmap;
+    FRunFolder: string;
     procedure FillBitmapWithColor(BMP: TBitmap; Color: TColor);
     function GetPixelAt(BMP: TBitmap; X, Y: Integer): TColor;
     procedure PrepareMarkedBitmap;
@@ -171,7 +172,11 @@ type
 implementation
 
 uses
-  LightVcl.Graph.FX.Rotate, LightCore.StreamBuff;
+  LightVcl.Graph.FX.Rotate, LightCore.StreamBuff,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestVclGraphRotate';
 
 
 procedure TTestGraphRotate.Setup;
@@ -181,12 +186,15 @@ begin
   FBitmap.Height:= 80;
   FBitmap.PixelFormat:= pf24bit;
   FillBitmapWithColor(FBitmap, clWhite);
+  FRunFolder:= NewRunFolder(RunPrefix);   { The stream tests write their files here }
 end;
 
 
 procedure TTestGraphRotate.TearDown;
 begin
   FreeAndNil(FBitmap);
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
 end;
 
 
@@ -651,7 +659,7 @@ VAR
   TempFile: string;
   Stream: TLightStream;
 begin
-  TempFile:= GetEnvironmentVariable('TEMP') + '\TestSpatialParams.tmp';
+  TempFile:= FRunFolder + 'TestSpatialParams.tmp';
 
   WriteParams.Flip:= TRUE;
   WriteParams.Mirror:= TRUE;
@@ -678,9 +686,7 @@ begin
   Assert.AreEqual(WriteParams.Mirror, ReadParams.Mirror, 'Mirror should match');
   Assert.AreEqual(WriteParams.Rotation, ReadParams.Rotation, 'Rotation should match');
 
-  { Cleanup }
-  if FileExists(TempFile)
-  then System.SysUtils.DeleteFile(TempFile);   { Qualified: WinApi.Windows.DeleteFile(PWideChar) shadows it }
+  DeleteFileInFolder(TempFile, FRunFolder);
 end;
 
 
@@ -691,7 +697,7 @@ VAR
   Stream: TLightStream;
   Rot: TRotateSense;
 begin
-  TempFile:= GetEnvironmentVariable('TEMP') + '\TestSpatialParamsRot.tmp';
+  TempFile:= FRunFolder + 'TestSpatialParamsRot.tmp';
 
   { Test all rotation values }
   for Rot:= Low(TRotateSense) to High(TRotateSense) do
@@ -716,9 +722,7 @@ begin
     Assert.AreEqual(Rot, ReadParams.Rotation, 'Rotation ' + IntToStr(Ord(Rot)) + ' should match');
    end;
 
-  { Cleanup }
-  if FileExists(TempFile)
-  then System.SysUtils.DeleteFile(TempFile);   { Qualified: WinApi.Windows.DeleteFile(PWideChar) shadows it }
+  DeleteFileInFolder(TempFile, FRunFolder);
 end;
 
 
@@ -728,7 +732,7 @@ VAR
   TempFile: string;
   Stream: TLightStream;
 begin
-  TempFile:= GetEnvironmentVariable('TEMP') + '\TestSpatialParamsInv.tmp';
+  TempFile:= FRunFolder + 'TestSpatialParamsInv.tmp';
 
   { Write invalid rotation value directly }
   Stream:= TLightStream.CreateWrite(TempFile);
@@ -752,9 +756,7 @@ begin
   { Invalid value should default to rtNone }
   Assert.AreEqual(rtNone, ReadParams.Rotation, 'Invalid rotation should default to rtNone');
 
-  { Cleanup }
-  if FileExists(TempFile)
-  then System.SysUtils.DeleteFile(TempFile);   { Qualified: WinApi.Windows.DeleteFile(PWideChar) shadows it }
+  DeleteFileInFolder(TempFile, FRunFolder);
 end;
 
 

@@ -19,6 +19,7 @@ type
   [TestFixture]
   TTestStreamFile = class
   private
+    FRunFolder: string;
     FTestFile: string;
     procedure CleanupTestFile;
   public
@@ -212,11 +213,15 @@ type
 implementation
 
 uses
-  LightCore.Types;
+  LightCore.Types, Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestLcStreamFile';
 
 procedure TTestStreamFile.Setup;
 begin
-  FTestFile:= TPath.GetTempFileName;
+  FRunFolder:= NewRunFolder(RunPrefix);
+  FTestFile:= FRunFolder + 'StreamFile.dat';
 end;
 
 procedure TTestStreamFile.TearDown;
@@ -226,8 +231,8 @@ end;
 
 procedure TTestStreamFile.CleanupTestFile;
 begin
-  if FileExists(FTestFile)
-  then DeleteFile(FTestFile);
+  DeleteRunFolder(FRunFolder, RunPrefix);
+  FRunFolder:= '';
 end;
 
 
