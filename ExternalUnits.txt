@@ -11,10 +11,6 @@ FastMM4
 # Autopilot for Delphi - the AI automation bridge, linked by 3 demos in Debug only (AUTOPILOT define)
 Autopilot.Bridge.Vcl
 
-# CoolTrayIcon - system tray icon component, used by Demo/VCL/Template App Full - https://github.com/GabrielOnDelphi/TrayIcon
-CoolTrayIcon
-TCoolTrayIcon
-
 # Graphics32 - used by LightVcl.Graphics (GR32_R is its runtime package)
 GR32*
 
