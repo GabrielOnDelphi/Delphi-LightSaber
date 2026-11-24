@@ -1,0 +1,42 @@
+# External units: libraries that LightSaber code names but that are NOT in this repository.
+# Someone who clones the repo must get these separately, or leave out the code that uses them.
+# The check c:\AI\Tools\Delphi\Check-RepoUnits\Check-RepoUnits.ps1 reads this file.
+# Format: one unit, class or package name per line (* is a wildcard). "ignore: <path>" skips a file.
+# Add a line only for a library that a user can download. A unit that only exists on Gabriel's PC
+# is a bug: put it in the repo or remove the reference.
+
+# FastMM4 - memory manager, linked in Debug builds only
+FastMM4
+
+# Autopilot for Delphi - the AI automation bridge, linked by 3 demos in Debug only (AUTOPILOT define)
+Autopilot.Bridge.Vcl
+
+# CoolTrayIcon - system tray icon component, used by 2 demos (URL: to be added by Gabriel)
+CoolTrayIcon
+TCoolTrayIcon
+
+# Graphics32 - used by LightVcl.Graphics (GR32_R is its runtime package)
+GR32*
+
+# PasJpeg2000 - www.github.com/galfar/PasJpeg2000 ; used only with the Jpg2000 define
+OpenJpeg2000Bitmap
+
+# madExcept (madshi.net, commercial) - used only with the madshi define
+mad*
+
+# TestInsight - IDE test runner, used only with the TESTINSIGHT define
+TestInsight.*
+
+# LightProteus - Gabriel's private licensing library, used only with the PROTEUS define
+cpProteus*
+cpCertificate
+
+# Named by CCR.Exif.BaseUtils only under the NeedHausladenByteStringsFix define (old Delphi versions)
+System.ByteStrings
+
+# CCR.Exif: a stale copy of the old package; the units now build in External\LightExternal.dpk
+ignore: External/Exif/out/*
+
+# A stale project that cannot build (C:\Projects\LightSaber\CLAUDE.md, "Warnings from past reviews").
+# The real one is FrameVCL/AutoTranslator/UnitTesting/Tests_LightVcl.Translator.dproj
+ignore: UnitTesting/Tests_LightVcl.Translator.dpr
