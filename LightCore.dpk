@@ -43,6 +43,7 @@ contains
   LightCore in 'LightCore.pas',
   LightCore.Binary in 'LightCore.Binary.pas',
   LightCore.INIFile in 'LightCore.INIFile.pas',
+  LightCore.INIFileMem in 'LightCore.INIFileMem.pas',
   LightCore.CompilerVersions in 'LightCore.CompilerVersions.pas',
   LightCore.StreamMem in 'LightCore.StreamMem.pas',
   LightCore.StreamBuff in 'LightCore.StreamBuff.pas',

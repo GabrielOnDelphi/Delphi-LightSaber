@@ -87,6 +87,7 @@ contains
   LightVcl.Visual.TimeLine in 'LightVcl.Visual.TimeLine.pas',
   LightVcl.Visual.Timer in 'LightVcl.Visual.Timer.pas',
   LightVcl.Visual.ToolBox in 'LightVcl.Visual.ToolBox.pas',
+  LightVcl.Visual.TrackBar in 'LightVcl.Visual.TrackBar.pas',
   LightVcl.Visual.TrayIcon in 'LightVcl.Visual.TrayIcon.pas',
   LightVcl.Visual.RichLogTrack in 'LightVcl.Visual.RichLogTrack.pas',
   LightVcl.Visual.RichLogUtils in 'LightVcl.Visual.RichLogUtils.pas',

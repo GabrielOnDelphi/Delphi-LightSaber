@@ -109,7 +109,7 @@ begin
   try
     if NOT TStyleManager.IsValidStyle(FullPath, Style) then
     begin
-      AppDataCore.RamLog.AddError('LoadStyleFromFile: not a valid VCL style: ' + FullPath);
+      TAppDataCore.LogError('LoadStyleFromFile: not a valid VCL style: ' + FullPath);
       MessageError('Style is not valid: ' + FullPath);
       EXIT(FALSE);
     end;
@@ -128,7 +128,7 @@ begin
       or truncated file raises here. The app continues with the default Windows theme. }
     on E: Exception do
     begin
-      AppDataCore.RamLog.AddError('LoadStyleFromFile [' + DiskShortName + ']: ' + E.ClassName + ' - ' + E.Message);
+      TAppDataCore.LogError('LoadStyleFromFile [' + DiskShortName + ']: ' + E.ClassName + ' - ' + E.Message);
       MessageError('Error loading style: ' + E.Message);
       EXIT(FALSE);
     end;

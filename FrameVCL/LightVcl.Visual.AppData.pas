@@ -1,7 +1,7 @@
 ﻿UNIT LightVcl.Visual.AppData;
 
 {=============================================================================================================
-   2026.09.19
+   2026.11.22
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -131,6 +131,11 @@ USES
 
 
 TYPE
+  { What RegisterUninstaller does with the Windows uninstall entry ("Apps & features") of this program }
+  TUninstallEntryAction = (ueRemove,    { Delete the entry }
+                           ueLeave,     { Touch nothing }
+                           ueWrite);    { Write the entry and the two folders the uninstaller reads }
+
   TAppData= class(TAppDataCore)
   private
     FFont: TFont;
@@ -151,6 +156,10 @@ TYPE
     procedure RegisterUninstaller;
   public
     Translator: TTranslator;
+    { TRUE by default: CreateMainForm writes the Windows uninstall entry of this program (RegisterUninstaller).
+      Set it to FALSE in the DPR, before CreateMainForm, in a program that is shipped inside the install folder of another product, such as a screensaver:
+      its entry would carry its own name but start the uninstaller of that product. FALSE also removes the entry that an older build wrote. }
+    RegistersUninstaller: Boolean;
    {--------------------------------------------------------------------------------------------------
       INIT
    --------------------------------------------------------------------------------------------------}
@@ -191,6 +200,7 @@ TYPE
    --------------------------------------------------------------------------------------------------}
     function  ReadAppDataFolder(CONST UninstalledApp: string): string;  //used by Uninstaller App
     function  ReadInstallationFolder(CONST UninstalledApp: string): string;
+    class function UninstallEntryAction(RunningFromSource, RegistersEntry, UninstallerShipped: Boolean): TUninstallEntryAction; static;
 
    {--------------------------------------------------------------------------------------------------
       FORMS
@@ -246,6 +256,8 @@ begin
 
   { Single instance } { Register a unique message ID for this applications. Used when we send the command line to the first running instance via WM_COPYDATA. We can do this only once per app so the best place is the Initialization section. However, since AppData is created only once, we can also do it here, in the constructor. https://stackoverflow.com/questions/35516347/sendmessagewm-copydata-record-string }
   CopyDataID:= RegisterWindowMessage('LightSaberCopyDataID');
+
+  RegistersUninstaller:= TRUE;
 
   { App stuff }
   Application.Title               := aAppName;
@@ -1159,26 +1171,40 @@ end;
 { Called by CreateMainForm at every start.
   Writes the Windows uninstall entry ("Apps & features") and the two folders the uninstaller reads.
   Does nothing when the program ships no uninstaller: a small tool, or the uninstaller itself running from its Temp copy.
-  A run from the source folder (RunningHome) is not an installation. The source folder can hold System\Uninstall.exe too, so an entry written from there would give Windows an Uninstall button that deletes the SOURCE folder. Remove the entry instead. }
+  A run from the source folder (RunningHome) is not an installation. The source folder can hold System\Uninstall.exe too, so an entry written from there would give Windows an Uninstall button that deletes the SOURCE folder. Remove the entry instead.
+  A program that set RegistersUninstaller = FALSE (a screensaver inside another product's folder) never writes the entry, and removes the one an older build wrote.
+  The decision itself is UninstallEntryAction. }
 procedure TAppData.RegisterUninstaller;
 CONST
   UninstallKey = 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\';
   UninstallerExe = 'Uninstall.exe';
 begin
-  if RunningHome then
-    begin
-      if RegDeleteKey(HKEY_CURRENT_USER, UninstallKey+ AppName)
-      then doLogInfo('Running from the source folder: the Windows uninstall entry was removed. An installed copy registers it.');
-      EXIT;
-    end;
+  case UninstallEntryAction(RunningHome, RegistersUninstaller, FileExists(AppSysDir+ UninstallerExe)) of
+    ueRemove:
+      if RegDeleteKey(HKEY_CURRENT_USER, UninstallKey+ AppName) then
+        if RunningHome
+        then doLogInfo('Running from the source folder: the Windows uninstall entry was removed. An installed copy registers it.')
+        else doLogInfo('This program has no Windows uninstall entry of its own (RegistersUninstaller = FALSE): the entry an older build wrote was removed.');
+    ueLeave: ;
+    ueWrite:
+      begin
+        RegWriteString(HKEY_CURRENT_USER, UninstallKey+ AppName, 'DisplayName', AppName);
+        RegWriteString(HKEY_CURRENT_USER, UninstallKey+ AppName, 'UninstallString', AppSysDir+ UninstallerExe);
+        writeAppDataFolder;
+        writeInstallationFolder;
+      end;
+  end;
+end;
 
-  if NOT FileExists(AppSysDir+ UninstallerExe) then EXIT;
 
-  RegWriteString(HKEY_CURRENT_USER, UninstallKey+ AppName, 'DisplayName', AppName);
-  RegWriteString(HKEY_CURRENT_USER, UninstallKey+ AppName, 'UninstallString', AppSysDir+ UninstallerExe);
-
-  writeAppDataFolder;
-  writeInstallationFolder;
+{ The decision of RegisterUninstaller, without the registry, so a test can check every case.
+  RunningFromSource: RunningHome. RegistersEntry: RegistersUninstaller. UninstallerShipped: System\Uninstall.exe exists beside the program. }
+class function TAppData.UninstallEntryAction(RunningFromSource, RegistersEntry, UninstallerShipped: Boolean): TUninstallEntryAction;
+begin
+  if RunningFromSource  then EXIT(ueRemove);
+  if NOT RegistersEntry then EXIT(ueRemove);
+  if UninstallerShipped then EXIT(ueWrite);
+  Result:= ueLeave;
 end;
 
 

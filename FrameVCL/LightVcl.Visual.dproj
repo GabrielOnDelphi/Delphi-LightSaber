@@ -155,6 +155,7 @@
         <DCCReference Include="LightVcl.Visual.TimeLine.pas"/>
         <DCCReference Include="LightVcl.Visual.Timer.pas"/>
         <DCCReference Include="LightVcl.Visual.ToolBox.pas"/>
+        <DCCReference Include="LightVcl.Visual.TrackBar.pas"/>
         <DCCReference Include="LightVcl.Visual.TrayIcon.pas"/>
         <DCCReference Include="LightVcl.Visual.RichLogTrack.pas"/>
         <DCCReference Include="LightVcl.Visual.RichLogUtils.pas"/>

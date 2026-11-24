@@ -52,9 +52,7 @@ begin
   EXCEPT
     on E: Exception do
       begin
-        // AppDataCore can be nil in unit-test/early-startup contexts — guard before use.
-        if Assigned(AppDataCore)
-        then AppDataCore.LogError(E.ClassName + ': ' + E.Message + ' - ' + FileName);
+        TAppDataCore.LogError(E.ClassName + ': ' + E.Message + ' - ' + FileName);
         RAISE;   // never swallow: caller must distinguish I/O failure from "unknown format"
       end;
   END;

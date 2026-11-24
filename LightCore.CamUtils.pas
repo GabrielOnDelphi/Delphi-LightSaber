@@ -304,8 +304,7 @@ end;
     Other  : returns 0; callback never fires (no async picker on Win/macOS desktop). }
 function SetupImagePickerCallback(const AOnImageSelected: TImageSelectedEvent): TSubscriptionId;
 begin
-  Result:= 0;
-{$IFDEF ANDROID}
+{$IF Defined(ANDROID)}
   Result:= TMessageManager.DefaultManager.SubscribeToMessage(TMessageResultNotification,
     procedure(const Sender: TObject; const M: TMessage)
     var
@@ -333,12 +332,10 @@ begin
         end;
       EXCEPT
         on E: Exception do
-          if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
-          then AppDataCore.RamLog.AddError('SetupImagePickerCallback: '+ E.ClassName +' - '+ E.Message);
+          TAppDataCore.LogError('SetupImagePickerCallback: '+ E.ClassName +' - '+ E.Message);
       END;
     end);
-{$ENDIF}
-{$IFDEF IOS}
+{$ELSEIF Defined(IOS)}
   Result:= TMessageManager.DefaultManager.SubscribeToMessage(TMessageImagePickerResult,
     procedure(const Sender: TObject; const M: TMessage)
     begin
@@ -347,10 +344,11 @@ begin
         then AOnImageSelected(TMessageImagePickerResult(M).Value);
       EXCEPT
         on E: Exception do
-          if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
-          then AppDataCore.RamLog.AddError('SetupImagePickerCallback (iOS): '+ E.ClassName +' - '+ E.Message);
+          TAppDataCore.LogError('SetupImagePickerCallback (iOS): '+ E.ClassName +' - '+ E.Message);
       END;
     end);
+{$ELSE}
+  Result:= 0;
 {$ENDIF}
 end;
 
@@ -366,8 +364,7 @@ end;
     Other  : returns 0; callback never fires. }
 function SetupAnyFilePickerCallback(const AOnFileSelected: TFileSelectedEvent): TSubscriptionId;
 begin
-  Result:= 0;
-{$IFDEF ANDROID}
+{$IF Defined(ANDROID)}
   Result:= TMessageManager.DefaultManager.SubscribeToMessage(TMessageResultNotification,
     procedure(const Sender: TObject; const M: TMessage)
     var
@@ -393,12 +390,10 @@ begin
         end;
       EXCEPT
         on E: Exception do
-          if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
-          then AppDataCore.RamLog.AddError('SetupAnyFilePickerCallback: '+ E.ClassName +' - '+ E.Message);
+          TAppDataCore.LogError('SetupAnyFilePickerCallback: '+ E.ClassName +' - '+ E.Message);
       END;
     end);
-{$ENDIF}
-{$IFDEF IOS}
+{$ELSEIF Defined(IOS)}
   Result:= TMessageManager.DefaultManager.SubscribeToMessage(TMessageFilePickerResult,
     procedure(const Sender: TObject; const M: TMessage)
     begin
@@ -407,10 +402,11 @@ begin
         then AOnFileSelected(TMessageFilePickerResult(M).Value);
       EXCEPT
         on E: Exception do
-          if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
-          then AppDataCore.RamLog.AddError('SetupAnyFilePickerCallback (iOS): '+ E.ClassName +' - '+ E.Message);
+          TAppDataCore.LogError('SetupAnyFilePickerCallback (iOS): '+ E.ClassName +' - '+ E.Message);
       END;
     end);
+{$ELSE}
+  Result:= 0;
 {$ENDIF}
 end;
 
@@ -499,8 +495,7 @@ begin
         then AOnFileReceived(Path);
       EXCEPT
         on E: Exception do
-          if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
-          then AppDataCore.RamLog.AddError('SubscribeToIncomingFileIntents: '+ E.ClassName +' - '+ E.Message);
+          TAppDataCore.LogError('SubscribeToIncomingFileIntents: '+ E.ClassName +' - '+ E.Message);
       END;
     end);
 end;
