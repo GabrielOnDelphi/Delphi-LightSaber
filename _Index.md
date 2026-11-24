@@ -342,12 +342,40 @@ function FixHtmlFormatings(Body: TStringList): string; overload;
 procedure FixHtmlFormatings(CONST FileName: string); overload;
 ```
 
-## LightCore.INIFile (16)
+## LightCore.INIFile (17)
 
 ```pascal
 function ReadDate (CONST Section, Ident: string; Default: TDateTime): TDateTime; reintroduce;
 procedure WriteDate(CONST Section, Ident: string; Value : TDateTime); reintroduce;
 function ReadString (CONST Section, Ident, Default: string): string; override; // Repairs the RTL's silent 2047-char cut. See implementation.
+procedure WriteString(CONST Section, Ident, Value: string); override; // Skips a value that the file already holds. See implementation.
+function ValueExists(CONST Ident: string): Boolean; reintroduce; overload;
+function ReadDate (CONST Ident: string; Default: TDateTime): TDateTime; reintroduce; overload;
+procedure WriteDate (CONST Ident: string; Value: TDateTime); reintroduce; overload;
+function Read (CONST Ident: string; Default: string): string; overload;
+procedure Write (const Ident, Value: String); overload;
+function Read (const Ident: string; Default: Integer= 0): Integer; overload;
+procedure Write (const Ident: string; Value: Integer); overload;
+function Read (CONST Ident: string; Default: Boolean= TRUE): Boolean; overload;
+procedure Write (const Ident: string; Value: Boolean); overload;
+function ReadFont (CONST Ident: string): FontStruct;
+procedure WriteFont (CONST Ident: string; Font: FontStruct);
+function Read (const Ident: string; Default: Double): Double; overload;
+procedure Write (const Ident: string; Value: Double); overload;
+```
+
+## LightCore.INIFileMem (22)
+
+```pascal
+procedure addChange(Kind: TIniChangeKind; CONST Section, Ident, Value: string);
+procedure reloadFile;
+procedure writeTempFile(CONST TempName: string);
+procedure swapInTempFile(CONST TempName: string; FileWasLoaded: Boolean);
+procedure saveViaTempFile(FileWasLoaded: Boolean);
+procedure WriteString (CONST Section, Ident, Value: String); override;
+procedure DeleteKey (CONST Section, Ident: String); override;
+procedure EraseSection(CONST Section: string); override;
+procedure UpdateFile; override;
 function ValueExists(CONST Ident: string): Boolean; reintroduce; overload;
 function ReadDate (CONST Ident: string; Default: TDateTime): TDateTime; reintroduce; overload;
 procedure WriteDate (CONST Ident: string; Value: TDateTime); reintroduce; overload;
@@ -512,7 +540,7 @@ procedure OpenURL(const URL: string); { Opens URL in the default browser. Cross-
 Procedure CreateUrl (CONST FullFileName, sFullURL: string); { Creates an .URL file }
 ```
 
-## LightCore.IO (142)
+## LightCore.IO (143)
 
 ```pascal
 function TrailLinuxPathEx (CONST Path: string): string; { Adds / in front and at the end of the path }
@@ -639,6 +667,7 @@ function NoRecycleBinReason (CONST Path: string): string; { Why a delete of Path
 function DriveHasRecycleBin (CONST Path: string): Boolean; { TRUE when NoRecycleBinReason gives no reason. Deletes nothing }
 function RecycleItemRefusal (CONST ItemName: string): string; overload; { Why RecycleItem (LightVcl.Common.IO) refuses ItemName, or '' when it accepts it. The drive is not checked: see DriveHasRecycleBin. Deletes nothing }
 function RecycleItemRefusal (CONST ItemName: string; OUT PathList: string): string; overload; { The same, and PathList receives the full paths in the form SHFileOperation.pFrom needs }
+function IsReparseTagNameSurrogate(Tag: Cardinal): Boolean; { TRUE for the tag of a junction, a symbolic link, a mounted folder (they stand for another entry); FALSE for a OneDrive placeholder. DeleteFolder and EmptyDirectory never enter such a link }
 function GetFileSize (CONST FileName: string): Int64;
 function GetFileSizeFormat(CONST FileName: string): string; { Same as GetFileSize but returns the size in b/kb/mb/etc }
 function GetFolderSize (CONST Folder: string; CONST FileType: string= '*.*'; DigSubdirectories: Boolean= TRUE): Int64;
@@ -2949,16 +2978,19 @@ procedure SaveAsJpg(const FullFileName: string);
 function GetJpeg(CONST Index: Integer): TJpegImage; { Get access to the specified JPEG }
 ```
 
-## LightVcl.Graph.RainDropParamEditorForm (8)
+## LightVcl.Graph.RainDropParamEditorForm (11)
 
 ```pascal
 procedure trkRainChange (Sender: TObject);
 procedure btnAdvancedClick(Sender: TObject);
+procedure btnOkClick (Sender: TObject);
+procedure btnResetClick (Sender: TObject);
 procedure FormDestroy (Sender: TObject);
 procedure FormKeyPress (Sender: TObject; var Key: Char);
 procedure FormClose (Sender: TObject; var Action: TCloseAction);
 procedure SettingChanged (Sender: TObject);
 procedure ObjectFromGUI;
+procedure showHeader(aPicture: TGraphic; const aText: string);
 procedure GuiFromObject;
 ```
 
@@ -3175,7 +3207,7 @@ procedure SetFieldValue (aForm: IHTMLFormElement; const fieldName: string; const
 function GetFormByNumber (Document: IHTMLDocument2; formNumber: integer): IHTMLFormElement;
 ```
 
-## LightVcl.Internet.PageDriver (52)
+## LightVcl.Internet.PageDriver (55)
 
 ```pascal
 function addStep(Kind: TStepKind; CONST Name, Target: string; TimeOut: Integer): TDriverStep;
@@ -3199,10 +3231,11 @@ procedure startStep;
 procedure startNavigate;
 procedure sendPoll;
 procedure sendScript(CONST JavaScript: string);
-procedure addCall(CONST Method, Params: string);
-procedure queueKey(CONST Key: string);
+procedure addCall(CONST Method, Params: string; WaitMs: Integer= 0);
+procedure queueKey(CONST Key: string; WaitMs: Integer= 0);
 procedure sendNextCall;
 procedure insertFocused(CONST Json: string);
+procedure typeFocused(CONST Json: string);
 procedure insertAnswered(CONST Json: string);
 procedure clickLocated(CONST Json: string);
 procedure startAttach;
@@ -3217,9 +3250,11 @@ procedure Navigate (CONST Url: string; TimeOut: Integer= 30000);
 procedure WaitFor (CONST Selector: string; TimeOut: Integer= 15000); { an element exists AND has a non-zero size }
 procedure WaitGone (CONST Selector: string; TimeOut: Integer= 15000); { no visible element matches any more }
 procedure WaitUntil (CONST Name, JsCondition: string; TimeOut: Integer= 15000); { a JavaScript expression that becomes true }
+procedure WaitClickable(CONST Selector: string; TimeOut: Integer= 5000); { the element exists, is enabled, and nothing covers its centre: a Click with cmMouse would land on it. Clicks nothing. On a time-out the reason names what covers it. }
 procedure RunScript (CONST Name, JavaScript: string; TimeOut: Integer= 10000); { stores the unwrapped result under Name }
 procedure ReadText (CONST Name, Selector: string; TimeOut: Integer= 10000); { innerText of the first match, stored under Name; fails if none }
 procedure InsertText(CONST Selector, Text: string; Mode: TInsertMode= imKeyboard; TimeOut: Integer= 15000);
+procedure TypeText (CONST Selector: string; CONST Texts: TStringDynArray; CONST PausesMs: TIntegerDynArray; TimeOut: Integer= 15000); { imKeyboard in parts, with a pause before each part. See TYPE TEXT in the header. }
 procedure Click (CONST Selector: string; Mode: TClickMode= cmMouse; TimeOut: Integer= 10000);
 procedure Focus (CONST Selector: string; TimeOut: Integer= 10000); { focuses the first match and puts the caret at its end; fails if none }
 procedure PressKey (CONST Key: string); { 'Enter', 'Escape', 'Tab', 'Backspace', 'SelectAll' (Ctrl+A) - sent to the focused element through Input.dispatchKeyEvent. Another key raises EArgumentException. }
@@ -4315,6 +4350,19 @@ procedure ShowIt(Parent: TControl);
 procedure Register;
 ```
 
+## LightVcl.Visual.TrackBar (8)
+
+```pascal
+procedure beforeScroll(ScrollCode: Integer);
+procedure afterScroll(ScrollCode: Integer);
+procedure endGesture;
+procedure CNHScroll(var Message: TWMHScroll); message CN_HSCROLL;
+procedure CNVScroll(var Message: TWMVScroll); message CN_VSCROLL;
+procedure WMMouseWheel(var Message: TWMMouseWheel); message WM_MOUSEWHEEL;
+procedure ChangeDone; dynamic;
+procedure Register;
+```
+
 ## LightVcl.Visual.TrayIcon (4)
 
 ```pascal
@@ -4324,4 +4372,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_3120 public routines across 239 units._
+_3158 public routines across 241 units._
