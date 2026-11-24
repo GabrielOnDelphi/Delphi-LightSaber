@@ -54,7 +54,10 @@ contains
   CCR.Exif.StreamHelper in 'Exif\CCR.Exif.StreamHelper.pas',
   CCR.Exif.TagIDs in 'Exif\CCR.Exif.TagIDs.pas',
   CCR.Exif.TiffUtils in 'Exif\CCR.Exif.TiffUtils.pas',
-  CCR.Exif.XMPUtils in 'Exif\CCR.Exif.XMPUtils.pas';
+  CCR.Exif.XMPUtils in 'Exif\CCR.Exif.XMPUtils.pas',
+  SimpleTimer in 'TrayIcon\SimpleTimer.pas',
+  CoolTrayIcon in 'TrayIcon\CoolTrayIcon.pas',
+  TextTrayIcon in 'TrayIcon\TextTrayIcon.pas';
 
 end.
 
