@@ -46,7 +46,7 @@ USES
   Winapi.Windows, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Controls,
   Vcl.ExtCtrls, System.Classes, System.SysUtils, Vcl.Forms, System.Win.Registry,
   LightVcl.Visual.PathEdit, LightVcl.Visual.CountDown, LightVcl.Visual.RichLog,
-  InternetLabel, Vcl.Imaging.pngimage, LightVcl.Visual.AppDataForm;
+  Vcl.Imaging.pngimage, LightVcl.Visual.AppDataForm;
 
 CONST
   { Set these four when you copy this template for a product }
@@ -67,7 +67,7 @@ TYPE
     btnFeedback  : TButton;
     btn1         : TButton;
     lblDiscount  : TLabel;
-    inetDiscount : TInternetLabel;
+    inetDiscount : TLabel;
     CountDown    : TLightCountDown;
     procedure btnUninstallClick (Sender: TObject);
     procedure btnFeedbackClick  (Sender: TObject);

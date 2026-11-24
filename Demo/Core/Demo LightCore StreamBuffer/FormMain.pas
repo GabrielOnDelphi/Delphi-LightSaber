@@ -14,15 +14,15 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, System.Types, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.ExtCtrls,
-  InternetLabel, LightVcl.Visual.PathEdit, LightVcl.Visual.SpinEdit,
+  LightVcl.Visual.PathEdit, LightVcl.Visual.SpinEdit,
   LightVcl.Visual.RichLogTrack, LightVcl.Visual.CheckBox, LightVcl.Visual.RichLog, LightCore.AppData,
-  LightVcl.Visual.AppData, LightVcl.Visual.AppDataForm, chHardID;
+  LightVcl.Visual.AppData, LightVcl.Visual.AppDataForm;
 
 TYPE
   TMainForm = class(TLightForm)
     pgCtrl             : TPageControl;
     edtFile2           : TlightPathEdit;
-    InternetLabel      : TInternetLabel;
+    InternetLabel      : TLabel;
     Label1             : TLabel;
     Label2             : TLabel;
     tabMain            : TTabSheet;
@@ -231,7 +231,7 @@ begin
    Stream.WriteStringA('');  // Empty string
    Stream.WriteStringA('abba');
    Stream.WriteStringA('Test ANSI with special chars: ÄÖÜ');
-   Stream.WriteStringA('A very long string: ' + StringOfChar('X', 1000));
+   Stream.WriteStringA(AnsiString('A very long string: ' + StringOfChar('X', 1000)));
    
    {----------------- UNICODE STRINGS -----------------}
    Stream.WriteString('');  // Empty string

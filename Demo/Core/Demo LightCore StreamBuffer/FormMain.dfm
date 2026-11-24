@@ -19,7 +19,7 @@ object MainForm: TMainForm
   SnapBuffer = 5
   Visible = True
   TextHeight = 15
-  object InternetLabel: TInternetLabel
+  object InternetLabel: TLabel
     Left = 610
     Top = 310
     Width = 28
@@ -34,12 +34,6 @@ object MainForm: TMainForm
     ParentFont = False
     ParentShowHint = False
     ShowHint = True
-    Link = 'http://www.tahionic.com'
-    LinkHint = False
-    Visited = False
-    VisitedColor = clPurple
-    NotVisitedColor = clBlue
-    OverColor = clRed
   end
   object pgCtrl: TPageControl
     Left = 0

@@ -2816,7 +2816,7 @@ object frmMain: TfrmMain
       Transparent = False
       Visible = False
     end
-    object inetDiscount: TInternetLabel
+    object inetDiscount: TLabel
       AlignWithMargins = True
       Left = 4
       Top = 31
@@ -2833,11 +2833,6 @@ object frmMain: TfrmMain
       Font.Style = []
       ParentFont = False
       Visible = False
-      LinkHint = False
-      Visited = False
-      VisitedColor = clPurple
-      NotVisitedColor = clBlue
-      OverColor = clRed
     end
     object mmoLog: TRichLog
       AlignWithMargins = True
