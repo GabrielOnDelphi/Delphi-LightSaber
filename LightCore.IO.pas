@@ -1,7 +1,7 @@
 ﻿UNIT LightCore.IO;
 
 {=============================================================================================================
-   2026.11.15
+   2026.11.22
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -403,6 +403,7 @@ TYPE
  function  DriveHasRecycleBin (CONST Path: string): Boolean;                                                 { TRUE when NoRecycleBinReason gives no reason. Deletes nothing }
  function  RecycleItemRefusal (CONST ItemName: string): string; overload;                                     { Why RecycleItem (LightVcl.Common.IO) refuses ItemName, or '' when it accepts it. The drive is not checked: see DriveHasRecycleBin. Deletes nothing }
  function  RecycleItemRefusal (CONST ItemName: string; OUT PathList: string): string; overload;                { The same, and PathList receives the full paths in the form SHFileOperation.pFrom needs }
+ function  IsReparseTagNameSurrogate(Tag: Cardinal): Boolean;                                                { TRUE for the tag of a junction, a symbolic link, a mounted folder (they stand for another entry); FALSE for a OneDrive placeholder. DeleteFolder and EmptyDirectory never enter such a link }
  {$ENDIF}
 
 {--------------------------------------------------------------------------------------------------
@@ -2638,26 +2639,56 @@ begin
 end;
 
 
-{ True when Folder itself carries FILE_ATTRIBUTE_REPARSE_POINT: a junction, a directory symbolic link, a mounted folder.
+{ TRUE when the reparse tag has the Name Surrogate bit (bit 29): the entry stands for another named entity, as a
+  junction (IO_REPARSE_TAG_MOUNT_POINT $A0000003) or a symbolic link (IO_REPARSE_TAG_SYMLINK $A000000C) does.
+  FALSE for a OneDrive placeholder (IO_REPARSE_TAG_CLOUD $9000001A), whose files are its own.
+  The IsReparseTagNameSurrogate macro of winnt.h, which the Delphi RTL does not declare:
+  https://learn.microsoft.com/en-us/windows/win32/api/winnt/nf-winnt-isreparsetagnamesurrogate
+  The bit layout of a tag (M = bit 31, R = 30, N = 29, D = 28), MS-FSCC 2.1.2.1:
+  https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fscc/c8e77b37-3909-4fe6-a4ea-2b9d423b1ee4 }
+function IsReparseTagNameSurrogate(Tag: Cardinal): Boolean;
+begin
+  Result:= (Tag AND $20000000) <> 0;
+end;
+
+
+{ True when Folder itself is a name-surrogate reparse point: a junction, a directory symbolic link, a mounted folder.
+  Another reparse point (a OneDrive placeholder) is a normal folder here. When the tag cannot be read, the folder counts as a link.
   GetFileAttributes returns the attributes of the link, not of its target:
-  https://learn.microsoft.com/en-us/windows/win32/fileio/symbolic-link-effects-on-file-systems-functions }
+  https://learn.microsoft.com/en-us/windows/win32/fileio/symbolic-link-effects-on-file-systems-functions
+  FindFirstFile on a folder path with no wildcard and no trailing backslash reports that folder itself, and dwReserved0 holds
+  its reparse tag when dwFileAttributes has FILE_ATTRIBUTE_REPARSE_POINT:
+  https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-findfirstfilew
+  https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-win32_find_dataw }
 function isLinkFolder(CONST Folder: string): Boolean;
-VAR Attr: DWORD;
+VAR
+  Attr: DWORD;
+  FindData: TWin32FindData;
+  Handle: THandle;
 begin
   Attr:= GetFileAttributes(PChar(Folder));
-  Result:= (Attr <> INVALID_FILE_ATTRIBUTES) AND ((Attr AND FILE_ATTRIBUTE_REPARSE_POINT) <> 0);
+  if (Attr = INVALID_FILE_ATTRIBUTES) OR ((Attr AND FILE_ATTRIBUTE_REPARSE_POINT) = 0) then EXIT(FALSE);
+
+  Handle:= FindFirstFile(PChar(ExcludeTrailingPathDelimiter(Folder)), FindData);
+  if Handle = INVALID_HANDLE_VALUE then EXIT(TRUE);
+  Winapi.Windows.FindClose(Handle);
+  Result:= ((FindData.dwFileAttributes AND FILE_ATTRIBUTE_REPARSE_POINT) = 0)   { the two reads disagree: count it as a link }
+        OR IsReparseTagNameSurrogate(FindData.dwReserved0);
 end;
 
 
 { Deletes everything inside Folder, then Folder itself. Best effort, like TDirectory.Delete: a failure on one entry does not stop the others.
-  An entry that carries FILE_ATTRIBUTE_REPARSE_POINT (a junction, a symbolic link) is removed as a link and NEVER entered,
+  An entry that is a name-surrogate reparse point (a junction, a symbolic link, a mounted folder) is removed as a link and NEVER entered,
   so the files of its target survive. TDirectory.Delete enters every entry that has faDirectory, links included
   (WalkThroughDirectory in c:\Delphi\Delphi 13\source\rtl\common\System.IOUtils.pas).
+  Any other reparse point (a OneDrive placeholder, IO_REPARSE_TAG_CLOUD) holds its own files, so it is entered and emptied like a normal folder.
   The attribute: https://learn.microsoft.com/en-us/windows/win32/fileio/file-attribute-constants
+  The tag is in FindData.dwReserved0 when the attribute is set: https://learn.microsoft.com/en-us/windows/win32/fileio/reparse-point-tags
   RemoveDirectory removes a junction "regardless of whether the target directory is empty or not":
   https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-removedirectoryw
   DeleteFile on a symbolic link deletes the link, not the target:
   https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-deletefilew }
+{$WARN SYMBOL_PLATFORM OFF}   { W1002: TSearchRec.FindData is marked 'platform'; this code is inside IFDEF MSWINDOWS }
 procedure deleteTreeNoLinks(CONST Folder: string);
 VAR
   SearchRec: TSearchRec;
@@ -2670,7 +2701,8 @@ begin
       if (SearchRec.Name = '.') OR (SearchRec.Name = '..') then Continue;
       Entry := IncludeTrailingPathDelimiter(Folder) + SearchRec.Name;
       IsDir := (Cardinal(SearchRec.Attr) AND FILE_ATTRIBUTE_DIRECTORY) <> 0;       { On Windows, Attr is FindData.dwFileAttributes (FindMatchingFile, System.SysUtils.pas) }
-      IsLink:= (Cardinal(SearchRec.Attr) AND FILE_ATTRIBUTE_REPARSE_POINT) <> 0;
+      IsLink:= ((Cardinal(SearchRec.Attr) AND FILE_ATTRIBUTE_REPARSE_POINT) <> 0)
+           AND IsReparseTagNameSurrogate(SearchRec.FindData.dwReserved0);
 
       if IsLink then
         if IsDir
@@ -2692,6 +2724,7 @@ begin
   SetFileAttributes(PChar(Folder), FILE_ATTRIBUTE_NORMAL);
   RemoveDirectory(PChar(Folder));
 end;
+{$WARN SYMBOL_PLATFORM ON}
 
 {$ELSE}
 
@@ -3388,7 +3421,7 @@ end;
   Returns False if: file doesn't exist, or file can be opened exclusively.
   Use case: Check before attempting to modify a file that might be in use. }
 function FileIsLockedRW(CONST FileName: string): Boolean;
-VAR hFileRes: HFILE;
+VAR hFileRes: THandle;   { Not HFILE: HFILE is a 32-bit LongWord, while CreateFile returns THandle, which is 64-bit on Win64 }
 begin
  if NOT FileExists(FileName) then EXIT(FALSE);  { Non-existent files aren't "locked" }
 
@@ -3403,7 +3436,7 @@ end;
   Raises Exception if the file doesn't exist.
   Use case: Check if a file can be read (e.g., before backup operations). }
 function FileIsLockedR(CONST FileName: string): Boolean;
-VAR hFileRes: HFILE;
+VAR hFileRes: THandle;   { Not HFILE: see FileIsLockedRW }
 begin
  if NOT FileExists(FileName)
  then raise Exception.Create('FileIsLockedR: File does not exist!' + CRLFw + FileName);
