@@ -269,15 +269,11 @@ begin
      RegWriteString(RootKey, Path+ FName+'\shell\open\command', '', ParamStr(0)+ ' "%L"', TRUE) AND  { Using %L instead of %1 gives the long path format instead of 8.3/DOS format }
      RegWriteString(RootKey, Path+ FName+'\DefaultIcon'       , '', ParamStr(0)+ ',0',    TRUE);
 
-   if NOT Result 
-   AND (AppDataCore <> NIL)
-   then AppDataCore.LogWarn('AssociateWith: cannot associate application with '+ FileExtension);
+   if NOT Result
+   then TAppDataCore.LogWarn('AssociateWith: cannot associate application with '+ FileExtension);
  EXCEPT
    on E: ERegistryException DO
-     begin
-       if (AppDataCore <> NIL)
-       then AppDataCore.LogWarn('AssociateWith: cannot associate application with '+ FileExtension+ '. '+ E.Message);
-     end;
+     TAppDataCore.LogWarn('AssociateWith: cannot associate application with '+ FileExtension+ '. '+ E.Message);
    else RAISE;
  END;
 
@@ -316,10 +312,7 @@ begin
   end;
  EXCEPT
    on E: ERegistryException DO
-     begin
-       if (AppDataCore <> NIL)
-       then AppDataCore.LogError('AssociateSelf_ShellMenu: cannot associate application. '+ E.Message);
-     end;
+     TAppDataCore.LogError('AssociateSelf_ShellMenu: cannot associate application. '+ E.Message);
    else RAISE;
  END;
 end;
