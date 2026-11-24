@@ -101,6 +101,9 @@ TYPE
 IMPLEMENTATION
 
 USES
+   {$IFDEF POSIX}
+   Posix.Unistd,   { Lets the compiler inline System.SysUtils.DeleteFile on Linux64 (hint H2443 without it) }
+   {$ENDIF}
    LightCore;
 
 CONST
