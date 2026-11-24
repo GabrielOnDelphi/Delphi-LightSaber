@@ -78,6 +78,7 @@ TYPE
     [Test] procedure Test_AntiAlias_NoCrash;
     [Test] procedure Test_Twist_NoCrash;
     [Test] procedure Test_FishEye_NoCrash;
+    [Test] procedure Test_FishEye_KeepsCenterPixel;
     [Test] procedure Test_SmoothRotate_NoCrash;
     [Test] procedure Test_Solorize_NoCrash;
     [Test] procedure Test_Posterize_NoCrash;
@@ -544,11 +545,53 @@ begin
 end;
 
 
+{ 32x32 with amount 0.5 gives rmax = 16, so the pixel (16, 0) lies exactly at rmax from the center,
+  and the corners lie beyond rmax. Every output pixel is a weighted mix of source pixels whose weights add up to 1,
+  so a source of one color must give an output of that same color everywhere. }
 procedure TTestJanFXBitmap.Test_FishEye_NoCrash;
+var
+  x, y: Integer;
+  R, G, B: Byte;
 begin
   FDst.Assign(FSrc);
   FishEye(FSrc, FDst, 0.5);
-  Assert.IsTrue(FDst.Width > 0);
+  Assert.AreEqual(32, FDst.Width);
+  for y:= 0 to FDst.Height - 1 do
+    for x:= 0 to FDst.Width - 1 do
+    begin
+      GetPixelRGB(FDst, x, y, R, G, B);
+      if (R <> 100) or (G <> 150) or (B <> 200)
+      then Assert.Fail('Pixel ('+ IntToStr(x)+ ', '+ IntToStr(y)+ ') is '+ IntToStr(R)+ ','+ IntToStr(G)+ ','+ IntToStr(B)+ ', expected 100,150,200');
+    end;
+end;
+
+
+{ The center of a fish-eye maps to itself: the output pixel at the center is the source pixel at the center }
+procedure TTestJanFXBitmap.Test_FishEye_KeepsCenterPixel;
+var
+  x, y: Integer;
+  p: PByteArray;
+  R, G, B: Byte;
+begin
+  { A gradient, so that each source pixel has its own color }
+  for y:= 0 to FSrc.Height - 1 do
+  begin
+    p:= FSrc.ScanLine[y];
+    for x:= 0 to FSrc.Width - 1 do
+    begin
+      p[x * 3]    := x * 7;
+      p[x * 3 + 1]:= y * 7;
+      p[x * 3 + 2]:= 50;
+    end;
+  end;
+  FDst.Assign(FSrc);
+
+  FishEye(FSrc, FDst, 0.5);
+
+  GetPixelRGB(FDst, 16, 16, R, G, B);
+  Assert.AreEqual(Integer(16 * 7), Integer(B), 'Center pixel blue');
+  Assert.AreEqual(Integer(16 * 7), Integer(G), 'Center pixel green');
+  Assert.AreEqual(50, Integer(R), 'Center pixel red');
 end;
 
 
@@ -817,5 +860,9 @@ begin
   Assert.IsTrue(FSrc.Width > 0, 'TexturizeOverlap should not crash');
 end;
 
+
+INITIALIZATION
+  TDUnitX.RegisterTestFixture(TTestJanFXUtils);
+  TDUnitX.RegisterTestFixture(TTestJanFXBitmap);
 
 end.

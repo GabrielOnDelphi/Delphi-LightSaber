@@ -44,7 +44,10 @@ uses
   AniImg,
   Test.AniImg,
   janFX,
-  Test.janFX;
+  Test.janFX,
+  FastJpegDec,
+  FastJpegDecHelper,
+  Test.FastJpegDec;
 
 {$IFNDEF TESTINSIGHT}
 var

@@ -129,7 +129,7 @@
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>..;c:\Projects\LightSaber;c:\Projects\LightSaber\FrameVCL;c:\Projects\LightProteusActive;c:\Projects\LightSaber\FrameVCL\AutoTranslator\;c:\Projects\LightSaber\UnitTesting;c:\Projects\LightSaber\External;c:\Projects\LightSaber\External\Exif;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..;c:\Projects\LightSaber;c:\Projects\LightSaber\FrameVCL;c:\Projects\LightSaber\FrameVCL\AutoTranslator\;c:\Projects\LightSaber\UnitTesting;c:\Projects\LightSaber\External;c:\Projects\LightSaber\External\Exif;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>

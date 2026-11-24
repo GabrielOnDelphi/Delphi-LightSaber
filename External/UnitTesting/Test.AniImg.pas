@@ -213,4 +213,7 @@ begin
 end;
 
 
+INITIALIZATION
+  TDUnitX.RegisterTestFixture(TTestAnimateImage);
+
 end.
