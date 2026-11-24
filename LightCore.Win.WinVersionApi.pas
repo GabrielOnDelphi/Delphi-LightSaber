@@ -5,7 +5,7 @@ UNIT  LightCore.Win.WinVersionApi;
 {$ENDIF}
 
 {=============================================================================================================
-   2026.09.30
+   2026.11.22
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -37,6 +37,35 @@ INTERFACE
 
 USES
    WinApi.Windows, System.SysUtils;
+
+
+{ Records that Windows fills in must have the C layout: every field on its natural boundary (Microsoft's default, /Zp8).
+  The package .dproj sets DCC_Alignment 2, which on Win64 would put the pointer fields of SERVER_INFO_101 on the wrong offsets.
+  $ALIGN is a local directive (https://docwiki.embarcadero.com/RADStudio/Athens/en/Align_fields_(Delphi)), so it holds from here to the end of this unit. }
+{$ALIGN 8}
+
+TYPE
+  { The SERVER_INFO_101 structure of lmserver.h, filled by NetServerGetInfo at level 101:
+    https://learn.microsoft.com/en-us/windows/win32/api/lmserver/ns-lmserver-server_info_101
+    Win32: size 24, offsets 0, 4, 8, 12, 16, 20.  Win64: size 40, offsets 0, 8, 16, 20, 24, 32. }
+  _SERVER_INFO_101 = record
+    sv101_platform_id: DWORD;
+    sv101_name: LPWSTR;
+    sv101_version_major: DWORD;
+    sv101_version_minor: DWORD;
+    sv101_type: DWORD;
+    sv101_comment: LPWSTR;
+  end;
+
+ SERVER_INFO_101   = _SERVER_INFO_101;
+ PSERVER_INFO_101  = ^SERVER_INFO_101;
+ LPSERVER_INFO_101 = PSERVER_INFO_101;
+
+{$IFDEF CPUX64}
+  {$IF SizeOf(SERVER_INFO_101) <> 40} {$MESSAGE ERROR 'SERVER_INFO_101 must be 40 bytes on Win64 (the lmserver.h layout)'} {$ENDIF}
+{$ELSE}
+  {$IF SizeOf(SERVER_INFO_101) <> 24} {$MESSAGE ERROR 'SERVER_INFO_101 must be 24 bytes on Win32 (the lmserver.h layout)'} {$ENDIF}
+{$ENDIF}
 
 
 procedure GetWinVersion (OUT MajVersion, MinVersion: Cardinal);  overload;
@@ -206,19 +235,6 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 TYPE
   NET_API_STATUS = DWORD;
-
-  _SERVER_INFO_101 = record
-    sv101_platform_id: DWORD;
-    sv101_name: LPWSTR;
-    sv101_version_major: DWORD;
-    sv101_version_minor: DWORD;
-    sv101_type: DWORD;
-    sv101_comment: LPWSTR;
-  end;
-
- SERVER_INFO_101   = _SERVER_INFO_101;
- PSERVER_INFO_101  = ^SERVER_INFO_101;
- LPSERVER_INFO_101 = PSERVER_INFO_101;
 
 CONST
   MAJOR_VERSION_MASK = $0F;

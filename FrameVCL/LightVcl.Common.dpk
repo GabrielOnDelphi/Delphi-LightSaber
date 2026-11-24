@@ -64,7 +64,7 @@ contains
   LightVcl.Common.System in 'LightVcl.Common.System.pas',
   LightVcl.Common.SystemSecurity in 'LightVcl.Common.SystemSecurity.pas',
   LightVcl.Common.SystemTime in 'LightVcl.Common.SystemTime.pas',
-  LightVcl.Common.Translate in '..\LightVcl.Common.Translate.pas',
+  LightVcl.Common.Translate in 'LightVcl.Common.Translate.pas',
   LightVcl.Common.VclUtils in 'LightVcl.Common.VclUtils.pas',
   LightVcl.Common.Window in 'LightVcl.Common.Window.pas',
   LightVcl.Common.WindowMetrics in 'LightVcl.Common.WindowMetrics.pas',
