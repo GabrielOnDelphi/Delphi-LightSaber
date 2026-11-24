@@ -233,8 +233,7 @@ begin
       then CloseHandle(ShellInfo.hProcess);
     end
   else
-    if (AppDataCore <> NIL)
-    then AppDataCore.LogError('ExecuteFileEx: '+ SysErrorMessage(GetLastError));
+    TAppDataCore.LogError('ExecuteFileEx: '+ SysErrorMessage(GetLastError));
 end;
 
 

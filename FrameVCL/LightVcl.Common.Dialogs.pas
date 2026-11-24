@@ -151,18 +151,15 @@ end;
   LogText: a short one-line version, for when the dialog text is long and multi-line.
            Left empty, the dialog text itself is logged.
 
-  AppDataCore is checked for NIL: an application creates it by hand in its DPR, and the finalization
-  of LightVcl.Visual.AppData sets it back to NIL during shutdown.
+  TAppDataCore.LogError is safe when AppDataCore is NIL (an application creates it by hand in its DPR,
+  and the finalization of LightVcl.Visual.AppData sets it back to NIL during shutdown).
 
   When Unattended is on, no dialog appears (MesajGeneric returns immediately) but the log line is still written. }
 procedure MessageErrorLog(CONST MessageText: string; CONST LogText: string = ''; CONST Title: string = '');
 begin
-  if AppDataCore <> NIL then
-   begin
-     if LogText = ''
-     then AppDataCore.LogError(MessageText)
-     else AppDataCore.LogError(LogText);
-   end;
+  if LogText = ''
+  then TAppDataCore.LogError(MessageText)
+  else TAppDataCore.LogError(LogText);
 
   MessageError(MessageText, Title);
 end;

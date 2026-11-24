@@ -1,24 +1,36 @@
 UNIT LightVcl.Graph.RainDropParamEditorForm;
 
 {=============================================================================================================
-   2026.01.30
+   2026.11.22
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Editor dialog for RainDrop animation parameters.
    Allows users to configure water drop effect settings: damping, wave amplitude, travel distance, etc.
-   Use TfrmRainEditor.ShowEditor(aParams) to display the modal dialog.
+   Use TfrmRainEditor.ShowEditorModal(aParams) to display the modal dialog.
+
+   Every control writes into aParams^ at once, so a running effect shows the change while the form is open.
+   The bottom bar: OK keeps the changes (ShowEditorModal returns TRUE: the caller saves them).
+   Reset puts the RRaindropParams defaults into the controls and into aParams^.
+   Cancel, Escape and the X button put back the values aParams^ had when the form opened (ShowEditorModal returns FALSE).
+   The buttons have the names and the size of the bottom bar of the BioniX effect editors (btnOk, btnReset, btnCancel, 90 x 28).
+
+   Effect header: the overload ShowEditorModal(aParams, aPicture, aText) shows a picture and a few words that
+   explain the effect at the top of the form, which grows by their height. imgEffect and lblEffectInfo are
+   hidden in the DFM, so the first overload shows the form without a header.
 =============================================================================================================}
 
 INTERFACE
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ComCtrls,
+  Winapi.Windows, System.SysUtils, System.Classes, System.Math,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ComCtrls,
   LightCore.Graph.RainDropParams;
   {Don't add dependencies to LightVcl.Visual.* because that package is not available yet}
 
 TYPE
   TfrmRainEditor = class(TForm)
+    imgEffect     : TImage;
+    lblEffectInfo : TLabel;
     btnAdvanced   : TButton;
     Container     : TPanel;
     GroupBox2     : TGroupBox;
@@ -44,9 +56,13 @@ TYPE
     trkTravelDist : TTrackBar;
     trkWaveAmp    : TTrackBar;
     pnlBtm        : TPanel;
-    btnClose      : TButton;
+    btnOk         : TButton;
+    btnReset      : TButton;
+    btnCancel     : TButton;
     procedure trkRainChange   (Sender: TObject);
     procedure btnAdvancedClick(Sender: TObject);
+    procedure btnOkClick      (Sender: TObject);
+    procedure btnResetClick   (Sender: TObject);
     procedure FormDestroy     (Sender: TObject);
     procedure FormKeyPress    (Sender: TObject; var Key: Char);
     procedure FormClose       (Sender: TObject; var Action: TCloseAction);
@@ -55,26 +71,42 @@ TYPE
     Params: PRaindropParams;
     Initializing: Boolean;     { Prevent OnChange events during initialization }
     procedure ObjectFromGUI;
+    procedure showHeader(aPicture: TGraphic; const aText: string);
   public
     procedure GuiFromObject;
-    class procedure ShowEditorModal(aParams: PRaindropParams); static;
+    { TRUE after OK. FALSE after Cancel, Escape or the X button: aParams^ then holds again the values it had at open }
+    class function ShowEditorModal(aParams: PRaindropParams): Boolean; overload; static;
+    { aPicture (may be NIL) and aText (may be '') form the effect header. The form copies the picture; the caller still owns it. }
+    class function ShowEditorModal(aParams: PRaindropParams; aPicture: TGraphic; const aText: string): Boolean; overload; static;
   end;
 
 
 IMPLEMENTATION {$R *.dfm}
 
-
+USES
+  LightVcl.Graph.ResizeWinBlt;
 
 
 
 {-------------------------------------------------------------------------------------------------------------
    CTOR/DTOR
 -------------------------------------------------------------------------------------------------------------}
-class procedure TfrmRainEditor.ShowEditorModal(aParams: PRaindropParams);
-VAR Editor: TfrmRainEditor;
+class function TfrmRainEditor.ShowEditorModal(aParams: PRaindropParams): Boolean;
+begin
+  Result:= ShowEditorModal(aParams, NIL, '');
+end;
+
+
+{ The copy is written back here, after ShowModal, and not in the form: the form only reports how it was closed }
+class function TfrmRainEditor.ShowEditorModal(aParams: PRaindropParams; aPicture: TGraphic; const aText: string): Boolean;
+VAR
+  Editor: TfrmRainEditor;
+  Saved: RRaindropParams;
 begin
   Assert(aParams <> NIL, 'TfrmRainEditor.ShowEditor: aParams cannot be nil');
+  Saved:= aParams^;
   Application.CreateForm(TfrmRainEditor, Editor);  { Freed by caFree in FormClose }
+  Editor.showHeader(aPicture, aText);
 
   Editor.Params:= aParams;
   Editor.Initializing:= TRUE;
@@ -83,7 +115,60 @@ begin
   FINALLY
     Editor.Initializing:= FALSE;
   END;
-  Editor.ShowModal;
+
+  Result:= Editor.ShowModal = mrOk;
+  if NOT Result
+  then aParams^:= Saved;
+end;
+
+
+{ Shows the header controls that the DFM hides, and makes the form taller by their height.
+  The bounds are set here, because the VCL aligns a control only once the form has a window handle. }
+procedure TfrmRainEditor.showHeader(aPicture: TGraphic; const aText: string);
+CONST
+  MaxPictureHeight = 120;
+VAR
+  Scale: Double;
+  Full, Small: TBitmap;
+  Y, Added: Integer;
+begin
+  Y:= 0;
+  Added:= 0;
+
+  { # Picture: scaled down proportionally (HALFTONE), never up }
+  if (aPicture <> NIL) AND NOT aPicture.Empty then
+   begin
+    Scale:= Min(Min((ClientWidth - 20) / aPicture.Width, MaxPictureHeight / aPicture.Height), 1.0);
+    Full:= TBitmap.Create;
+    TRY
+      Full.PixelFormat:= pf24bit;
+      Full.SetSize(aPicture.Width, aPicture.Height);
+      Full.Canvas.Draw(0, 0, aPicture);
+      Small:= StretchF(Full, Max(1, Round(aPicture.Width * Scale)), Max(1, Round(aPicture.Height * Scale)));
+      TRY
+        imgEffect.Picture.Assign(Small);
+        imgEffect.SetBounds(10, 10, ClientWidth - 20, Small.Height);
+      FINALLY
+        FreeAndNil(Small);
+      END;
+    FINALLY
+      FreeAndNil(Full);
+    END;
+    imgEffect.Visible:= TRUE;
+    Y:= imgEffect.Top + imgEffect.Height;
+    Inc(Added, imgEffect.Margins.ControlHeight);
+   end;
+
+  { # Text: AutoSize + WordWrap, so the height follows the text }
+  if aText <> '' then
+   begin
+    lblEffectInfo.SetBounds(12, Y + 6, ClientWidth - 24, 15);
+    lblEffectInfo.Caption:= aText;
+    lblEffectInfo.Visible:= TRUE;
+    Inc(Added, lblEffectInfo.Margins.ControlHeight);
+   end;
+
+  ClientHeight:= ClientHeight + Added;
 end;
 
 
@@ -143,10 +228,40 @@ begin
 end;
 
 
+{ Enter is OK. Escape is Cancel: Close sets ModalResult to mrCancel on a modal form }
 procedure TfrmRainEditor.FormKeyPress(Sender: TObject; var Key: Char);
 begin
-  if Ord(Key) = VK_RETURN then Close;
+  if Ord(Key) = VK_RETURN then
+   begin
+    btnOk.Click;   { TCustomButton.Click sets ModalResult (mrOk in the DFM) before OnClick, so the form closes }
+    Key:= #0;
+   end;
   if Ord(Key) = VK_ESCAPE then Close;
+end;
+
+
+procedure TfrmRainEditor.btnOkClick(Sender: TObject);
+begin
+  ObjectFromGUI;
+end;
+
+
+{ The defaults go into the controls and into Params at once, so a running effect shows them. Cancel undoes it.
+  The Advanced group stays as the user has it: AdvancedMode only says whether that group is shown }
+procedure TfrmRainEditor.btnResetClick(Sender: TObject);
+VAR Defaults: RRaindropParams;
+begin
+  Defaults:= Params^;
+  Defaults.Reset;
+  Defaults.AdvancedMode:= grpAdvanced.Visible;
+  Params^:= Defaults;
+
+  Initializing:= TRUE;
+  TRY
+    GuiFromObject;
+  FINALLY
+    Initializing:= FALSE;
+  END;
 end;
 
 

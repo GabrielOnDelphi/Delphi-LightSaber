@@ -669,9 +669,8 @@ begin
  else
   begin
    { One side of the output is bigger and the other is smaller. No border set fits, so nothing is drawn }
-   if AppDataCore <> NIL
-   then AppDataCore.LogError('FadeBorderAuto: output '+ IntToStr(OutBmp.Width)+ 'x'+ IntToStr(OutBmp.Height)
-                           + ' does not fully contain or fit inside input '+ IntToStr(InpBmp.Width)+ 'x'+ IntToStr(InpBmp.Height));
+   TAppDataCore.LogError('FadeBorderAuto: output '+ IntToStr(OutBmp.Width)+ 'x'+ IntToStr(OutBmp.Height)
+                       + ' does not fully contain or fit inside input '+ IntToStr(InpBmp.Width)+ 'x'+ IntToStr(InpBmp.Height));
    EXIT;
   end;
 

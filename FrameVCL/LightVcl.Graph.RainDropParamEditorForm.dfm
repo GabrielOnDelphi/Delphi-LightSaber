@@ -14,6 +14,38 @@ object frmRainEditor: TfrmRainEditor
   OnDestroy = FormDestroy
   OnKeyPress = FormKeyPress
   TextHeight = 15
+  object imgEffect: TImage
+    AlignWithMargins = True
+    Left = 10
+    Top = 10
+    Width = 570
+    Height = 120
+    Hint = 'What this effect does, shown as a picture.'
+    Margins.Left = 10
+    Margins.Top = 10
+    Margins.Right = 10
+    Margins.Bottom = 0
+    Align = alTop
+    Center = True
+    Proportional = True
+    Visible = False
+  end
+  object lblEffectInfo: TLabel
+    AlignWithMargins = True
+    Left = 12
+    Top = 136
+    Width = 566
+    Height = 15
+    Hint = 'What this effect does, in a few words.'
+    Margins.Left = 12
+    Margins.Top = 6
+    Margins.Right = 12
+    Margins.Bottom = 4
+    Align = alTop
+    Caption = 'What this effect does (the text is set at run time)'
+    Visible = False
+    WordWrap = True
+  end
   object Container: TPanel
     AlignWithMargins = True
     Left = 3
@@ -318,17 +350,46 @@ object frmRainEditor: TfrmRainEditor
       Height = 36
       Align = alBottom
       TabOrder = 2
-      object btnClose: TButton
+      object btnOk: TButton
+        AlignWithMargins = True
+        Left = 298
+        Top = 4
+        Width = 90
+        Height = 28
+        Hint = 'Keep the settings. The effect already shows them.'
+        Align = alRight
+        Caption = 'OK'
+        Default = True
+        ModalResult = 1
+        TabOrder = 0
+        OnClick = btnOkClick
+      end
+      object btnReset: TButton
+        AlignWithMargins = True
+        Left = 394
+        Top = 4
+        Width = 90
+        Height = 28
+        Hint =
+          'Put the default settings into the controls. The effect shows the' +
+          'm at once. Cancel undoes it.'
+        Align = alRight
+        Caption = 'Reset'
+        TabOrder = 1
+        OnClick = btnResetClick
+      end
+      object btnCancel: TButton
         AlignWithMargins = True
         Left = 490
         Top = 4
         Width = 90
         Height = 28
-        Hint = 'Close the window. Settings are applied in real-time.'
+        Hint = 'Put back the settings the effect had when this window opened.'
         Align = alRight
-        Caption = 'Close'
-        ModalResult = 1
-        TabOrder = 0
+        Cancel = True
+        Caption = 'Cancel'
+        ModalResult = 2
+        TabOrder = 2
       end
     end
   end
