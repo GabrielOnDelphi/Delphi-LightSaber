@@ -162,6 +162,9 @@
         <DCCReference Include="Exif\CCR.Exif.TagIDs.pas"/>
         <DCCReference Include="Exif\CCR.Exif.TiffUtils.pas"/>
         <DCCReference Include="Exif\CCR.Exif.XMPUtils.pas"/>
+        <DCCReference Include="TrayIcon\SimpleTimer.pas"/>
+        <DCCReference Include="TrayIcon\CoolTrayIcon.pas"/>
+        <DCCReference Include="TrayIcon\TextTrayIcon.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
