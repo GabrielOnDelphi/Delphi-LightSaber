@@ -1570,32 +1570,39 @@ end;
  Check a port status(opened/closed) on remote host. Uses WinSock.
  http://www.delphigeist.com/search?updated-min=2010-01-01T00%3A00%3A00%2B02%3A00&updated-max=2011-01-01T00%3A00%3A00%2B02%3A00&max-results=37
 }
+{ Converts a dotted address or looks up a host name (IPv4). Address is in network byte order; INADDR_NONE and FALSE on failure.
+  Starts WinSock itself: gethostbyname fails with WSANOTINITIALISED without a successful WSAStartup
+  (https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-gethostbyname). A caller that already started it
+  (IsPortOpened) is not disturbed: only the last WSACleanup cleans up
+  (https://learn.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-wsacleanup). The address is copied out of the hostent,
+  which WinSock owns, before WSACleanup. }
 function ResolveAddress(CONST HostName: String; out Address: DWORD): Boolean;
 VAR
    lpHost: PHostEnt;
    AnsiHostName: AnsiString;
+   WSAData: TWSAData;
+   Started: Boolean;
 begin
   AnsiHostName:= AnsiString(HostName);
   Address:= DWORD(INADDR_NONE);                                     // Set default address
+  Started:= WSAStartup($0202, WSAData) = 0;
   TRY
-    if Length(AnsiHostName) > 0 then                                // Check host name length
+    if Started AND (Length(AnsiHostName) > 0) then                   // Check host name length
      begin
-      Address:= inet_addr(PAnsiChar(AnsiHostName));                  // Try converting the hostname. In Delphi 7 this was PChar
+      Address:= DWORD(inet_addr(PAnsiChar(AnsiHostName)));           // Try converting the hostname. inet_addr returns the signed u_long -1 (INADDR_NONE) for a name: the cast keeps the bits, a plain assignment raises ERangeError under range checking
       if (DWORD(Address) = DWORD(INADDR_NONE)) then                  // Check address
        begin
         lpHost := gethostbyname(PAnsiChar(AnsiHostName));            // Attempt to get host by name
 
         // Check host ent structure for valid ip address
         if Assigned(lpHost) and Assigned(lpHost^.h_addr_list^)
-        then Address := u_long(PLongInt(lpHost^.h_addr_list^)^);     // Get the address from the list
+        then Address := DWORD(PLongInt(lpHost^.h_addr_list^)^);      // Get the address from the list. DWORD cast: an address whose last octet is 128 or more is a negative LongInt
       end;
     end;
   FINALLY
-    // Check result address
-    if (DWORD(Address) = DWORD(INADDR_NONE))
-    then Result:= False    // Invalid host specified
-    else Result:= True;   // Converted correctly
+    if Started then WSACleanup;
   END;
+  Result:= Address <> DWORD(INADDR_NONE);   { FALSE: invalid host, or WinSock could not start }
 end;
 
 
@@ -1611,21 +1618,21 @@ label
   lClean;
 begin
   Result := False;
-  if Winapi.WinSock.WSAStartup(MakeWord(1, 1), WinSocketData) = 0 then
-  begin
-    Address.sin_family := AF_INET;
-    if NOT ResolveAddress(Host, dwAddress) then
-      goto lClean;
-    Address.sin_addr.S_addr := dwAddress;
-    Socket := Winapi.WinSock.Socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-    if Socket = INVALID_SOCKET then
-      goto lClean;
-    Address.sin_port := Winapi.WinSock.htons(Port);
-    if Winapi.WinSock.Connect(Socket, Address, szSockAddr) = 0
-    then Result := True;
-    // close the socket (also on failed connect - WSACleanup only deallocates it when the process-wide refcount drops to zero)
-    Winapi.WinSock.closesocket(Socket);
-  end;// if WinSock.WSAStartup(MakeWord(1, 1), WinSocketData) = 0 then begin
+  if Winapi.WinSock.WSAStartup(MakeWord(1, 1), WinSocketData) <> 0 then EXIT;   { no WSACleanup without a successful WSAStartup }
+
+  Address.sin_family := AF_INET;
+  if NOT ResolveAddress(Host, dwAddress) then
+    goto lClean;
+  Address.sin_addr.S_addr := dwAddress;
+  Socket := Winapi.WinSock.Socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+  if Socket = INVALID_SOCKET then
+    goto lClean;
+  Address.sin_port := Winapi.WinSock.htons(Port);
+  if Winapi.WinSock.Connect(Socket, Address, szSockAddr) = 0
+  then Result := True;
+  // close the socket (also on failed connect - WSACleanup only deallocates it when the process-wide refcount drops to zero)
+  Winapi.WinSock.closesocket(Socket);
+
   lClean:
     Winapi.WinSock.WSACleanup;
 end;
