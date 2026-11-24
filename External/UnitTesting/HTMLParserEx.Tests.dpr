@@ -5,6 +5,9 @@ program HTMLParserEx.Tests;
 {$ENDIF}
 
 uses
+  {$IFDEF DEBUG}
+  FastMM4,  { Must be the first unit: FastMM4 does not install once another unit has allocated memory }
+  {$ENDIF}
   {$IFDEF TESTINSIGHT}
   TestInsight.DUnit,
   {$ELSE}
@@ -16,6 +19,14 @@ uses
 {$R *.RES}
 
 begin
+  {$IFDEF DEBUG}
+  FastMM4.SuppressMessageBoxes:= TRUE;  { Leaks and heap errors go only to <exe>_MemoryManager_EventLog.txt; a message box would stop the unattended run }
+  if IsConsole then
+    if FastMM4.FastMM_GetInstallationState = FastMM4.mmisInstalled
+    then Writeln('FastMM4 ', FastMM4.FastMMVersion, ': installed')
+    else Writeln('FastMM4: NOT INSTALLED (FastMM_FullDebugMode.dll not found, or FastMM4 is not the first unit) - leaks and heap errors go undetected');
+  {$ENDIF}
+
  {$IFDEF TESTINSIGHT}  //TestInsight IDE Plugin enabled
     TestInsight.DUnit.RunRegisteredTests;
   {$ELSE}  //Standard DUnit tests (typically from an automated build process)
