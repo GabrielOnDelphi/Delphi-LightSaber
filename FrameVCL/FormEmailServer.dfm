@@ -39,7 +39,7 @@ object frmSmtpSettings: TfrmSmtpSettings
       Height = 13
       Caption = 'Port'
     end
-    object inetAllowLessSecure: TInternetLabel
+    object inetAllowLessSecure: TLabel
       Left = 2
       Top = 286
       Width = 540
@@ -57,12 +57,7 @@ object frmSmtpSettings: TfrmSmtpSettings
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      Link = 'https://stackoverflow.com/questions/20337040'
-      LinkHint = True
-      Visited = True
-      VisitedColor = clPurple
-      NotVisitedColor = clBlue
-      OverColor = clRed
+      OnClick = inetAllowLessSecureClick
     end
     object ledHost: TLabeledEdit
       Left = 41

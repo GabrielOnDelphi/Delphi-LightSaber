@@ -36,7 +36,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
-  IdSMTP, IdExplicitTLSClientServerBase, Vcl.ComCtrls, LightVcl.Visual.RadioButton, InternetLabel, Vcl.Mask;
+  IdSMTP, IdExplicitTLSClientServerBase, Vcl.ComCtrls, LightVcl.Visual.RadioButton, Vcl.Mask;
 
 CONST
   DEFAULT_SMTP_HOST = 'smtp.Gmail.com';
@@ -57,8 +57,9 @@ TYPE
     radTslNone    : TLightRadioButton;
     radTslRequire : TLightRadioButton;
     spnPort       : TSpinEdit;
-    inetAllowLessSecure: TInternetLabel;
+    inetAllowLessSecure: TLabel;
     procedure btnShowPasswordClick(Sender: TObject);
+    procedure inetAllowLessSecureClick(Sender: TObject);
     procedure btnGMailDefClick    (Sender: TObject);
     procedure FormCreate          (Sender: TObject);
   private
@@ -76,13 +77,22 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  LightCore.AppData, LightCore.EncodeXOR, LightVcl.Visual.INIFile;
+  LightCore.AppData, LightCore.EncodeXOR, LightVcl.Visual.INIFile, LightVcl.Common.ExecuteShell;
+
+CONST
+  LessSecureAppsURL = 'https://stackoverflow.com/questions/20337040';
 
 
 { Form creation - initialization is deferred to Initialize method }
 procedure TfrmSmtpSettings.FormCreate(Sender: TObject);
 begin
   // Initialization is done in Initialize method after INI loading
+end;
+
+
+procedure TfrmSmtpSettings.inetAllowLessSecureClick(Sender: TObject);
+begin
+  ExecuteURL(LessSecureAppsURL);
 end;
 
 
