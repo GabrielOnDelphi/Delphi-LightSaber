@@ -1638,6 +1638,9 @@ var
  total_blue: Single;
  ix, iy: Integer;
  sli, slo: pbytearray;
+ Denom: Single;
+CONST
+ MaxCoord = 2.0E9;  { A source position beyond this cannot be held by an Integer after Trunc }
 begin
  if amount = 0 then EXIT;  { Avoid division by zero in rmax calculation }
  xmid := Bmp.Width / 2;
@@ -1654,10 +1657,17 @@ begin
        fy := ymid;
       end
      else begin
-       r2 := rmax / 2 * (1 / (1 - r1 / rmax) - 1);
+       Denom := 1 - r1 / rmax;
+       if Denom = 0
+       then r2 := MaxCoord   { A pixel at exactly rmax from the center maps to infinity }
+       else r2 := rmax / 2 * (1 / Denom - 1);
        fx := dx * r2 / r1 + xmid;
        fy := dy * r2 / r1 + ymid;
       end;
+     if fx > MaxCoord then fx := MaxCoord else
+     if fx < -MaxCoord then fx := -MaxCoord;
+     if fy > MaxCoord then fy := MaxCoord else
+     if fy < -MaxCoord then fy := -MaxCoord;
      ify := Trunc(fy);
      ifx := Trunc(fx);
      // Calculate the weights.
