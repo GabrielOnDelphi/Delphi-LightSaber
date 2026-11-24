@@ -1,7 +1,7 @@
 UNIT LightCore.INIFile;
 
 {=============================================================================================================
-   2026.01.29
+   2026.11.20
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -55,6 +55,7 @@ TYPE
 
     {$IFDEF MSWINDOWS}
     function  ReadString (CONST Section, Ident, Default: string): string;        override;   // Repairs the RTL's silent 2047-char cut. See implementation.
+    procedure WriteString(CONST Section, Ident, Value: string);                  override;   // Skips a value that the file already holds. See implementation.
     {$ENDIF}
 
     function  ValueExists(CONST Ident: string): Boolean;                         reintroduce; overload;
@@ -136,6 +137,23 @@ begin
 
  SetLength(Buffer, Returned);
  Result:= Buffer;
+end;
+
+
+{ Skips a write when the file already holds the same value.
+  Each WritePrivateProfileString call rewrites the file, and the next access to the file waits while the antivirus scans it:
+  about 4 ms per write in AppData with Windows Defender, against 0.15 ms in a folder on Defender's exclusion list.
+  A program that saves all its settings at close mostly writes values that did not change (DNA Baser: 264 of 283 writes, 1.2 s).
+  The read uses the ReadString override above, so values longer than 2047 characters compare whole.
+  Every typed write of TCustomIniFile (WriteInteger, WriteBool, WriteFloat, WriteDate...) calls this virtual WriteString.
+  Side effect: an unchanged value written to a read-only file no longer raises EIniFileException. }
+procedure TIniFileEx.WriteString(CONST Section, Ident, Value: string);
+CONST
+   NotInFile = #1'NotInFile'#1;    { Returned for a missing key. No real value is equal to it, so a missing key is always written, even with an empty value }
+begin
+ if ReadString(Section, Ident, NotInFile) = Value
+ then EXIT;
+ inherited WriteString(Section, Ident, Value);
 end;
 {$ENDIF}
 
@@ -237,12 +255,12 @@ end;
 
 function TIniFileEx.Read(CONST Ident: string; Default: string): string;
 begin
- Result:= inherited ReadString(FSection, Ident, Default);
+ Result:= ReadString(FSection, Ident, Default);    { Not 'inherited': that call would start in TIniFile and miss the 2047-char repair of our ReadString override }
 end;
 
 procedure TIniFileEx.Write(const Ident, Value: String);
 begin
- inherited WriteString(FSection, Ident, Value);
+ WriteString(FSection, Ident, Value);              { Not 'inherited': that call would start in TIniFile and miss the skip of our WriteString override }
 end;
 
 
