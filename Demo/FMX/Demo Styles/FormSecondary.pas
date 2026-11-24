@@ -10,7 +10,7 @@ INTERFACE
 USES
   System.SysUtils, System.Types, System.Classes,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Dialogs,
-  CoolTrayIcon, FMX.Objects, FMX.StdCtrls,
+  FMX.Objects, FMX.StdCtrls,
   FMX.Colors, FMX.TabControl, FMX.ScrollBox, FMX.Grid, FMX.ExtCtrls, FMX.ComboTrackBar, FMX.ComboEdit,
   FMX.SpinBox, FMX.Edit, FMX.EditBox, FMX.NumberBox, FMX.DateTimeCtrls, FMX.Calendar,
   FMX.Controls.Presentation, FMX.ListView, FMX.TreeView, FMX.ListBox, FMX.Layouts, FMX.Menus, System.Rtti,
@@ -24,7 +24,6 @@ TYPE
     ComboBox1: TComboBox;
     ComboEdit1: TComboEdit;
     ComboTrackBar1: TComboTrackBar;
-    CoolTrayIcon1: TCoolTrayIcon;
     CornerButton1: TCornerButton;
     DropTarget1: TDropTarget;
     Expander1: TExpander;
