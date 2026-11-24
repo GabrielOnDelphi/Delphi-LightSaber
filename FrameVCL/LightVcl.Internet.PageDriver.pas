@@ -1,7 +1,7 @@
 UNIT LightVcl.Internet.PageDriver;
 
 {=============================================================================================================
-   2026.11.17
+   2026.11.20
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Drives ONE web page in a TEdgeBrowser (WebView2) through a queue of steps:
@@ -61,6 +61,18 @@ UNIT LightVcl.Internet.PageDriver;
      (https://chromedevtools.github.io/devtools-protocol/tot/Page/, saved in c:\Projects\Projects AI\Social Robot\Sources\cdp pages\02_chromedevtools.github.io_devtools-protocol_tot_Page.txt line 372).
      The driver receives no DevTools event; the event is not needed, because AttachFile sets the files itself.
 
+   WAIT CLICKABLE
+     Click with cmMouse sends its mouse events only after a hit test: document.elementFromPoint at the centre of the element must be the element or inside it.
+     A covered element fails the Click step at once, before any mouse event. A site may lay a transparent element over the whole window
+     (measured on X: its hashtag typeahead puts a position:fixed div with no attribute and no text in front of everything, c:\Projects\Projects AI\Social Robot\SocialRobot.XRecipe.pas, THE TYPEAHEAD).
+     WaitClickable runs the same hit test as a wait step, without the click, so a caller can make the element reachable and check it BEFORE it commits to the click.
+
+   TYPE TEXT
+     TypeText types like InsertText with imKeyboard (focus the element, caret at its end, Input.insertText), but in parts, and waits PausesMs[i] before part i.
+     A part that is exactly LF (#10) is an Enter key press; any other part that holds a CR or a LF raises EArgumentException when the step is added.
+     The caller makes the parts and the pauses (Social Robot: c:\Projects\Projects AI\Social Robot\SocialRobot.Timing.pas). The step does not check the text that arrived: the caller reads it back.
+     The waits run on the delay timer between two DevTools calls of the same step, so the step's TimeOut must cover their sum: TypeText adds the sum to the TimeOut it is given.
+
    ------------------------------------------------------------------------------------------------------
    TRAPS
    ------------------------------------------------------------------------------------------------------
@@ -99,7 +111,7 @@ UNIT LightVcl.Internet.PageDriver;
 INTERFACE
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes, System.Contnrs, System.Generics.Collections,
+  Winapi.Windows, System.SysUtils, System.Classes, System.Types, System.Contnrs, System.Generics.Collections,
   Vcl.ExtCtrls, Vcl.Edge, Winapi.WebView2;
 
 CONST
@@ -128,8 +140,8 @@ TYPE
 
   TPageDriver = class(TObject)
   private type
-    TStepKind    = (skNavigate, skWaitFor, skWaitGone, skWaitUntil, skRunScript, skReadText, skInsertText, skClick, skPressKey, skPause, skFocus, skAttachFile, skDevTools);
-    TDelayAction = (daNone, daNextStep, daPoll, daPauseEnd);
+    TStepKind    = (skNavigate, skWaitFor, skWaitGone, skWaitUntil, skWaitClickable, skRunScript, skReadText, skInsertText, skTypeText, skClick, skPressKey, skPause, skFocus, skAttachFile, skDevTools);
+    TDelayAction = (daNone, daNextStep, daPoll, daPauseEnd, daNextCall);
 
     TDriverStep = class
       Kind      : TStepKind;
@@ -139,6 +151,8 @@ TYPE
       InsertMode: TInsertMode;
       ClickMode : TClickMode;
       TimeOut   : Integer;       { ms. For a Pause: its length }
+      Texts     : TStringDynArray;    { TypeText: the parts, each typed after its pause }
+      Pauses    : TIntegerDynArray;   { TypeText: ms before Texts[i] }
     end;
   private
     FBrowser    : TCustomEdgeBrowser;
@@ -158,6 +172,7 @@ TYPE
     FLastSeen   : string;        { the last poll answer or navigation failure. Named when the step times out. }
     FCallMethods: TStringList;   { the DevTools calls still to send in this step... }
     FCallParams : TStringList;   { ...and their parameters, as JSON }
+    FCallWaits  : TList<Integer>;   { ...and the ms to wait before each one is sent (TypeText) }
     FLastCall   : string;        { the DevTools call in flight, for the error message }
     FNavHooked  : Boolean;
     FNavToken   : EventRegistrationToken;
@@ -189,10 +204,11 @@ TYPE
     procedure startNavigate;
     procedure sendPoll;
     procedure sendScript(CONST JavaScript: string);
-    procedure addCall(CONST Method, Params: string);
-    procedure queueKey(CONST Key: string);
+    procedure addCall(CONST Method, Params: string; WaitMs: Integer= 0);
+    procedure queueKey(CONST Key: string; WaitMs: Integer= 0);
     procedure sendNextCall;
     procedure insertFocused(CONST Json: string);
+    procedure typeFocused(CONST Json: string);
     procedure insertAnswered(CONST Json: string);
     procedure clickLocated(CONST Json: string);
     procedure startAttach;
@@ -219,9 +235,11 @@ TYPE
     procedure WaitFor   (CONST Selector: string; TimeOut: Integer= 15000);                { an element exists AND has a non-zero size }
     procedure WaitGone  (CONST Selector: string; TimeOut: Integer= 15000);                { no visible element matches any more }
     procedure WaitUntil (CONST Name, JsCondition: string; TimeOut: Integer= 15000);       { a JavaScript expression that becomes true }
+    procedure WaitClickable(CONST Selector: string; TimeOut: Integer= 5000);             { the element exists, is enabled, and nothing covers its centre: a Click with cmMouse would land on it. Clicks nothing. On a time-out the reason names what covers it. }
     procedure RunScript (CONST Name, JavaScript: string; TimeOut: Integer= 10000);        { stores the unwrapped result under Name }
     procedure ReadText  (CONST Name, Selector: string; TimeOut: Integer= 10000);          { innerText of the first match, stored under Name; fails if none }
     procedure InsertText(CONST Selector, Text: string; Mode: TInsertMode= imKeyboard; TimeOut: Integer= 15000);
+    procedure TypeText  (CONST Selector: string; CONST Texts: TStringDynArray; CONST PausesMs: TIntegerDynArray; TimeOut: Integer= 15000);   { imKeyboard in parts, with a pause before each part. See TYPE TEXT in the header. }
     procedure Click     (CONST Selector: string; Mode: TClickMode= cmMouse; TimeOut: Integer= 10000);
     procedure Focus     (CONST Selector: string; TimeOut: Integer= 10000);                { focuses the first match and puts the caret at its end; fails if none }
     procedure PressKey  (CONST Key: string);    { 'Enter', 'Escape', 'Tab', 'Backspace', 'SelectAll' (Ctrl+A) - sent to the focused element through Input.dispatchKeyEvent. Another key raises EArgumentException. }
@@ -241,7 +259,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-  System.StrUtils, System.Types, System.JSON,
+  System.StrUtils, System.JSON,
   LightCore, LightVcl.Internet.Browser;
 
 CONST
@@ -501,18 +519,35 @@ begin
 end;
 
 
-{ cmMouse: returns the centre of the element in CSS pixels, rounded, so Delphi never formats a float (a decimal comma would break the JSON).
-  A covered element fails and names what covers it: that is how a popup in front of a button shows up in the log. }
-function locateScript(CONST Selector: string): string;
-begin
-  Result:= wrapScript(findElement(Selector) + ScrollToCentre + DisabledCheck +
+CONST
+  { The hit test of cmMouse and WaitClickable: x and y are the centre of e in CSS pixels, rounded, so Delphi never formats a float (a decimal comma would break the JSON).
+    When elementFromPoint there is not e or inside e, the answer names what covers it (tag, id, role, data-testid, size, CSS position, text):
+    that is how a popup or a transparent click catcher in front of a button shows up in the log. }
+  HitTest =
     'var r=e.getBoundingClientRect(),x=Math.round(r.left+r.width/2),y=Math.round(r.top+r.height/2);'+
     'var h=document.elementFromPoint(x,y);'+
     'if(!h||!(h===e||e.contains(h))){'+
-    '  var d=h?h.tagName.toLowerCase()+" data-testid="+(h.getAttribute("data-testid")||"")+" text="+(h.innerText||"").replace(/\s+/g," ").substring(0,60):"nothing";'+
+    '  var d="nothing";'+
+    '  if(h){var q=h.getBoundingClientRect();'+
+    '    d=h.tagName.toLowerCase()+(h.id?" id="+h.id:"")+(h.getAttribute("role")?" role="+h.getAttribute("role"):"")+" data-testid="+(h.getAttribute("data-testid")||"")+'+
+    '      " "+Math.round(q.width)+"x"+Math.round(q.height)+" "+getComputedStyle(h).position+" text="+(h.innerText||"").replace(/\s+/g," ").substring(0,60);}'+
     '  return {ok:false,info:"covered by "+d};'+
-    '}'+
+    '}';
+
+
+{ cmMouse: the centre of the element, after the hit test. A covered element fails the step before any mouse event is sent. }
+function locateScript(CONST Selector: string): string;
+begin
+  Result:= wrapScript(findElement(Selector) + ScrollToCentre + DisabledCheck + HitTest +
     'return {ok:true,x:x,y:y,info:"mouse click at "+x+","+y};');
+end;
+
+
+{ WaitClickable: the same checks as cmMouse makes before its click, and no click. None of its answers is fatal, so the step polls until they pass or it times out. }
+function clickableScript(CONST Selector: string): string;
+begin
+  Result:= wrapScript(findElement(Selector) + ScrollToCentre + DisabledCheck + HitTest +
+    'return {ok:true,info:"reachable at "+x+","+y};');
 end;
 
 
@@ -661,6 +696,7 @@ begin
   FResults    := TDictionary<string, string>.Create;
   FCallMethods:= TStringList.Create;
   FCallParams := TStringList.Create;
+  FCallWaits  := TList<Integer>.Create;
 
   FStepTimer:= TTimer.Create(NIL);
   FStepTimer.Enabled:= FALSE;
@@ -693,6 +729,7 @@ begin
 
   FreeAndNil(FStepTimer);
   FreeAndNil(FDelayTimer);
+  FreeAndNil(FCallWaits);
   FreeAndNil(FCallParams);
   FreeAndNil(FCallMethods);
   FreeAndNil(FResults);
@@ -751,6 +788,12 @@ begin
 end;
 
 
+procedure TPageDriver.WaitClickable(CONST Selector: string; TimeOut: Integer);
+begin
+  addStep(skWaitClickable, 'WaitClickable ' + Selector, Selector, TimeOut);
+end;
+
+
 procedure TPageDriver.RunScript(CONST Name, JavaScript: string; TimeOut: Integer);
 begin
   addStep(skRunScript, Name, JavaScript, TimeOut);
@@ -769,6 +812,31 @@ begin
   Step:= addStep(skInsertText, 'InsertText ' + Selector + ' ' + InsertModeNames[Mode], Selector, TimeOut);
   Step.Text      := Text;
   Step.InsertMode:= Mode;
+end;
+
+
+{ TYPE TEXT in the header }
+procedure TPageDriver.TypeText(CONST Selector: string; CONST Texts: TStringDynArray; CONST PausesMs: TIntegerDynArray; TimeOut: Integer);
+VAR
+  Step: TDriverStep;
+  i, Sum: Integer;
+begin
+  if Length(Texts) <> Length(PausesMs)
+  then raise EArgumentException.Create('TPageDriver.TypeText: ' + IntToStr(Length(Texts)) + ' parts but ' + IntToStr(Length(PausesMs)) + ' pauses');
+
+  Sum:= 0;
+  for i:= 0 to High(Texts) do
+    begin
+      if (Texts[i] <> #10) AND ((Pos(#10, Texts[i]) > 0) OR (Pos(#13, Texts[i]) > 0))
+      then raise EArgumentException.Create('TPageDriver.TypeText: part ' + IntToStr(i) + ' holds a line break; a line break is a part of its own (exactly LF)');
+      if PausesMs[i] < 0
+      then raise EArgumentException.Create('TPageDriver.TypeText: pause ' + IntToStr(i) + ' is negative');
+      Inc(Sum, PausesMs[i]);
+    end;
+
+  Step:= addStep(skTypeText, 'TypeText ' + Selector + ' in ' + IntToStr(Length(Texts)) + ' parts, ' + IntToStr(Sum) + ' ms of pauses', Selector, TimeOut + Sum);
+  Step.Texts := Copy(Texts);
+  Step.Pauses:= Copy(PausesMs);
 end;
 
 
@@ -1054,6 +1122,7 @@ begin
     daNextStep: nextStep;
     daPoll    : sendPoll;
     daPauseEnd: finishStep;
+    daNextCall: sendNextCall;
     daNone    : ;
   end;
 end;
@@ -1106,6 +1175,7 @@ begin
   FLastCall  := '';
   FCallMethods.Clear;
   FCallParams.Clear;
+  FCallWaits.Clear;
   FStepStart := GetTickCount64;
   doLog(stepLabel + ': start');
 
@@ -1120,10 +1190,12 @@ begin
     skNavigate  : startNavigate;
     skWaitFor,
     skWaitGone,
-    skWaitUntil : sendPoll;
+    skWaitUntil,
+    skWaitClickable: sendPoll;
     skRunScript : sendScript(Step.Target);
     skReadText  : sendScript(readTextScript(Step.Target));
     skInsertText,
+    skTypeText,
     skFocus     : sendScript(focusScript(Step.Target));
     skClick     : if Step.ClickMode = cmMouse
                   then sendScript(locateScript(Step.Target))
@@ -1164,6 +1236,7 @@ begin
     skWaitFor  : sendScript(waitForScript (Step.Target));
     skWaitGone : sendScript(waitGoneScript(Step.Target));
     skWaitUntil: sendScript(waitUntilScript(Step.Target));
+    skWaitClickable: sendScript(clickableScript(Step.Target));
   else
     Assert(FALSE, 'sendPoll: not a wait step');
   end;
@@ -1189,30 +1262,33 @@ begin
 end;
 
 
-procedure TPageDriver.addCall(CONST Method, Params: string);
+procedure TPageDriver.addCall(CONST Method, Params: string; WaitMs: Integer);
 begin
   FCallMethods.Add(Method);
   FCallParams.Add(Params);
+  FCallWaits.Add(WaitMs);
 end;
 
 
-procedure TPageDriver.queueKey(CONST Key: string);
+{ WaitMs: the pause before the key-down }
+procedure TPageDriver.queueKey(CONST Key: string; WaitMs: Integer);
 VAR Down, Up: string;
 begin
   if NOT keyEvents(Key, Down, Up)
   then raise EArgumentException.Create('TPageDriver: unknown key "' + Key + '"');
 
-  addCall('Input.dispatchKeyEvent', Down);
+  addCall('Input.dispatchKeyEvent', Down, WaitMs);
   addCall('Input.dispatchKeyEvent', Up);
 end;
 
 
-{ Sends the next queued DevTools call. With none left, the step is done. }
+{ Sends the next queued DevTools call, after its wait (TYPE TEXT in the header). With none left, the step is done. }
 procedure TPageDriver.sendNextCall;
 VAR
   Handler: ICoreWebView2CallDevToolsProtocolMethodCompletedHandler;
   Method, Params: string;
   HR: HResult;
+  WaitMs: Integer;
 begin
   if FCallMethods.Count = 0 then
     begin
@@ -1220,10 +1296,19 @@ begin
       EXIT;
     end;
 
+  WaitMs:= FCallWaits[0];
+  if WaitMs > 0 then
+    begin
+      FCallWaits[0]:= 0;   { the timer comes back here, and then the call goes out }
+      delay(WaitMs, daNextCall);
+      EXIT;
+    end;
+
   Method:= FCallMethods[0];
   Params:= FCallParams[0];
   FCallMethods.Delete(0);
   FCallParams.Delete(0);
+  FCallWaits.Delete(0);
   FLastCall:= Method + ' ' + Params;
 
   if FBrowser.DefaultInterface = NIL then
@@ -1278,7 +1363,8 @@ begin
 
     skWaitFor,
     skWaitGone,
-    skWaitUntil:
+    skWaitUntil,
+    skWaitClickable:
       begin
         readAnswer(Json, Ok, Fatal, Info, X, Y);
         if Ok
@@ -1309,6 +1395,11 @@ begin
       if FPhase = 0
       then insertFocused(Json)
       else insertAnswered(Json);
+
+    skTypeText:
+      if FPhase = 0
+      then typeFocused(Json)
+      else sendNextCall;
 
     skClick:
       if FPhase = 0
@@ -1380,6 +1471,34 @@ begin
     imExecCommand: sendScript(execCommandScript(Lines));
     imPaste      : sendScript(pasteScript(ReplaceEnters(Step.Text, #10)));
   end;
+end;
+
+
+{ TypeText: the element has the focus and the caret is at its end. Each part goes out after its pause. }
+procedure TPageDriver.typeFocused(CONST Json: string);
+VAR
+  Step: TDriverStep;
+  Ok, Fatal: Boolean;
+  Info: string;
+  X, Y, i: Integer;
+begin
+  readAnswer(Json, Ok, Fatal, Info, X, Y);
+  if NOT Ok then
+    begin
+      failStep(Info);
+      EXIT;
+    end;
+
+  Step:= current;
+  doLog(stepLabel + ': ' + Info);
+  FPhase:= 1;
+  for i:= 0 to High(Step.Texts) do
+    if Step.Texts[i] = #10
+    then queueKey('Enter', Step.Pauses[i])
+    else
+      if Step.Texts[i] <> ''
+      then addCall('Input.insertText', '{"text":' + JsString(Step.Texts[i]) + '}', Step.Pauses[i]);
+  sendNextCall;
 end;
 
 
