@@ -30,7 +30,6 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls,
-  InternetLabel,
   LightCore, ciUpdater, LightVcl.Visual.RichLog, LightVcl.Visual.RichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
 
 CONST
@@ -48,8 +47,8 @@ TYPE
     btnNewVersFound  : TButton;
     btnSettings      : TButton;
     Button1          : TButton;
-    inetWhatsNew     : TInternetLabel;
-    lblDownload      : TInternetLabel;
+    inetWhatsNew     : TLabel;
+    lblDownload      : TLabel;
     lblConnectError  : TLabel;
     lblStatus        : TLabel;
     lblVersion       : TLabel;
@@ -68,6 +67,8 @@ TYPE
     procedure btnIsTimeToCheckClick (Sender: TObject);
     procedure btnNewVersFoundClick  (Sender: TObject);
     procedure btnSettingsClick      (Sender: TObject);
+    procedure lblDownloadClick      (Sender: TObject);
+    procedure inetWhatsNewClick     (Sender: TObject);
     procedure OnConnectError        (Sender: TObject; Msg: string);
     procedure OnHasNews             (Sender: TObject);
     procedure OnNoNews              (Sender: TObject);
@@ -88,7 +89,7 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   LightVcl.Visual.RichLogUtils, LightCore.Colors, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.System;
+   LightVcl.Visual.RichLogUtils, LightCore.Colors, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.System, LightVcl.Common.ExecuteShell;
 
 
 { The version of the running program with all four numbers (9.55.1.2), as NewVersionFound needs it.
@@ -125,9 +126,7 @@ begin
 
   { GUI. Hide the link labels when the caller didn't supply a URL — matches FMX twin behavior
     in FrameFMX\FormUpdaterNotifier and avoids showing broken clickable links to end users. }
-  lblDownload .Link      := Updater.URLDownload;
   lblDownload .Visible   := Updater.URLDownload   <> '';
-  inetWhatsNew.Link      := Updater.URLRelHistory;
   inetWhatsNew.Visible   := Updater.URLRelHistory <> '';
   lblConnectError.Visible:= Updater.ConnectionError;
 
@@ -380,6 +379,18 @@ end;
 procedure TFrmUpdater.btnSettingsClick(Sender: TObject);
 begin
   TfrmUpdaterSettings.CreateModal;
+end;
+
+
+procedure TFrmUpdater.lblDownloadClick(Sender: TObject);
+begin
+  ExecuteURL(Updater.URLDownload);
+end;
+
+
+procedure TFrmUpdater.inetWhatsNewClick(Sender: TObject);
+begin
+  ExecuteURL(Updater.URLRelHistory);
 end;
 
 

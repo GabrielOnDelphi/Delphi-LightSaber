@@ -136,7 +136,7 @@ object FrmUpdater: TFrmUpdater
           DesignSize = (
             150
             45)
-          object inetWhatsNew: TInternetLabel
+          object inetWhatsNew: TLabel
             AlignWithMargins = True
             Left = 10
             Top = 7
@@ -158,13 +158,9 @@ object FrmUpdater: TFrmUpdater
             Font.Quality = fqProof
             ParentColor = False
             ParentFont = False
-            LinkHint = True
-            Visited = False
-            VisitedColor = clPurple
-            NotVisitedColor = clBlue
-            OverColor = clRed
+            OnClick = inetWhatsNewClick
           end
-          object lblDownload: TInternetLabel
+          object lblDownload: TLabel
             AlignWithMargins = True
             Left = 10
             Top = 24
@@ -183,12 +179,7 @@ object FrmUpdater: TFrmUpdater
             Font.Quality = fqProof
             ParentColor = False
             ParentFont = False
-            Link = 'http://'
-            LinkHint = True
-            Visited = False
-            VisitedColor = clPurple
-            NotVisitedColor = clBlue
-            OverColor = clRed
+            OnClick = lblDownloadClick
           end
         end
       end
