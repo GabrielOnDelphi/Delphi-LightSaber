@@ -35,10 +35,10 @@ Six were re-checked by an independent `grep` over the same tree, and all six con
 `never referenced` = not one application, not one test, not one other LightSaber unit.
 `test only` = the unit test is the sole caller. This is exactly the bucket `DoubleBuffer` was in.
 
-### LightCore.IO.pas  -  24
+### LightCore.IO.pas  -  25
 
 - **never referenced** (15): `AppendTo`, `CopyFileTop`, `ExtractRelativePath_`, `FileNameIsValid_`, `GetDownloadsPath`, `GetFolderSize`, `GetMoviesPath`, `GetMusicPath`, `GetSharedDocumentsPath`, `IsEMF`, `IsICO`, `IsImage2Bmp`, `IsWMF`, `MoveFolderRel`, `MoveFolderSlow`
-- **test only** (9): `AppendFileExtension`, `CheckPathLength`, `ExtensionToMimeType`, `ExtractFileExtUp`, `ExtractFirstFolder`, `ExtractParentFolder`, `IsSubfolder`, `ListFilesAndFolderOf`, `SameFolderFromFile`
+- **test only** (10): `AppendFileExtension`, `CheckPathLength`, `ExtensionToMimeType`, `ExtractFileExtUp`, `ExtractFirstFolder`, `ExtractParentFolder`, `GetPosAfterExtendedPrefix`, `IsSubfolder`, `ListFilesAndFolderOf`, `SameFolderFromFile`
 
 ### LightCore.pas  -  24
 
@@ -135,11 +135,6 @@ Six were re-checked by an independent `grep` over the same tree, and all six con
 
 - **test only** (6): `CenterTextY`, `CenterTextY`, `DrawTextCentered`, `GetFontHeight`, `ShadowDownLeft`, `ShadowDownRight`
 
-### LightVcl.Common.IO.pas  -  6
-
-- **never referenced** (3): `GetMyDocumentsAPI`, `GetMyPicturesAPI`, `GetSaveDialog`
-- **test only** (3): `GetDriveTypeS`, `GetPosAfterExtendedPrefix`, `SetCompressionAtr`
-
 ### LightVcl.Common.CenterControl.pas  -  5
 
 - **never referenced** (2): `CorrectFormPositionMainMonitor`, `CorrectFormPositionMonitor`
@@ -201,6 +196,14 @@ Six were re-checked by an independent `grep` over the same tree, and all six con
 ### LightVcl.Common.EnvironmentVar.pas  -  3
 
 - **test only** (3): `GetEnvironmentVars`, `GetEnvironmentVars`, `SetEnvironmentVars`
+
+### LightVcl.Common.IO.pas  -  3
+
+- **never referenced** (3): `GetMyDocumentsAPI`, `GetMyPicturesAPI`, `GetSaveDialog`
+
+### LightCore.Win.IO.pas  -  3
+
+- **test only** (3): `GetDriveTypeS`, `GetSpecialFolders`, `SetCompressionAtr`
 
 ### LightVcl.Internet.HTML.pas  -  2
 
@@ -321,8 +324,4 @@ Six were re-checked by an independent `grep` over the same tree, and all six con
 ### LightFmx.Common.Helpers.pas  -  1
 
 - **test only** (1): `FindImmediateParentForm`
-
-### LightCore.Win.IO.pas  -  1
-
-- **test only** (1): `GetSpecialFolders`
 
