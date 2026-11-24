@@ -1,0 +1,70 @@
+﻿Run folder: C:\test delete\ReplaceFile measure\2026.11.20 - 17.40.12
+Windows: Microsoft Windows NT 10.0.26300.0
+
+CASE 1 - the file to replace does not exist (first save), backup name given
+  Before:
+    target.ini.tmp   content='NEW'  attributes=Archive, NotContentIndexed
+  ReplaceFileW returned FALSE, GetLastError = 2
+  After:
+    target.ini.tmp   content='NEW'  attributes=Archive, NotContentIndexed
+
+CASE 2 - the file to replace does not exist (first save), no backup name
+  Before:
+    target.ini.tmp   content='NEW'  attributes=Archive, NotContentIndexed
+  ReplaceFileW returned FALSE, GetLastError = 2
+  After:
+    target.ini.tmp   content='NEW'  attributes=Archive, NotContentIndexed
+
+CASE 3 - normal save: the file to replace exists, no backup file yet
+  Before:
+    target.ini       content='OLD'  attributes=Archive, NotContentIndexed
+    target.ini.tmp   content='NEW'  attributes=Archive, NotContentIndexed
+  ReplaceFileW returned TRUE
+  After:
+    target.ini       content='NEW'  attributes=Archive, NotContentIndexed
+    target.ini.bak   content='OLD'  attributes=Archive, NotContentIndexed
+
+CASE 4 - a backup file already exists (left by an earlier save)
+  Before:
+    target.ini       content='OLD'  attributes=Archive, NotContentIndexed
+    target.ini.bak   content='STALE'  attributes=Archive, NotContentIndexed
+    target.ini.tmp   content='NEW'  attributes=Archive, NotContentIndexed
+  ReplaceFileW returned TRUE
+  After:
+    target.ini       content='NEW'  attributes=Archive, NotContentIndexed
+    target.ini.bak   content='OLD'  attributes=Archive, NotContentIndexed
+
+CASE 5 - the file to replace is read-only, backup name given
+  Before:
+    target.ini       content='OLD'  attributes=ReadOnly, Archive, NotContentIndexed
+    target.ini.tmp   content='NEW'  attributes=Archive, NotContentIndexed
+  ReplaceFileW returned FALSE, GetLastError = 5
+  After:
+    target.ini       content='OLD'  attributes=ReadOnly, Archive, NotContentIndexed
+    target.ini.tmp   content='NEW'  attributes=Archive, NotContentIndexed
+
+CASE 6 - the file to replace is held open by another handle (read access, share mode READ only)
+  Before:
+    target.ini       content='OLD'  attributes=Archive, NotContentIndexed
+    target.ini.tmp   content='NEW'  attributes=Archive, NotContentIndexed
+  ReplaceFileW returned FALSE, GetLastError = 32
+  After (handle closed):
+    target.ini       content='OLD'  attributes=Archive, NotContentIndexed
+    target.ini.tmp   content='NEW'  attributes=Archive, NotContentIndexed
+
+CASE 7 - a backup file already exists and is read-only
+  Before:
+    target.ini       content='OLD'  attributes=Archive, NotContentIndexed
+    target.ini.bak   content='STALE'  attributes=ReadOnly, Archive, NotContentIndexed
+    target.ini.tmp   content='NEW'  attributes=Archive, NotContentIndexed
+  ReplaceFileW returned FALSE, GetLastError = 1175
+  After:
+    target.ini       content='OLD'  attributes=Archive, NotContentIndexed
+    target.ini.bak   content='STALE'  attributes=ReadOnly, Archive, NotContentIndexed
+    target.ini.tmp   content='NEW'  attributes=Archive, NotContentIndexed
+
+CASE 8 - write the temp file, then swap it in at once, 300 times (first loop: rename, because no target exists yet)
+  Folder: C:\test delete\ReplaceFile measure\2026.11.20 - 17.40.12\case8
+  Time: 3079 ms for 300 loops (10.263 ms per loop)
+  Failed swaps: 0
+  Last value in the target: K=300
