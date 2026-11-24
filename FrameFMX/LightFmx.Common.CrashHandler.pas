@@ -164,22 +164,19 @@ begin
     // TThread.Queue called from the main thread executes the closure IMMEDIATELY
     // (System.Classes TThread.Synchronize runs it inline unless ForceQueue is set),
     // which would defeat the deferral entirely.
-    if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog) then
+    LineCap:= Line;
+    TThread.ForceQueue(NIL, procedure
       begin
-        LineCap:= Line;
-        TThread.ForceQueue(NIL, procedure
-          begin
-            { Swallow any failure of the deferred mirror.
-              This closure runs on a LATER message-loop turn (via CheckSynchronize), OUTSIDE the outer try..except above and with FInHandler already cleared.
-              AddError CAN raise (CheckAndSaveToDisk re-raises AV/EOutOfMemory; PopUpWindow can fault): CheckSynchronize would then route the exception to Application.OnException -> back into THIS handler, unguarded, scheduling yet another failing closure = repeating error storm.
-              The crash is already persisted by WriteCrashLog below; a failed in-session mirror to the viewer has nothing useful to add. }
-            TRY
-              if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
-              then AppDataCore.RamLog.AddError('Unhandled: ' + LineCap);
-            EXCEPT
-            END;
-          end);
-      end;
+        { Swallow any failure of the deferred mirror.
+          This closure runs on a LATER message-loop turn (via CheckSynchronize), OUTSIDE the outer try..except above and with FInHandler already cleared.
+          AddError CAN raise (CheckAndSaveToDisk re-raises AV/EOutOfMemory; PopUpWindow can fault): CheckSynchronize would then route the exception to Application.OnException -> back into THIS handler, unguarded, scheduling yet another failing closure = repeating error storm.
+          The crash is already persisted by WriteCrashLog below; a failed in-session mirror to the viewer has nothing useful to add.
+          TAppDataCore.LogError tests AppDataCore and its RamLog when the closure runs, so a log freed in the meantime is safe. }
+        TRY
+          TAppDataCore.LogError('Unhandled: ' + LineCap);
+        EXCEPT
+        END;
+      end);
 
     { Persist to disk so the next session can show the user what happened.
       Documented intentional deviation from the log+reraise rule (see WriteCrashLog). }

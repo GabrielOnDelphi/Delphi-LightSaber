@@ -30,6 +30,7 @@ uses
   {$ENDIF }
   DUnitX.TestFramework,
   Test.RunnerChecks in '..\..\..\UnitTesting\Test.RunnerChecks.pas',
+  Test.RunFolder in '..\..\..\UnitTesting\Test.RunFolder.pas',
   LightCore.AppData,
   Test.LightVcl.Translate in 'Test.LightVcl.Translate.pas',
   Test.LightVcl.TranslatorAPI in 'Test.LightVcl.TranslatorAPI.pas',  LightVcl.Common.Translate in '..\..\LightVcl.Common.Translate.pas',

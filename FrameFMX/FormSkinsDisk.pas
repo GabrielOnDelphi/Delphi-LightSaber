@@ -181,7 +181,7 @@ begin
     if LoadFailed
     then
       begin
-        AppDataCore.RamLog.AddError('LoadStyleFromFile: cannot read style file (corrupted/locked/wrong format): ' + FullPath);
+        TAppDataCore.LogError('LoadStyleFromFile: cannot read style file (corrupted/locked/wrong format): ' + FullPath);
         MessageError('Cannot read style file (corrupted or wrong format): ' + ExtractFileName(FullPath));
       end
     else MessageError('Style is not compatible with this platform: ' + ExtractFileName(FullPath));
@@ -192,7 +192,7 @@ begin
     Result:= TStyleManager.SetStyleFromFile(FullPath);
     if NOT Result then
     begin
-      AppDataCore.RamLog.AddError('LoadStyleFromFile: SetStyleFromFile returned FALSE for ' + FullPath);
+      TAppDataCore.LogError('LoadStyleFromFile: SetStyleFromFile returned FALSE for ' + FullPath);
       MessageError('Failed to apply style: ' + ExtractFileName(FullPath));
     end;
   except
@@ -201,7 +201,7 @@ begin
       { Log+show, then swallow.
         Cannot reraise: caller (LoadLastStyle) runs in DPR before Application.Run, an uncaught exception there aborts startup.
         We surface the error to the user via dialog and to the log for post-mortem; app continues with platform default. }
-      AppDataCore.RamLog.AddError('LoadStyleFromFile [' + DiskShortName + ']: ' + E.ClassName + ' - ' + E.Message);
+      TAppDataCore.LogError('LoadStyleFromFile [' + DiskShortName + ']: ' + E.ClassName + ' - ' + E.Message);
       MessageError('Error loading style: ' + E.Message);
       EXIT(FALSE);
     end;
@@ -240,8 +240,7 @@ begin
   Assert(MarkerClearTimer = NIL, 'StartMarkerClearTimer: timer already armed — LoadLastStyle called twice?');
   if MarkerClearTimer <> NIL then
   begin
-    if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
-    then AppDataCore.RamLog.AddError('StartMarkerClearTimer: timer already armed — LoadLastStyle called more than once. Ignoring.');
+    TAppDataCore.LogError('StartMarkerClearTimer: timer already armed — LoadLastStyle called more than once. Ignoring.');
     EXIT;
   end;
 
@@ -267,8 +266,7 @@ begin
     CurrentStyleName:= DefPlatformStyle;
     { CANNOT show a dialog here — LoadLastStyle runs before Application.Run, and on Android/iOS FMX dialogs require a running message loop (silently fail/deadlock).
       Always log; queue the user-visible warning for after Run starts. }
-    if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
-    then AppDataCore.RamLog.AddError('Previous startup crashed on style: ' + PoisonedStyle + ' — reverted to platform default.');
+    TAppDataCore.LogError('Previous startup crashed on style: ' + PoisonedStyle + ' — reverted to platform default.');
     PendingStartupMsg:= 'Previous startup crashed while loading style: ' + PoisonedStyle + CRLF + 'Reverted to platform default.';
     StartMarkerClearTimer;   // Arm the timer so OnTick surfaces PendingStartupMsg once the message pump is running. Without this, the user never sees the warning. OnTick safely no-ops on the (already-cleared) INI marker.
     EXIT;

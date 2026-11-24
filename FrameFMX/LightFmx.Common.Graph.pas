@@ -61,8 +61,7 @@ begin
   except
     on E: Exception do
     begin
-      if Assigned(AppDataCore) 
-      then AppDataCore.LogError('LoadImage failed: ' + E.Message);
+      TAppDataCore.LogError('LoadImage failed: ' + E.Message);
       FreeAndNil(Result);
     end;
   end;
@@ -129,8 +128,7 @@ begin
   except
     on E: Exception do
     begin
-      if Assigned(AppDataCore) 
-      then AppDataCore.LogError('LoadThumbnail failed: ' + E.Message);
+      TAppDataCore.LogError('LoadThumbnail failed: ' + E.Message);
       FreeAndNil(Result);
     end;
   end;
@@ -160,8 +158,7 @@ begin
   except
     on E: Exception do
       begin
-        if Assigned(AppDataCore)
-        then AppDataCore.LogError('Cannot get image resolution for ' + FileName + ': ' + E.Message);
+        TAppDataCore.LogError('Cannot get image resolution for ' + FileName + ': ' + E.Message);
         Width := 0;
         Height:= 0;
       end;
@@ -185,8 +182,7 @@ begin
         except
           { Soft-fail per function contract ("Returns 0,0 if file cannot be read") }
           on E2: Exception do
-            if Assigned(AppDataCore)
-            then AppDataCore.LogError('GetImageResolution fallback failed for ' + FileName + ': ' + E2.Message);
+            TAppDataCore.LogError('GetImageResolution fallback failed for ' + FileName + ': ' + E2.Message);
         end;
       finally
         FreeAndNil(Bmp);
@@ -210,8 +206,7 @@ begin
   except
     on E: Exception do
       begin
-        if Assigned(AppDataCore)
-        then AppDataCore.LogError('SaveBitmap failed for ' + FileName + ': ' + E.Message);
+        TAppDataCore.LogError('SaveBitmap failed for ' + FileName + ': ' + E.Message);
         RAISE;
       end;
   end;
@@ -306,8 +301,7 @@ begin
     except
       on E: Exception do
       begin
-        if Assigned(AppDataCore) 
-        then AppDataCore.LogError('LoadImage (bytes) failed: ' + E.Message);
+        TAppDataCore.LogError('LoadImage (bytes) failed: ' + E.Message);
         FreeAndNil(Result);
       end;
     end;

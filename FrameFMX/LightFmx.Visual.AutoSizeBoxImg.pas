@@ -68,8 +68,7 @@ begin
 
   if NOT FileExists(FileName) then
     begin
-      if Assigned(AppDataCore) then
-        AppDataCore.LogError('AutosizeBoxImg.LoadImage: file not found - ' + FileName);
+      TAppDataCore.LogError('AutosizeBoxImg.LoadImage: file not found - ' + FileName);
       FImage.Bitmap.SetSize(0, 0);
       UpdateSize;
       EXIT;
@@ -90,8 +89,7 @@ begin
 
   if Length(Bytes) = 0 then
     begin
-      if Assigned(AppDataCore) then
-        AppDataCore.LogError('AutosizeBoxImg.LoadImage: empty bytes input');
+      TAppDataCore.LogError('AutosizeBoxImg.LoadImage: empty bytes input');
       FImage.Bitmap.SetSize(0, 0);
       UpdateSize;
       EXIT;

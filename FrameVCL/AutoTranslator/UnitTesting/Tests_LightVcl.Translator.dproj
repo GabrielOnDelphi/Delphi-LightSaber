@@ -167,6 +167,7 @@
         <DCCReference Include="..\..\LightVcl.Common.Translate.pas"/>
         <DCCReference Include="..\LightVcl.TranslatorAPI.pas"/>
         <DCCReference Include="..\..\LightVcl.Visual.AppData.pas"/>
+        <DCCReference Include="..\..\..\UnitTesting\Test.RunFolder.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

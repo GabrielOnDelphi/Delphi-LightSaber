@@ -13,7 +13,6 @@ unit Test.LightVcl.TranslatorAPI;
 interface
 
 uses
-  LightCore.IO,
   DUnitX.TestFramework,
   System.SysUtils,
   System.Classes,
@@ -25,7 +24,6 @@ type
   private
     FTestFolder: string;
     FTargetINI: string;
-    procedure CleanupTestFiles;
   public
     [Setup]
     procedure Setup;
@@ -149,27 +147,24 @@ implementation
 
 uses
   LightVcl.TranslatorAPI,
-  LightCore.TextFile;
+  LightCore.TextFile,
+  Test.RunFolder;
+
+CONST
+  RunPrefix = 'TestVclTranslatorAPI';
 
 
 procedure TTestTranslatorAPI.Setup;
 begin
-  FTestFolder:= TPath.Combine(TPath.GetTempPath, 'TranslatorAPITest_' + IntToStr(Random(100000)));
-  ForceDirectoriesE(FTestFolder);
+  FTestFolder:= NewRunFolder(RunPrefix);
   FTargetINI:= TPath.Combine(FTestFolder, 'German.ini');
 end;
 
 
 procedure TTestTranslatorAPI.TearDown;
 begin
-  CleanupTestFiles;
-end;
-
-
-procedure TTestTranslatorAPI.CleanupTestFiles;
-begin
-  if DirectoryExists(FTestFolder)
-  then TDirectory.Delete(FTestFolder, True);
+  DeleteRunFolder(FTestFolder, RunPrefix);
+  FTestFolder:= '';
 end;
 
 

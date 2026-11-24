@@ -60,11 +60,12 @@ TYPE
 IMPLEMENTATION
 
 USES
-  System.SysUtils, System.IOUtils, System.IniFiles,
+  System.SysUtils, System.StrUtils, System.IOUtils, System.IniFiles,
   LightCore.TextFile,
   LightCore.IO;
 
 CONST
+   TestDeleteRoot = 'C:\test delete\';   { Every run makes its own folder in here, never in the Temp folder or in a user profile }
    SkipMsg = 'SKIPPED - no DeepL key. Set the DEEPL_API_KEY environment variable, or put the key in %APPDATA%\LightSaber\DeepL.key';
 
 
@@ -95,16 +96,22 @@ procedure TTestTranslatorLive.Setup;
 begin
   FApiKey:= ReadApiKey;
 
-  FTestFolder:= TPath.Combine(TPath.GetTempPath, 'LightSaber_TranslatorLive');
+  FTestFolder:= TestDeleteRoot + 'TranslatorLive_'+ TGUID.NewGuid.ToString;
+  Assert.IsTrue(StartsText(TestDeleteRoot, FTestFolder), 'Setup: the test folder must lie in '+ TestDeleteRoot+ ': '+ FTestFolder);
+  Assert.IsFalse(DirectoryExists(FTestFolder), 'Setup: the test folder must be new: '+ FTestFolder);
   ForceDirectoriesE(FTestFolder);
   FSourceINI:= TPath.Combine(FTestFolder, 'English.ini');
   FTargetINI:= TPath.Combine(FTestFolder, 'German.ini');
 end;
 
 
+{ Deletes only the folder this run made: it must lie below TestDeleteRoot and never be TestDeleteRoot itself }
 procedure TTestTranslatorLive.TearDown;
 begin
-  if DirectoryExists(FTestFolder)
+  if (FTestFolder <> '')
+  AND StartsText(TestDeleteRoot, FTestFolder)
+  AND (Length(FTestFolder) > Length(TestDeleteRoot))
+  AND DirectoryExists(FTestFolder)
   then DeleteFolder(FTestFolder);
 end;
 

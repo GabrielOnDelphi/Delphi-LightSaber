@@ -157,8 +157,7 @@ begin
   EXCEPT
     on E: Exception do
       begin
-        if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
-        then AppDataCore.RamLog.AddError('iOS image picker save failed: ' + E.ClassName + ' - ' + E.Message);
+        TAppDataCore.LogError('iOS image picker save failed: ' + E.ClassName + ' - ' + E.Message);
         TMessageManager.DefaultManager.SendMessage(NIL, TMessageImagePickerResult.Create(''));
       end;
   END;
@@ -207,8 +206,7 @@ begin
     then TMessageManager.DefaultManager.SendMessage(NIL, TMessageFilePickerResult.Create(TempPath))
     else
       begin
-        if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
-        then AppDataCore.RamLog.AddError('iOS file picker copy failed: ' + PathStr + ' -> ' + TempPath);
+        TAppDataCore.LogError('iOS file picker copy failed: ' + PathStr + ' -> ' + TempPath);
         TMessageManager.DefaultManager.SendMessage(NIL, TMessageFilePickerResult.Create(''));
       end;
   FINALLY
@@ -285,8 +283,7 @@ begin
   then Window.rootViewController.presentModalViewController(GIosDocumentPicker, True)
   else
     begin
-      if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
-      then AppDataCore.RamLog.AddError('iOSPickFile: keyWindow.rootViewController unavailable');
+      TAppDataCore.LogError('iOSPickFile: keyWindow.rootViewController unavailable');
       GIosDocumentPicker:= NIL;
       TMessageManager.DefaultManager.SendMessage(NIL, TMessageFilePickerResult.Create(''));
     end;
@@ -359,8 +356,7 @@ begin
     then AOnFileReceived(Path);
   EXCEPT
     on E: Exception do
-      if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
-      then AppDataCore.RamLog.AddError('ProcessLaunchIntent: '+ E.ClassName +' - '+ E.Message);
+      TAppDataCore.LogError('ProcessLaunchIntent: '+ E.ClassName +' - '+ E.Message);
   END;
 end;
 {$ENDIF}
