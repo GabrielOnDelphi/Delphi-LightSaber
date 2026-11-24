@@ -30,7 +30,7 @@ INTERFACE
 
 USES
   Winapi.Windows, System.Classes, Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls,
-  InternetLabel, Vcl.Imaging.pngimage;
+  Vcl.Imaging.pngimage;
 
 TYPE
   TEnterKeyFunc = reference to function: Boolean;   { Shows the license-key box. Returns TRUE when the key was accepted. }
@@ -38,18 +38,20 @@ TYPE
   TfrmAboutApp = class(TLightForm)
     Container    : TPanel;
     imgLogo      : TImage;
-    lblCompany   : TInternetLabel;
+    lblCompany   : TLabel;
     lblAppName   : TLabel;
     lblChildren  : TLabel;
     lblVersion   : TLabel;
     lblExpire    : TLabel;
-    inetEULA     : TInternetLabel;
+    inetEULA     : TLabel;
     btnEnterKey  : TButton;
     btnOrderNow  : TButton;
     procedure FormCreate       (Sender: TObject);
     procedure FormKeyPress     (Sender: TObject; var Key: Char);
     procedure btnEnterKeyClick (Sender: TObject);
     procedure btnOrderNowClick (Sender: TObject);
+    procedure lblCompanyClick  (Sender: TObject);
+    procedure inetEULAClick    (Sender: TObject);
   private
     FOnEnterKey: TEnterKeyFunc;
   public
@@ -68,6 +70,9 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
    System.SysUtils, LightVcl.Common.CenterControl, LightCore.AppData, LightCore.Debugger, LightVcl.Visual.AppData, LightVcl.Common.Dialogs, LightVcl.Common.ExecuteShell;
+
+CONST
+  EulaURL = 'http://www.BionixWallpaper.com/contact/LicenseAgreement.txt';
 
 
 
@@ -139,7 +144,6 @@ begin
 
   // Populate application info from AppData
   lblCompany.Caption:= AppData.CompanyName;
-  lblCompany.Link:= AppData.ProductHome;
   lblAppName.Caption:= AppData.AppName;
   lblVersion.Caption:= TAppData.GetVersionInfoV + '   |   High-DPI: ' + HighDpiAwarenessS;
 
@@ -190,6 +194,18 @@ end;
 procedure TfrmAboutApp.btnOrderNowClick(Sender: TObject);
 begin
   ExecuteURL(AppData.ProductOrder);
+end;
+
+
+procedure TfrmAboutApp.lblCompanyClick(Sender: TObject);
+begin
+  ExecuteURL(AppData.ProductHome);
+end;
+
+
+procedure TfrmAboutApp.inetEULAClick(Sender: TObject);
+begin
+  ExecuteURL(EulaURL);
 end;
 
 

@@ -95,7 +95,7 @@ object frmAboutApp: TfrmAboutApp
       Center = True
       Stretch = True
     end
-    object lblCompany: TInternetLabel
+    object lblCompany: TLabel
       AlignWithMargins = True
       Left = 4
       Top = 56
@@ -114,11 +114,7 @@ object frmAboutApp: TfrmAboutApp
       ParentShowHint = False
       ShowHint = True
       Transparent = True
-      LinkHint = False
-      Visited = False
-      VisitedColor = clPurple
-      NotVisitedColor = clBlue
-      OverColor = clRed
+      OnClick = lblCompanyClick
     end
     object lblAppName: TLabel
       AlignWithMargins = True
@@ -163,7 +159,7 @@ object frmAboutApp: TfrmAboutApp
       Transparent = True
       Visible = False
     end
-    object inetEULA: TInternetLabel
+    object inetEULA: TLabel
       AlignWithMargins = True
       Left = 4
       Top = 381
@@ -181,12 +177,7 @@ object frmAboutApp: TfrmAboutApp
       ParentFont = False
       Transparent = True
       Visible = False
-      Link = 'http://www.BionixWallpaper.com/contact/LicenseAgreement.txt'
-      LinkHint = False
-      Visited = False
-      VisitedColor = clPurple
-      NotVisitedColor = clBlue
-      OverColor = clRed
+      OnClick = inetEULAClick
     end
     object btnEnterKey: TButton
       AlignWithMargins = True
